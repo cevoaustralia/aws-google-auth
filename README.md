@@ -65,3 +65,8 @@ printed on stdout.
 You should `eval` the `export` statements that come out, because that'll set
 environment variables for you. This tools currently doesn't write credentials to an
 `~/.aws/credentials` file
+
+## Acknowledgements
+
+This work is inspired by [keyme](https://github.com/wheniwork/keyme) -- their digging into the
+guts of how Google SAML auth works is what's enabled it.
