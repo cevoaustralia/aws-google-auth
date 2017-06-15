@@ -43,11 +43,12 @@ where the last bit (after the ``=``) is the IDP ID.
 Installation
 ------------
 
-You can install the python code locally, via ``pip``:
+You can install quite easily via ``pip``, if you want to have it on your
+local system:
 
 .. code:: shell
 
-    localhost$ cd ..../aws-google-auth && pip install .
+    localhost$ sudo pip install aws-google-auth
 
 If you don't want to have the tool installed on your local system, or if
 you prefer to isolate changes, there is a Dockerfile provided, which you
@@ -64,11 +65,12 @@ Usage
    and ``GOOGLE_SP_ID`` (see above under "Important Data" for how to
    find the last two; the first one is usually your email address)
 2. For Docker:
-   ``docker run -it -e GOOGLE_USERNAME -e GOOGLE_IDP_ID -e GOOGLE_SP_ID    aws-google-auth``
+   ``docker run -it -e GOOGLE_USERNAME -e GOOGLE_IDP_ID -e GOOGLE_SP_ID aws-google-auth``
 3. For Python: ``aws-google-auth``
 
-You'll be prompted for your password and an MFA token, which you can get
-via Google Authenticator, Authy, or other similar TOTP applications.
+You'll be prompted for your password. If you've set up an MFA token for
+your Google account, you'll also be prompted for the current token
+value.
 
 If you have more than one role available to you, you'll be prompted to
 choose the role from a list; otherwise, if your credentials are correct,
