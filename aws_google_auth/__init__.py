@@ -10,7 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 from lxml import etree
 
-VERSION = "0.1"
+VERSION = "0.0.2"
 
 REGION = os.getenv("AWS_DEFAULT_REGION") or "ap-southeast-2"
 IDP_ID = os.getenv("GOOGLE_IDP_ID")

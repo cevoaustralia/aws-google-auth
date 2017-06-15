@@ -23,13 +23,15 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.0.1',
+    version='0.0.2',
 
     description='Acquire AWS STS (temporary) credentials via Google Apps SAML Single Sign On',
     long_description=long_description,
 
     # The project's main homepage.
     url='https://github.com/cevoaustralia/aws-google-auth',
+
+    download_url='https://github.com/cevoaustralia/aws-google-auth/archive/0.0.2.tar.gz',
 
     # Author details
     author='Colin Panisset',
@@ -51,15 +53,14 @@ setup(
         'Intended Audience :: System Administrators',
         'Topic :: Security',
         'Topic :: System :: Systems Administration :: Authentication/Directory',
-
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
-
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+
     ],
 
     # What does your project relate to?
