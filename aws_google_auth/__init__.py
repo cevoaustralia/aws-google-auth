@@ -10,7 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 from lxml import etree
 
-VERSION = "0.0.2"
+VERSION = "0.0.3"
 
 REGION = os.getenv("AWS_DEFAULT_REGION") or "ap-southeast-2"
 IDP_ID = os.getenv("GOOGLE_IDP_ID")
@@ -188,7 +188,11 @@ def pick_one(roles):
             print "Invalid choice, try again"
 
 def cli():
-    parser = argparse.ArgumentParser(description="Acquire temporary AWS credentials via Google SSO")
+    parser = argparse.ArgumentParser(
+        prog="aws-google-auth",
+        description="Acquire temporary AWS credentials via Google SSO",
+        version=VERSION,
+    )
     parser.add_argument('-u', '--username', default=USERNAME, help='Google Apps username ($GOOGLE_USERNAME)')
     parser.add_argument('-I', '--idp-id', default=IDP_ID, help='Google SSO IDP identifier ($GOOGLE_IDP_ID)')
     parser.add_argument('-S', '--sp-id', default=SP_ID, help='Google SSO SP identifier ($GOOGLE_SP_ID)')
