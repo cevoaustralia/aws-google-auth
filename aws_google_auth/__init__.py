@@ -10,7 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 from lxml import etree
 
-VERSION = "0.0.4"
+VERSION = "0.0.5"
 
 REGION = os.getenv("AWS_DEFAULT_REGION") or "ap-southeast-2"
 IDP_ID = os.getenv("GOOGLE_IDP_ID")
@@ -52,7 +52,7 @@ class GoogleAuth:
 
     def do_login(self):
         session = requests.Session()
-        session.headers['User-Agent'] = "Cevo aws-google-auth %s" % self.version
+        session.headers['User-Agent'] = "AWS Sign-in/%s (Cevo aws-google-auth)" % self.version
         sess = session.get(self.login_url)
         sess.raise_for_status()
 
