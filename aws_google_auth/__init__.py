@@ -133,7 +133,7 @@ class GoogleAuth:
         session.headers['Referrer'] = sess.url
 
         # Was there an MFA challenge?
-        if sess.url.find("totp/"):
+        if "totp/" in sess.url:
             tl = response_page.find('input', {'name': 'TL'}).get('value')
             gxf = response_page.find('input', {'name': 'gxf'}).get('value')
             challenge_url = sess.url.split("?")[0]
