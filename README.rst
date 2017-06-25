@@ -80,6 +80,40 @@ You should ``eval`` the ``export`` statements that come out, because
 that'll set environment variables for you. This tools currently doesn't
 write credentials to an ``~/.aws/credentials`` file
 
+Notes on Authentication
+-----------------------
+
+Google supports a number of 2-factor authentication schemes. Each of these
+results in a slightly different "next" URL, if they're enabled, during ``do_login``
+
+Google controls the preference ordering of these schemes in the case that
+you have multiple ones defined.
+
+The varying 2-factor schemes and their representative URL fragments handled
+by this tool are:
+
++------------------+-------------------------------------+
+| Method           | URL Fragment                        |
++==================+=====================================+
+| No second factor | (none)                              |
++------------------+-------------------------------------+
+| TOTP (eg Google  | ``.../signin/challenge/totp/2?...`` |
+|  Authenticator   |                                     |
+|  or Authy)       |                                     |
++------------------+-------------------------------------+
+| SMS (or voice    | ``.../signin/challenge/ipp/2?...``  |
+|  call)           |                                     |
++------------------+-------------------------------------+
+| Google Prompt    | ``.../signin/challenge/az/2?...``   |
+|  (phone app)     |                                     |
++------------------+-------------------------------------+
+| Backup code      | ``... (unknown yet) ...``           |
+|  (printed codes) |                                     |
++------------------+-------------------------------------+
+| Security key     | ``... (unknown yet) ...``           |
+|  (eg yubikey)    |                                     |
++------------------+-------------------------------------+
+
 Acknowledgements
 ----------------
 

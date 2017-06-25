@@ -51,15 +51,15 @@ class GoogleAuth:
         self.login_url = "https://accounts.google.com/o/saml2/initsso?idpid=%s&spid=%s&forceauthn=false" % (self.idp_id, self.sp_id)
 
     def do_login(self):
-        session = requests.Session()
-        session.headers['User-Agent'] = "AWS Sign-in/%s (Cevo aws-google-auth)" % self.version
-        sess = session.get(self.login_url)
+        self.session = requests.Session()
+        self.session.headers['User-Agent'] = "AWS Sign-in/%s (Cevo aws-google-auth)" % self.version
+        sess = self.session.get(self.login_url)
         sess.raise_for_status()
 
         # Collect information from the page source
         first_page = BeautifulSoup(sess.text, 'html.parser')
         gxf = first_page.find('input', {'name': 'gxf'}).get('value')
-        cont = first_page.find('input', {'name': 'continue'}).get('value')
+        self.cont = first_page.find('input', {'name': 'continue'}).get('value')
         page = first_page.find('input', {'name': 'Page'}).get('value')
         sign_in = first_page.find('input', {'name': 'signIn'}).get('value')
         account_login_url = first_page.find('form', {'id': 'gaia_loginform'}).get('action')
@@ -68,7 +68,7 @@ class GoogleAuth:
             'bgresponse': 'js_disabled',
             'checkConnection': '',
             'checkedDomains': 'youtube',
-            'continue': cont,
+            'continue': self.cont,
             'Email': self.username,
             'gxf': gxf,
             'identifier-captcha-input': '',
@@ -96,9 +96,9 @@ class GoogleAuth:
             pass
 
         # POST to account login info page, to collect profile and session info
-        sess = session.post(account_login_url, data=payload)
+        sess = self.session.post(account_login_url, data=payload)
         sess.raise_for_status()
-        session.headers['Referrer'] = sess.url
+        self.session.headers['Referrer'] = sess.url
 
         # Collect ProfileInformation, SessionState, signIn, and Password Challenge URL
         challenge_page = BeautifulSoup(sess.text, 'html.parser')
@@ -115,7 +115,7 @@ class GoogleAuth:
         payload['Passwd'] = self.password
 
         # POST to Authenticate Password
-        sess = session.post(passwd_challenge_url, data=payload)
+        sess = self.session.post(passwd_challenge_url, data=payload)
         sess.raise_for_status()
         response_page = BeautifulSoup(sess.text, 'html.parser')
         error = response_page.find(class_='error-msg')
@@ -130,51 +130,74 @@ class GoogleAuth:
         if cap is not None:
             raise ValueError('Captcha Required. Manually Login to remove this.')
 
-        session.headers['Referrer'] = sess.url
+        self.session.headers['Referrer'] = sess.url
+
+        print "Got next step session URL -> %s" % sess.url
 
         # Was there an MFA challenge?
-        if sess.url.find("totp/"):
-            tl = response_page.find('input', {'name': 'TL'}).get('value')
-            gxf = response_page.find('input', {'name': 'gxf'}).get('value')
-            challenge_url = sess.url.split("?")[0]
-            challenge_id = challenge_url.split("totp/")[1]
+        if sess.url.count("challenge/totp/"):
+            sess = self.handle_totp(sess)
+        elif sess.url.count("challenge/ipp/"):
+            sess = self.handle_sms(sess)
+        elif sess.url.count("challenge/az/"):
+            sess = self.handle_prompt(sess)
 
-            mfa_token  = raw_input("MFA token: ") or None
-
-            if not mfa_token:
-                raise ValueError("MFA token required for % but none supplied" % self.username)
-
-            payload = {
-                'challengeId': challenge_id,
-                'challengeType': 6,
-                'continue': cont,
-                'scc': 1,
-                'sarp': 1,
-                'checkedDomains': 'youtube',
-                'pstMsg': 0,
-                'TL': tl,
-                'gxf': gxf,
-                'Pin': mfa_token,
-                'TrustDevice': 'on',
-            }
-            # Submit TOTP
-            sess = session.post(challenge_url, data=payload)
-            sess.raise_for_status()
+        # ... there are different URLs for backup codes (printed)
+        # and security keys (eg yubikey) as well
 
         # save for later
-        self.session = sess
+        self.session_state = sess
 
     def parse_saml(self):
-        if self.session is None:
+        if self.session_state is None:
             raise StandardError('You must use do_login() before calling parse_saml()')
 
-        parsed = BeautifulSoup(self.session.text, 'html.parser')
+        parsed = BeautifulSoup(self.session_state.text, 'html.parser')
         try:
             saml_element = parsed.find('input', {'name':'SAMLResponse'}).get('value')
         except:
             raise StandardError('Could not find SAML response, check your credentials')
 
         return saml_element
+
+    def handle_sms(self, sess):
+        pass
+
+    def handle_prompt(self, sess):
+        pass
+
+    def handle_totp(self, sess):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        tl = response_page.find('input', {'name': 'TL'}).get('value')
+        gxf = response_page.find('input', {'name': 'gxf'}).get('value')
+        challenge_url = sess.url.split("?")[0]
+        challenge_id = challenge_url.split("totp/")[1]
+
+        mfa_token  = raw_input("MFA token: ") or None
+
+        if not mfa_token:
+            raise ValueError("MFA token required for % but none supplied" % self.username)
+
+        payload = {
+            'challengeId': challenge_id,
+            'challengeType': 6,
+            'continue': self.cont,
+            'scc': 1,
+            'sarp': 1,
+            'checkedDomains': 'youtube',
+            'pstMsg': 0,
+            'TL': tl,
+            'gxf': gxf,
+            'Pin': mfa_token,
+            'TrustDevice': 'on',
+        }
+        # Submit TOTP
+        sess = self.session.post(challenge_url, data=payload)
+        sess.raise_for_status()
+
+        return sess
+
+
 
 def pick_one(roles):
     while True:
