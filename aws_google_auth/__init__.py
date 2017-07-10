@@ -144,7 +144,6 @@ class GoogleAuth:
 
         # ... there are different URLs for backup codes (printed)
         # and security keys (eg yubikey) as well
-
         # save for later
         self.session_state = sess
 
