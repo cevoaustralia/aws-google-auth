@@ -7,10 +7,12 @@ import boto3
 import os
 import sys
 import requests
+import time
+import json
 from bs4 import BeautifulSoup
 from lxml import etree
 
-VERSION = "0.0.5"
+VERSION = "0.0.6"
 
 REGION = os.getenv("AWS_DEFAULT_REGION") or "ap-southeast-2"
 IDP_ID = os.getenv("GOOGLE_IDP_ID")
@@ -98,7 +100,7 @@ class GoogleAuth:
         # POST to account login info page, to collect profile and session info
         sess = self.session.post(account_login_url, data=payload)
         sess.raise_for_status()
-        self.session.headers['Referrer'] = sess.url
+        self.session.headers['Referer'] = sess.url
 
         # Collect ProfileInformation, SessionState, signIn, and Password Challenge URL
         challenge_page = BeautifulSoup(sess.text, 'html.parser')
@@ -130,16 +132,14 @@ class GoogleAuth:
         if cap is not None:
             raise ValueError('Captcha Required. Manually Login to remove this.')
 
-        self.session.headers['Referrer'] = sess.url
-
-        print "Got next step session URL -> %s" % sess.url
+        self.session.headers['Referer'] = sess.url
 
         # Was there an MFA challenge?
-        if sess.url.count("challenge/totp/"):
+        if "challenge/totp/" in sess.url:
             sess = self.handle_totp(sess)
-        elif sess.url.count("challenge/ipp/"):
+        elif "challenge/ipp/" in sess.url:
             sess = self.handle_sms(sess)
-        elif sess.url.count("challenge/az/"):
+        elif "challenge/az/" in sess.url:
             sess = self.handle_prompt(sess)
 
         # ... there are different URLs for backup codes (printed)
@@ -161,10 +161,68 @@ class GoogleAuth:
         return saml_element
 
     def handle_sms(self, sess):
-        pass
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        challenge_url = sess.url.split("?")[0]
+
+        sms_token  = raw_input("Enter SMS token: G-") or None
+
+        payload = {
+            'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
+            'challengeType': response_page.find('input', {'name': 'challengeType'}).get('value'),
+            'continue': response_page.find('input', {'name': 'continue'}).get('value'),
+            'scc': response_page.find('input', {'name': 'scc'}).get('value'),
+            'sarp': response_page.find('input', {'name': 'sarp'}).get('value'),
+            'checkedDomains': response_page.find('input', {'name': 'checkedDomains'}).get('value'),
+            'pstMsg': response_page.find('input', {'name': 'pstMsg'}).get('value'),
+            'TL': response_page.find('input', {'name': 'TL'}).get('value'),
+            'gxf': response_page.find('input', {'name': 'gxf'}).get('value'),
+            'Pin': sms_token,
+            'TrustDevice': 'on',
+        }
+
+        # Submit IPP (SMS code)
+        sess = self.session.post(challenge_url, data=payload)
+        sess.raise_for_status()
+
+        return sess
 
     def handle_prompt(self, sess):
-        pass
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        challenge_url = sess.url.split("?")[0]
+
+        data_key = response_page.find('div', {'data-api-key': True}).get('data-api-key')
+        data_tx_id = response_page.find('div', {'data-tx-id': True}).get('data-tx-id')
+
+        # Need to post this to the verification/pause endpoint
+        await_url = "https://content.googleapis.com/cryptauth/v1/authzen/awaittx?alt=json&key=%s" % data_key
+        await_body = {'txId': data_tx_id}
+
+        print "Open the Google App, and tap 'Yes' on the prompt to sign in ..."
+
+        self.session.headers['Referer'] = sess.url
+        response = self.session.post(await_url, json=await_body)
+        parsed = json.loads(response.text)
+
+        payload = {
+            'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
+            'challengeType': response_page.find('input', {'name': 'challengeType'}).get('value'),
+            'continue': response_page.find('input', {'name': 'continue'}).get('value'),
+            'scc': response_page.find('input', {'name': 'scc'}).get('value'),
+            'sarp': response_page.find('input', {'name': 'sarp'}).get('value'),
+            'checkedDomains': response_page.find('input', {'name': 'checkedDomains'}).get('value'),
+            'checkConnection': 'youtube:1295:1',
+            'pstMsg': response_page.find('input', {'name': 'pstMsg'}).get('value'),
+            'TL': response_page.find('input', {'name': 'TL'}).get('value'),
+            'gxf': response_page.find('input', {'name': 'gxf'}).get('value'),
+            'token': parsed['txToken'],
+            'action': response_page.find('input', {'name': 'action'}).get('value'),
+            'TrustDevice': 'on',
+        }
+
+        sess = self.session.post(challenge_url, data=payload)
+        sess.raise_for_status()
+
+        return sess
 
     def handle_totp(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
@@ -191,22 +249,21 @@ class GoogleAuth:
             'Pin': mfa_token,
             'TrustDevice': 'on',
         }
+
         # Submit TOTP
         sess = self.session.post(challenge_url, data=payload)
         sess.raise_for_status()
 
         return sess
 
-
-
 def pick_one(roles):
     while True:
         for i, role in enumerate(roles):
-            print "[{:d}] {}".format(i, role)
-        choice = raw_input("Choose role to assume: ")
+            print "[{:>3d}] {}".format(i+1, role)
+        choice = raw_input("Type the number (1 - {:d}) of the role to assume: ".format(len(roles)))
         try:
             num = int(choice)
-            return roles.items()[num]
+            return roles.items()[num - 1]
         except:
             print "Invalid choice, try again"
 

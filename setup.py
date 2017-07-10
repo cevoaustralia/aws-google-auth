@@ -17,7 +17,7 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-VERSION = '0.0.5'
+VERSION = '0.0.6'
 
 setup(
     name='aws-google-auth',
