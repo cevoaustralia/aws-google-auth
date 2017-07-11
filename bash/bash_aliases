@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Put the contents of this file in $HOME/.bash_aliases in order to get transparent
+# command-line integration with aws-google-auth
+
+# By default, if you have docker installed, these wrappers will use the docker image
+# If you want to override that, set USE_DOCKER=false below
+AWS_GOOGLE_AUTH_USE_DOCKER=true
+
+aws_google_auth_docker () {
+    local DOCKER_IMAGE_NAME=cevoaustralia/aws-google-auth
+    local AUTH_COMMAND=""
+    local ENV_OPTS=""
+
+    local DOCKER_IMG=$( docker images -q $DOCKER_IMAGE_NAME 2>/dev/null )
+    if [ -z "$DOCKER_IMG" ]; then
+        echo No local image for $DOCKER_IMAGE_NAME, pulling it ...
+        if ! docker pull $DOCKER_IMAGE_NAME >/dev/null; then
+            echo Cannot pull $DOCKER_IMAGE_NAME
+            return
+        fi
+    fi
+
+    [ -n "$GOOGLE_USERNAME" ] && ENV_OPTS="$ENV_OPTS -e GOOGLE_USERNAME"
+    [ -n "$GOOGLE_IDP_ID" ] && ENV_OPTS="$ENV_OPTS -e GOOGLE_IDP_ID"
+    [ -n "$GOOGLE_SP_ID" ] && ENV_OPTS="$ENV_OPTS -e GOOGLE_SP_ID"
+    AUTH_COMMAND="docker run -it ${ENV_OPTS} ${DOCKER_IMAGE_NAME}"
+
+    $AUTH_COMMAND
+    RES=$?
+    CONTAINER=$( docker ps -a --filter ancestor=$DOCKER_IMAGE_NAME --latest -q )
+    if [ $RES -eq 0 ]; then
+        RESULT=$( docker logs $CONTAINER | grep export | tr -d '\r' )
+        eval "$RESULT"
+    fi
+    docker rm $CONTAINER >/dev/null
+}
+
+aws_google_auth_python () {
+    aws-google-auth 
+}
+
+aws_google_auth () {
+    # Do we have Docker, and a local image to use?
+    if type -P docker >/dev/null; then
+        aws_google_auth_docker
+    elif type -P aws-google-auth >/dev/null; then
+        aws_google_auth_python
+    else
+        echo Neither docker nor the aws-google-auth Python script installed.
+        echo Either install Docker, or install aws-google-auth via:
+        echo "    pip install --upgrade aws-google-auth"
+        return
+    fi
+
+}
+

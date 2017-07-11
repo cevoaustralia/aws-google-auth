@@ -70,7 +70,7 @@ Usage
 
 You'll be prompted for your password. If you've set up an MFA token for
 your Google account, you'll also be prompted for the current token
-value.
+value or, if you're using Google Prompt, press "Yes" on the app.
 
 If you have more than one role available to you, you'll be prompted to
 choose the role from a list; otherwise, if your credentials are correct,
@@ -79,6 +79,20 @@ you'll just see the AWS keys printed on stdout.
 You should ``eval`` the ``export`` statements that come out, because
 that'll set environment variables for you. This tools currently doesn't
 write credentials to an ``~/.aws/credentials`` file
+
+Bash wrapper
+------------
+
+If you want a fairly straightforward wrapper so that you don't have to ``eval``
+the output of the script, you can add the contents of ``bash/bash_aliases``
+to your ``$HOME/.bashrc`` or ``$HOME/.bash_aliases``; then, when the time
+comes to authenticate, simply type:
+
+.. code:: shell
+
+        localhost$ aws_google_auth
+
+and the wrapper will take care of everything else
 
 Notes on Authentication
 -----------------------
