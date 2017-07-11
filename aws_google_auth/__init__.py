@@ -14,8 +14,6 @@ from lxml import etree
 import configparser
 
 import prepare
-# from . import prepare
-# from .prepare import google_config
 
 VERSION = "0.0.6"
 

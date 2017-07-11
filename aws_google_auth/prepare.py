@@ -53,10 +53,6 @@ def _create_google_default_config():
     config.aws_credentials_location = os.path.expanduser(session.get_config_variable('credentials_file'))
     config.aws_config_location = os.path.expanduser(session.get_config_variable('config_file'))
 
-    # SSL certificate verification: Whether or not strict certificate
-    # verification is done, False should only be used for dev/test
-    config.ssl_verification = True
-
     config.role_arn = None
     config.provider = None
 
@@ -64,10 +60,6 @@ def _create_google_default_config():
     config.google_idp_id = None
     config.google_username = None
     config.duration = 3600
-
-    # Note: if your bucket require CORS, it is advised that you use path style addressing
-    # (which is set by default in signature version 4).
-    config.s3_signature_version = None
 
     return config
 
@@ -91,27 +83,12 @@ def _load_google_config_from_stored_profile(google_config, profile):
     def load_config(config, profile):
         google_config.region = config.get_or(profile, 'region', google_config.region)
         google_config.output_format = config.get_or(profile, 'output', google_config.output_format)
-        google_config.ssl_verification = ast.literal_eval(config.get_or(
-            profile, 'google_config.ssl_verification',
-            str(google_config.ssl_verification)))
 
         google_config.role_arn = config.get_or(profile, 'google_config.role_arn', google_config.role_arn)
         google_config.provider = config.get_or(profile, 'google_config.provider', google_config.provider)
         google_config.google_idp_id = config.get_or(profile, 'google_config.google_idp_id', google_config.google_idp_id)
         google_config.google_sp_id = config.get_or(profile, 'google_config.google_sp_id', google_config.google_sp_id)
         google_config.google_username = config.get_or(profile, 'google_config.google_username', google_config.google_username)
-
-        google_config.s3_signature_version = None
-        rawS3SubSection = config.get_or(profile, 's3', None)
-        if rawS3SubSection:
-            s3SubSection = configparser.RawConfigParser()
-            setattr(s3SubSection, get_or.__name__, MethodType(get_or, s3SubSection))
-            s3SubSection.read_string('[s3_section]\n' + rawS3SubSection)
-            google_config.s3_signature_version = s3SubSection.get_or(
-                's3_section',
-                'signature_version',
-                google_config.s3_signature_version
-            )
 
     if profile == 'default':
         load_from_config(google_config.aws_config_location, profile, load_config)
