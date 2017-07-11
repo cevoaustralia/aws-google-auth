@@ -76,9 +76,6 @@ If you have more than one role available to you, you'll be prompted to
 choose the role from a list; otherwise, if your credentials are correct,
 you'll just see the AWS keys printed on stdout.
 
-You should ``eval`` the ``export`` statements that come out, because
-that'll set environment variables for you. This tools currently doesn't
-write credentials to an ``~/.aws/credentials`` file
 
 Notes on Authentication
 -----------------------
@@ -120,3 +117,6 @@ Acknowledgements
 This work is inspired by `keyme <https://github.com/wheniwork/keyme>`__
 -- their digging into the guts of how Google SAML auth works is what's
 enabled it.
+
+The attribute management and credential injection into AWS configuration files
+was heavily borrowed from `aws-adfs <https://github.com/venth/aws-adfs>`
