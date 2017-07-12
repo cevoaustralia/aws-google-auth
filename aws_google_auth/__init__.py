@@ -21,7 +21,8 @@ REGION = os.getenv("AWS_DEFAULT_REGION") or "ap-southeast-2"
 IDP_ID = os.getenv("GOOGLE_IDP_ID")
 SP_ID = os.getenv("GOOGLE_SP_ID")
 USERNAME = os.getenv("GOOGLE_USERNAME")
-DURATION = os.getenv("DURATION")
+MAX_DURATION = 3600
+DURATION = int(os.getenv("DURATION") or MAX_DURATION)
 PROFILE = os.getenv("AWS_PROFILE")
 
 class GoogleAuth:
@@ -280,14 +281,14 @@ def cli():
     parser.add_argument('-I', '--idp-id', default=IDP_ID, help='Google SSO IDP identifier ($GOOGLE_IDP_ID)')
     parser.add_argument('-S', '--sp-id', default=SP_ID, help='Google SSO SP identifier ($GOOGLE_SP_ID)')
     parser.add_argument('-R', '--region', default=REGION, help='AWS region endpoint ($AWS_DEFAULT_REGION)')
-    parser.add_argument('-d', '--duration', default=DURATION, help='Credential duration ($DURATION)')
+    parser.add_argument('-d', '--duration', type=int, default=DURATION, help='Credential duration ($DURATION)')
     parser.add_argument('-p', '--profile', default=PROFILE, help='AWS profile ($AWS_PROFILE)')
 
     args = parser.parse_args()
 
-    if args.duration > 3600:
-        print "Duration must be less than or equal to 3600"
-        duration = 3600
+    if args.duration > MAX_DURATION:
+        print "Duration must be less than or equal to %d" % MAX_DURATION
+        args.duration = MAX_DURATION
 
     config = prepare.get_prepared_config(
         args.profile,
