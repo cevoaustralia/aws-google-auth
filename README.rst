@@ -116,7 +116,7 @@ you'll just see the AWS keys printed on stdout.
 Storage of profile credentials
 ------------------------------
 
-Through the use of AWS profiles, using the ``-p` or ``--profile`` flag, the ``aws-google-auth`` utility will store the supplied username, IDP and SP details in your ``./aws/config`` files.
+Through the use of AWS profiles, using the ``-p`` or ``--profile`` flag, the ``aws-google-auth`` utility will store the supplied username, IDP and SP details in your ``./aws/config`` files.
 
 When re-authenticating using the same profile, the values will be remembered to speed up the re-authentication process.
 This enables an approach that enables you to enter your username, IPD and SP values once and then after only need to re-enter your password (and MFA if enabled).
