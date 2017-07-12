@@ -11,14 +11,18 @@ import time
 import json
 from bs4 import BeautifulSoup
 from lxml import etree
+import configparser
 
-VERSION = "0.0.6"
+import prepare
+
+VERSION = "0.0.7"
 
 REGION = os.getenv("AWS_DEFAULT_REGION") or "ap-southeast-2"
 IDP_ID = os.getenv("GOOGLE_IDP_ID")
 SP_ID = os.getenv("GOOGLE_SP_ID")
 USERNAME = os.getenv("GOOGLE_USERNAME")
 DURATION = os.getenv("DURATION")
+PROFILE = os.getenv("AWS_PROFILE")
 
 class GoogleAuth:
     def __init__(self, **kwargs):
@@ -277,32 +281,41 @@ def cli():
     parser.add_argument('-S', '--sp-id', default=SP_ID, help='Google SSO SP identifier ($GOOGLE_SP_ID)')
     parser.add_argument('-R', '--region', default=REGION, help='AWS region endpoint ($AWS_DEFAULT_REGION)')
     parser.add_argument('-d', '--duration', default=DURATION, help='Credential duration ($DURATION)')
+    parser.add_argument('-p', '--profile', default=PROFILE, help='AWS profile ($AWS_PROFILE)')
 
     args = parser.parse_args()
-
-    if args.username is None:
-        args.username = raw_input("Google username: ")
-
-    if args.idp_id is None or args.sp_id is None:
-        print "Must set both GOOGLE_IDP_ID and GOOGLE_SP_ID"
-        parser.print_help()
-        sys.exit(1)
-
-    if args.duration is None:
-        print "Setting duration to 3600 seconds"
-        args.duration = 3600
 
     if args.duration > 3600:
         print "Duration must be less than or equal to 3600"
         duration = 3600
 
+    config = prepare.get_prepared_config(
+        args.profile,
+        args.region,
+        args.username,
+        args.idp_id,
+        args.sp_id,
+        args.duration
+    )
+
+    if config.google_username is None:
+        config.google_username = raw_input("Google username: ")
+    else:
+        print "Google username: " + config.google_username
+
+    if config.google_idp_id is None:
+        config.google_idp_id = raw_input("Google idp: ")
+
+    if config.google_sp_id is None:
+        config.google_sp_id = raw_input("Google sp: ")
+
     passwd = getpass.getpass()
 
     google = GoogleAuth(
-        username=args.username,
+        username=config.google_username,
         password=passwd,
-        idp_id=args.idp_id,
-        sp_id=args.sp_id
+        idp_id=config.google_idp_id,
+        sp_id=config.google_sp_id
     )
 
     google.do_login()
@@ -312,18 +325,69 @@ def cli():
     doc = etree.fromstring(base64.b64decode(encoded_saml))
     roles = dict([x.split(',') for x in doc.xpath('//*[@Name = "https://aws.amazon.com/SAML/Attributes/Role"]//text()')])
 
-    role, provider = pick_one(roles)
+    if not config.role_arn in roles:
+        config.role_arn, config.provider = pick_one(roles)
 
-    print "Assuming " + role
+    print "Assuming " + config.role_arn
 
-    sts = boto3.client('sts', region_name=REGION)
+    sts = boto3.client('sts', region_name=config.region)
     token = sts.assume_role_with_saml(
-                RoleArn=role,
-                PrincipalArn=provider,
+                RoleArn=config.role_arn,
+                PrincipalArn=config.provider,
                 SAMLAssertion=encoded_saml,
-                DurationSeconds=args.duration)
+                DurationSeconds=config.duration)
 
-    print "export AWS_ACCESS_KEY_ID='{}'".format(token['Credentials']['AccessKeyId'])
-    print "export AWS_SECRET_ACCESS_KEY='{}'".format(token['Credentials']['SecretAccessKey'])
-    print "export AWS_SESSION_TOKEN='{}'".format(token['Credentials']['SessionToken'])
-    print "export AWS_SESSION_EXPIRATION='{}'".format(token['Credentials']['Expiration'])
+    if conifig.profile is None:
+        print "export AWS_ACCESS_KEY_ID='{}'".format(token['Credentials']['AccessKeyId'])
+        print "export AWS_SECRET_ACCESS_KEY='{}'".format(token['Credentials']['SecretAccessKey'])
+        print "export AWS_SESSION_TOKEN='{}'".format(token['Credentials']['SessionToken'])
+        print "export AWS_SESSION_EXPIRATION='{}'".format(token['Credentials']['Expiration'])
+
+    _store(config, token)
+
+
+def _store(config, aws_session_token):
+
+    def store_config(profile, config_location, storer):
+        config_file = configparser.RawConfigParser()
+        config_file.read(config_location)
+
+        if not config_file.has_section(profile):
+            config_file.add_section(profile)
+
+        storer(config_file, profile)
+
+        with open(config_location, 'w+') as f:
+            try:
+                config_file.write(f)
+            finally:
+                f.close()
+
+    def credentials_storer(config_file, profile):
+        config_file.set(profile, 'aws_access_key_id', aws_session_token['Credentials']['AccessKeyId'])
+        config_file.set(profile, 'aws_secret_access_key', aws_session_token['Credentials']['SecretAccessKey'])
+        config_file.set(profile, 'aws_session_token', aws_session_token['Credentials']['SessionToken'])
+        config_file.set(profile, 'aws_security_token', aws_session_token['Credentials']['SessionToken'])
+
+    def config_storer(config_file, profile):
+        config_file.set(profile, 'region', config.region)
+        config_file.set(profile, 'output', config.output_format)
+        config_file.set(profile, 'google_config.role_arn', config.role_arn)
+        config_file.set(profile, 'google_config.provider', config.provider)
+        config_file.set(profile, 'google_config.google_idp_id', config.google_idp_id)
+        config_file.set(profile, 'google_config.google_sp_id', config.google_sp_id)
+        config_file.set(profile, 'google_config.google_username', config.google_username)
+        config_file.set(profile, 'google_config.duration', config.duration)
+
+    store_config(config.profile, config.aws_credentials_location, credentials_storer)
+    if config.profile == 'default':
+        store_config(config.profile, config.aws_config_location, config_storer)
+    else:
+        store_config('profile {}'.format(config.profile), config.aws_config_location, config_storer)
+
+
+if __name__ == '__main__':
+    try:
+        cli()
+    except KeyboardInterrupt:
+        pass

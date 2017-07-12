@@ -17,7 +17,7 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-VERSION = '0.0.6'
+VERSION = '0.0.7'
 
 setup(
     name='aws-google-auth',
@@ -81,7 +81,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     # install_requires=['peppercorn'],
-    install_requires=['boto3', 'lxml', 'requests', 'beautifulsoup4'],
+    install_requires=['boto3', 'lxml', 'requests', 'beautifulsoup4', 'configparser'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
@@ -114,4 +114,3 @@ setup(
         ],
     },
 )
-
