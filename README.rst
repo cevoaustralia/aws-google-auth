@@ -61,12 +61,47 @@ can build with:
 Usage
 -----
 
+```
+$ aws-google-auth --help
+usage: aws-google-auth [-h] [-v] [-u USERNAME] [-I IDP_ID] [-S SP_ID]
+                       [-R REGION] [-d DURATION] [-p PROFILE]
+
+Acquire temporary AWS credentials via Google SSO
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --version         show program's version number and exit
+
+  -u USERNAME, --username USERNAME
+                        Google Apps username ($GOOGLE_USERNAME)
+  -I IDP_ID, --idp-id IDP_ID
+                        Google SSO IDP identifier ($GOOGLE_IDP_ID)
+  -S SP_ID, --sp-id SP_ID
+                        Google SSO SP identifier ($GOOGLE_SP_ID)
+  -R REGION, --region REGION
+                        AWS region endpoint ($AWS_DEFAULT_REGION)
+  -d DURATION, --duration DURATION
+                        Credential duration ($DURATION)
+  -p PROFILE, --profile PROFILE
+                        AWS profile ($AWS_PROFILE)
+```
+
+Native Python
+~~~~~~~~~~~~~
+
+1. Execute ``aws-google-auth``
+2. You will be prompted to supply each parameter
+
+*Note* You can skip prompts by either passing parameters to the command, or setting the specified Environment variables.
+
+Via Docker
+~~~~~~~~~~~~~
+
 1. Set environment variables for ``GOOGLE_USERNAME``, ``GOOGLE_IDP_ID``,
    and ``GOOGLE_SP_ID`` (see above under "Important Data" for how to
    find the last two; the first one is usually your email address)
 2. For Docker:
    ``docker run -it -e GOOGLE_USERNAME -e GOOGLE_IDP_ID -e GOOGLE_SP_ID aws-google-auth``
-3. For Python: ``aws-google-auth``
 
 You'll be prompted for your password. If you've set up an MFA token for
 your Google account, you'll also be prompted for the current token
@@ -75,6 +110,19 @@ value.
 If you have more than one role available to you, you'll be prompted to
 choose the role from a list; otherwise, if your credentials are correct,
 you'll just see the AWS keys printed on stdout.
+
+
+Storage of profile credentials
+------------------------------
+
+Through the use of AWS profiles, using the `-p` or `--profile` flag, the `aws-google-auth` utility will store the supplied username, IDP and SP details in your `./aws/config` files.
+
+When re-authenticating using the same profile, the values will be remembered to speed up the re-authentication process.
+This enables an approach that enables you to enter your username, IPD and SP values once and then after only need to re-enter your password (and MFA if enabled).
+
+Creating an alias as below can be a quick and easy way to re-authenticate with a simple command shortcut.
+
+`alias aws-development='unset AWS_PROFILE; aws-google-auth -p aws-dev; export AWS_PROFILE=aws-dev'`
 
 
 Notes on Authentication
