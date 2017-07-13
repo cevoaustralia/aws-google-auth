@@ -337,7 +337,7 @@ def cli():
                 SAMLAssertion=encoded_saml,
                 DurationSeconds=config.duration)
 
-    if conifig.profile is None:
+    if config.profile is None:
         print "export AWS_ACCESS_KEY_ID='{}'".format(token['Credentials']['AccessKeyId'])
         print "export AWS_SECRET_ACCESS_KEY='{}'".format(token['Credentials']['SecretAccessKey'])
         print "export AWS_SESSION_TOKEN='{}'".format(token['Credentials']['SessionToken'])
