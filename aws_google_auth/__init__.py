@@ -15,7 +15,7 @@ import configparser
 
 import prepare
 
-VERSION = "0.0.7"
+VERSION = "0.0.8"
 
 REGION = os.getenv("AWS_DEFAULT_REGION") or "ap-southeast-2"
 IDP_ID = os.getenv("GOOGLE_IDP_ID")
