@@ -15,7 +15,7 @@ import configparser
 
 import prepare
 
-VERSION = "0.0.7"
+VERSION = "0.0.8"
 
 REGION = os.getenv("AWS_DEFAULT_REGION") or "ap-southeast-2"
 IDP_ID = os.getenv("GOOGLE_IDP_ID")
@@ -338,7 +338,7 @@ def cli():
                 SAMLAssertion=encoded_saml,
                 DurationSeconds=config.duration)
 
-    if conifig.profile is None:
+    if config.profile is None:
         print "export AWS_ACCESS_KEY_ID='{}'".format(token['Credentials']['AccessKeyId'])
         print "export AWS_SECRET_ACCESS_KEY='{}'".format(token['Credentials']['SecretAccessKey'])
         print "export AWS_SESSION_TOKEN='{}'".format(token['Credentials']['SessionToken'])
