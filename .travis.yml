@@ -3,6 +3,8 @@ sudo: false
 dist: trusty
 install:
   - pip install .
+script:
+  - python setup.py test
 deploy:
   provider: pypi
   username: nonspecialist
