@@ -1,0 +1,10 @@
+language: python
+sudo: false
+dist: trusty
+deploy:
+  provider: pypi
+  username: nonspecialist
+  password:
+    secure: kkbjBg1MwRhyPPabNQcYreTsFexf+1/5W4soO6MWslgPQDsB3h63QfTOV5OvBFAJdBDjPFcrG8raH4JL6oebadVbl/gTYeNCpu7iSbudlSnHTgm4G84o2IOrnFDrEE7iTxkzasPAkmdhBde6ZLIbJFKJ5x5c4LQeHZZSPvYftN043Sv4yta/xeQ84iHsRGVZ/8ugXtmaiZX1rbjqpUqXe/WlR7z3O48KBFSEagZZA93fQdCQEC25SJ5J5P+WgrWyNncK8zaIl5O0k5VzfjSXrwzUl+GTA4SFkqPqj66tqJzgHIl7Ggu5D2kEY2U2+JDYaQz5bcv+WwlkE/De4DicwMoLL7Mjn2MnL2W6uSAtrkX8VoebzbSnmC4/JFC4FiPvPFiBVeO5uupsijoU7UXhYjEvLv/L0tRRo2F3PIzFTRq34KvuT60dfbnagRxp764jiXwRj9gDqbjGXqPIEf2itllOd+aur2YTjVBMQ6Nv5+C0P1wiqlHcNeeg8OY7t6e9WQHbe6iqb2ZhTQ9AgA5MEmVQRWzTD3joqY536kNcIWrbwlQ06+JhbcXlgozPwX4MiSYKtxXMXsom29wiWMzL3MJTIUOsOBe/eOWCBolYEl0Km5zr5C0gXyKZ3+4kXaG5tyGa+wjSuCXz4D01DRoK9wXDSxi+ZpHM5RYdxcAO3uY=
+  on:
+    tags: true
