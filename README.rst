@@ -1,6 +1,9 @@
 aws-google-auth
 ===============
 
+.. image:: https://img.shields.io/travis/cevoaustralia/aws-google-auth.svg
+   :alt: Travis build badge
+
 .. image:: https://img.shields.io/docker/build/cevoaustralia/aws-google-auth.svg
    :alt: Docker build status badge
 
