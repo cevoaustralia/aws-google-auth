@@ -1,6 +1,8 @@
 language: python
 sudo: false
 dist: trusty
+install:
+  - pip install .
 deploy:
   provider: pypi
   username: nonspecialist
