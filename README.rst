@@ -1,6 +1,15 @@
 aws-google-auth
 ===============
 
+.. image:: https://img.shields.io/travis/cevoaustralia/aws-google-auth.svg
+   :alt: Travis build badge
+
+.. image:: https://img.shields.io/docker/build/cevoaustralia/aws-google-auth.svg
+   :alt: Docker build status badge
+
+.. image:: https://img.shields.io/pypi/v/aws-google-auth.svg
+   :alt: PyPI version badge
+
 This command-line tool allows you to acquire AWS temporary (STS)
 credentials using Google Apps as a federated (Single Sign-On, or SSO)
 provider.
