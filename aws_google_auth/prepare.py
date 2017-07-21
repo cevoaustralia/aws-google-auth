@@ -29,7 +29,7 @@ def get_prepared_config(
     google_config.google_idp_id = default_if_none(google_idp_id, google_config.google_idp_id)
     google_config.google_sp_id = default_if_none(google_sp_id, google_config.google_sp_id)
     google_config.duration = default_if_none(duration, google_config.duration)
-    google_config.ask_role = default_if_none(ask_role, False)
+    google_config.ask_role = default_if_none(ask_role, google_config.ask_role)
 
     return google_config
 
@@ -63,6 +63,7 @@ def _create_google_default_config():
     config.google_idp_id = None
     config.google_username = None
     config.duration = 3600
+    config.ask_role = False
 
     return config
 
