@@ -23,6 +23,7 @@ USERNAME = os.getenv("GOOGLE_USERNAME")
 MAX_DURATION = 3600
 DURATION = int(os.getenv("DURATION") or MAX_DURATION)
 PROFILE = os.getenv("AWS_PROFILE")
+ASK_ROLE = os.getenv("AWS_ASK_ROLE") or False
 
 class GoogleAuth:
     def __init__(self, **kwargs):
@@ -298,6 +299,7 @@ def cli():
         prog="aws-google-auth",
         description="Acquire temporary AWS credentials via Google SSO",
     )
+
     parser.add_argument('-u', '--username', default=USERNAME,
                         help='Google Apps username ($GOOGLE_USERNAME)')
     parser.add_argument('-I', '--idp-id', default=IDP_ID,
@@ -310,6 +312,8 @@ def cli():
                         help='Credential duration ($DURATION)')
     parser.add_argument('-p', '--profile', default=PROFILE,
                         help='AWS profile ($AWS_PROFILE)')
+    parser.add_argument('-a', '--ask-role', default=ASK_ROLE, 
+                        help='Set true to always pick the role')
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s {version}'.format(version=_version.__version__))
 
@@ -325,7 +329,8 @@ def cli():
         args.username,
         args.idp_id,
         args.sp_id,
-        args.duration
+        args.duration,
+        args.ask_role
     )
 
     if config.google_username is None:
@@ -364,7 +369,7 @@ def cli():
     doc = etree.fromstring(base64.b64decode(encoded_saml))
     roles = parse_roles(doc)
 
-    if not config.role_arn in roles:
+    if (not config.role_arn in roles or config.ask_role):
         config.role_arn, config.provider = pick_one(roles)
 
     print("Assuming " + config.role_arn)
