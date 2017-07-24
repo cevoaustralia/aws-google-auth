@@ -115,4 +115,7 @@ setup(
             'aws-google-auth=aws_google_auth:cli',
         ],
     },
+
+    test_suite='nose.collector',
+    tests_require=['nose'],
 )
