@@ -5,10 +5,10 @@ from lxml import etree
 here = path.abspath(path.dirname(__file__))
 
 with open(path.join(here, 'valid-response.xml')) as fp:
-    VALID_DOC = etree.fromstring(fp.read())
+    VALID_DOC = etree.fromstring(fp.read().encode('utf-8'))
 
 with open(path.join(here, 'too-many-commas.xml')) as fp:
-    TOO_MANY_COMMAS_DOC = etree.fromstring(fp.read())
+    TOO_MANY_COMMAS_DOC = etree.fromstring(fp.read().encode('utf-8'))
 
 VALID_ROLE_ARN = "arn:aws:iam::123456789012:role/admin"
 
