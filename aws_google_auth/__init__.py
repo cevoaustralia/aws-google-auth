@@ -13,9 +13,8 @@ from bs4 import BeautifulSoup
 from lxml import etree
 import configparser
 
-import prepare
-
-VERSION = "0.0.8"
+from . import _version
+from . import prepare
 
 REGION = os.getenv("AWS_DEFAULT_REGION") or "ap-southeast-2"
 IDP_ID = os.getenv("GOOGLE_IDP_ID")
@@ -39,7 +38,7 @@ class GoogleAuth:
         duration_seconds: number of seconds for the session to be active (max 3600)
         """
 
-        self.version = VERSION
+        self.version = _version.__version__
 
         self.username = kwargs.pop('username')
         self.password = kwargs.pop('password')
@@ -52,7 +51,7 @@ class GoogleAuth:
                 raise ValueError('GoogleAuth: duration_seconds must be an integer')
 
             if self.duration_seconds > 3600:
-                print "WARNING: Clamping duration_seconds to 3600"
+                print("WARNING: Clamping duration_seconds to 3600")
                 self.duration_seconds = 3600
 
         self.login_url = "https://accounts.google.com/o/saml2/initsso?idpid=%s&spid=%s&forceauthn=false" % (self.idp_id, self.sp_id)
@@ -201,7 +200,7 @@ class GoogleAuth:
         await_url = "https://content.googleapis.com/cryptauth/v1/authzen/awaittx?alt=json&key=%s" % data_key
         await_body = {'txId': data_tx_id}
 
-        print "Open the Google App, and tap 'Yes' on the prompt to sign in ..."
+        print("Open the Google App, and tap 'Yes' on the prompt to sign in ...")
 
         self.session.headers['Referer'] = sess.url
         response = self.session.post(await_url, json=await_body)
@@ -263,31 +262,38 @@ class GoogleAuth:
 def pick_one(roles):
     while True:
         for i, role in enumerate(roles):
-            print "[{:>3d}] {}".format(i+1, role)
+            print("[{:>3d}] {}".format(i+1, role))
         choice = raw_input("Type the number (1 - {:d}) of the role to assume: ".format(len(roles)))
         try:
             num = int(choice)
             return roles.items()[num - 1]
         except:
-            print "Invalid choice, try again"
+            print("Invalid choice, try again")
 
 def cli():
     parser = argparse.ArgumentParser(
         prog="aws-google-auth",
         description="Acquire temporary AWS credentials via Google SSO",
-        version=VERSION,
     )
-    parser.add_argument('-u', '--username', default=USERNAME, help='Google Apps username ($GOOGLE_USERNAME)')
-    parser.add_argument('-I', '--idp-id', default=IDP_ID, help='Google SSO IDP identifier ($GOOGLE_IDP_ID)')
-    parser.add_argument('-S', '--sp-id', default=SP_ID, help='Google SSO SP identifier ($GOOGLE_SP_ID)')
-    parser.add_argument('-R', '--region', default=REGION, help='AWS region endpoint ($AWS_DEFAULT_REGION)')
-    parser.add_argument('-d', '--duration', type=int, default=DURATION, help='Credential duration ($DURATION)')
-    parser.add_argument('-p', '--profile', default=PROFILE, help='AWS profile ($AWS_PROFILE)')
+    parser.add_argument('-u', '--username', default=USERNAME,
+                        help='Google Apps username ($GOOGLE_USERNAME)')
+    parser.add_argument('-I', '--idp-id', default=IDP_ID,
+                        help='Google SSO IDP identifier ($GOOGLE_IDP_ID)')
+    parser.add_argument('-S', '--sp-id', default=SP_ID,
+                        help='Google SSO SP identifier ($GOOGLE_SP_ID)')
+    parser.add_argument('-R', '--region', default=REGION,
+                        help='AWS region endpoint ($AWS_DEFAULT_REGION)')
+    parser.add_argument('-d', '--duration', type=int, default=DURATION,
+                        help='Credential duration ($DURATION)')
+    parser.add_argument('-p', '--profile', default=PROFILE,
+                        help='AWS profile ($AWS_PROFILE)')
+    parser.add_argument('-V', '--version', action='version',
+                        version='%(prog)s {version}'.format(version=_version.__version__))
 
     args = parser.parse_args()
 
     if args.duration > MAX_DURATION:
-        print "Duration must be less than or equal to %d" % MAX_DURATION
+        print("Duration must be less than or equal to %d" % MAX_DURATION)
         args.duration = MAX_DURATION
 
     config = prepare.get_prepared_config(
@@ -302,7 +308,7 @@ def cli():
     if config.google_username is None:
         config.google_username = raw_input("Google username: ")
     else:
-        print "Google username: " + config.google_username
+        print("Google username: " + config.google_username)
 
     if config.google_idp_id is None:
         config.google_idp_id = raw_input("Google idp: ")
@@ -329,7 +335,7 @@ def cli():
     if not config.role_arn in roles:
         config.role_arn, config.provider = pick_one(roles)
 
-    print "Assuming " + config.role_arn
+    print("Assuming " + config.role_arn)
 
     sts = boto3.client('sts', region_name=config.region)
     token = sts.assume_role_with_saml(
@@ -339,10 +345,10 @@ def cli():
                 DurationSeconds=config.duration)
 
     if config.profile is None:
-        print "export AWS_ACCESS_KEY_ID='{}'".format(token['Credentials']['AccessKeyId'])
-        print "export AWS_SECRET_ACCESS_KEY='{}'".format(token['Credentials']['SecretAccessKey'])
-        print "export AWS_SESSION_TOKEN='{}'".format(token['Credentials']['SessionToken'])
-        print "export AWS_SESSION_EXPIRATION='{}'".format(token['Credentials']['Expiration'])
+        print("export AWS_ACCESS_KEY_ID='{}'".format(token['Credentials']['AccessKeyId']))
+        print("export AWS_SECRET_ACCESS_KEY='{}'".format(token['Credentials']['SecretAccessKey']))
+        print("export AWS_SESSION_TOKEN='{}'".format(token['Credentials']['SessionToken']))
+        print("export AWS_SESSION_EXPIRATION='{}'".format(token['Credentials']['Expiration']))
 
     _store(config, token)
 
