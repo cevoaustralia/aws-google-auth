@@ -1,11 +1,28 @@
 language: python
+python:
+  - "2.6"
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
 sudo: false
 dist: trusty
 jobs:
   include:
-    - install: pip install .
+    - python: "2.6"
+      install: pip install .
       script: python setup.py test
-    - install: pip3 install .
+    - python: "2.7"
+      install: pip install .
+      script: python setup.py test
+    - python: "3.4"
+      install: pip3 install .
+      script: python3 setup.py test
+    - python: "3.5"
+      install: pip3 install .
+      script: python3 setup.py test
+    - python: "3.6"
+      install: pip3 install .
       script: python3 setup.py test
     - stage: deploy
       deploy:
