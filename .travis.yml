@@ -12,11 +12,12 @@ script: python setup.py test
 
 jobs:
   include:
-    - stage: test
-      # by default, the python versions from the matrix defined above will all be
-      # used in this stage, so there will be 5 or so separate "test" stages that run
-      # in parallel, each with a different version. Then, because we specify a version
-      # below for "deploy", it only uses a single version
+    # There is always a default stage called 'test' which uses the 'install' and
+    # 'script' global definitions from above
+    # The python versions from the matrix defined above will all be
+    # used in this stage, so there will be 5 or so separate "test" stages that run
+    # in parallel, each with a different version. Then, because we specify a version
+    # below for "deploy", it only uses a single version
     - stage: deploy
       python: "2.7"
       deploy:
