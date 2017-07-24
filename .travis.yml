@@ -12,12 +12,13 @@ script: python setup.py test
 
 jobs:
   include:
-    - python: "2.6"
-    - python: "2.7"
-    - python: "3.4"
-    - python: "3.5"
-    - python: "3.6"
+    - stage: test
+      # by default, the python versions from the matrix defined above will all be
+      # used in this stage, so there will be 5 or so separate "test" stages that run
+      # in parallel, each with a different version. Then, because we specify a version
+      # below for "deploy", it only uses a single version
     - stage: deploy
+      python: "2.7"
       deploy:
         provider: pypi
         username: nonspecialist
