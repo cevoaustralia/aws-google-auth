@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<saml2p:Response xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol" Destination="https://signin.aws.amazon.com/saml" ID="_7c434be06bf79a781dae9e7ed0024679" IssueInstant="2017-07-24T10:31:41.125Z" Version="2.0">
+  <saml2:Issuer xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">https://accounts.google.com/o/saml2?idpid=abcd12345</saml2:Issuer>
+  <saml2p:Status>
+    <saml2p:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+  </saml2p:Status>
+  <saml2:Assertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" ID="_b1dd2c0469d905dfb1e10751d6feae95" IssueInstant="2017-07-24T10:31:41.125Z" Version="2.0">
+    <saml2:Issuer>https://accounts.google.com/o/saml2?idpid=abcd12345</saml2:Issuer>
+    <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+      <ds:SignedInfo>
+        <ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+        <ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+        <ds:Reference URI="#_b1dd2c0469d905dfb1e10751d6feae95">
+          <ds:Transforms>
+            <ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+            <ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+          </ds:Transforms>
+          <ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+          <ds:DigestValue>GbaJHVPpMT7JJEn+DtohU/tzd5b/BiZ9+It3sd2LB5Y=</ds:DigestValue>
+        </ds:Reference>
+      </ds:SignedInfo>
+      <ds:SignatureValue>dJxZmFNw+rY07AV7Ex1Kbvn9ZiGE4VKwYELwxkrejgEiVeAteyaw8rQfeHDF1UhZJ/2JTHWs3uk+
+VoWZcI1qcWO3HRjZ/jz7DXH/QGVIBYe447sr9o2RC2WfpjAYTDJ5rN5nPmrQKXxREfFzsZXJutcj
+iPGXDNCC4SsWmKDaqbpWiDKhw+wRxtGxEXB2Ny11dRL6sCIHCdq86H55EXcq2YqL5I/ryMcWt3L0
+SZ5B9aq80omhear/24M1HyL35dmxVUFODrYBxMQ+7Lw6/XUCA2k60MjcsHQW+BJZGwFJBL0HJywu
+bc10BKTA89jbXyBtdoagtWRhF6LJzjL5bImLGA==</ds:SignatureValue>
+      <ds:KeyInfo>
+        <ds:X509Data>
+          <ds:X509SubjectName>ST=California,C=US,OU=Google For Work,CN=Google,L=Mountain View,O=Google Inc.</ds:X509SubjectName>
+          <ds:X509Certificate>MIIDdDCCAlygAwIBAgIGAVXC/OcnMA0GCSqGSIb3DQEBCwUAMHsxFDASBgNVBAoTC0dvb2dsZSBJ
+bmMuMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MQ8wDQYDVQQDEwZHb29nbGUxGDAWBgNVBAsTD0dv
+b2dsZSBGb3IgV29yazELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWEwHhcNMTYwNzA3
+MDEzMzE5WhcNMjEwNzA2MDEzMzE5WjB7MRQwEgYDVQQKEwtHb29nbGUgSW5jLjEWMBQGA1UEBxMN
+TW91bnRhaW4gVmlldzEPMA0GA1UEAxMGR29vZ2xlMRgwFgYDVQQLEw9Hb29nbGUgRm9yIFdvcmsx
+CzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+MIIBCgKCAQEAhkv0Sr7ALfc58YrnLXzVGfTRg1T9xUfuZqhdu80BgHTfaJDLX66icHHRRoso/hho
+EIYo1pUQTq0DtgmqkLg9rAup3rR+pImfcHBC55+vMDoEf5t88H/i0qDn3r63PxeULRoFIkCX9aVG
+uUPDe2CHAxB1UXUxyDf7ZAdIQJLPJdOQlsNRleBBoek4vuo2ZHv+A2tbAhE8/rIoQlDvXSpCZ9P7
+m9TrFOb7tB4pHjJjESdmqcnEFc5zepAT8IuRAGZ1OkjJs74JUp+03do8scTMXzvVi4jefpyXhnoN
+C0da4OwPig7UmbDsrSCGbqz29UgxmGUmSnLchpkglw1eET5hTwIDAQABMA0GCSqGSIb3DQEBCwUA
+A4IBAQAA5WBtCPlaSIm1NIpKYd2x8qfeKc2YsxbAPukgUFaRDl1uxGw1HdzNzUp9X4JOF/futpw/
+yhmw9o1GHBukIdj0mJRt8O9szRdkJmx4EfbY5bTVzkQ7QGv9FI1LBD6z6KgJEOxEGpDbh2Z8uyW8
+HvxXgZgiyan53FauVJe+UuAkBy2ynJcVKK3+vUEISFXn1oh5SPOmi+2R4WKSgyTqOKpuowHHHg9u
+EbwwnXPMU4q3QLG1oDrp0ZvVuprvJaoWd5zIt/TYB3Hb5oEO7Imwx1n9K9QskYmFygR9rdJ6VS7L
+6/h6rcL/dKjm4pU0Dgk9h9Hi8ps7Mn+nRRhsWQbiD59n</ds:X509Certificate>
+        </ds:X509Data>
+      </ds:KeyInfo>
+    </ds:Signature>
+    <saml2:Subject>
+      <saml2:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified">first.last@example.com</saml2:NameID>
+      <saml2:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+        <saml2:SubjectConfirmationData NotOnOrAfter="2017-07-24T10:36:41.125Z" Recipient="https://signin.aws.amazon.com/saml"/>
+      </saml2:SubjectConfirmation>
+    </saml2:Subject>
+    <saml2:Conditions NotBefore="2017-07-24T10:26:41.125Z" NotOnOrAfter="2017-07-24T10:36:41.125Z">
+      <saml2:AudienceRestriction>
+        <saml2:Audience>https://signin.aws.amazon.com/saml</saml2:Audience>
+      </saml2:AudienceRestriction>
+    </saml2:Conditions>
+    <saml2:AttributeStatement>
+      <saml2:Attribute Name="https://aws.amazon.com/SAML/Attributes/RoleSessionName">
+        <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:anyType">first.last@example.com</saml2:AttributeValue>
+      </saml2:Attribute>
+      <saml2:Attribute Name="https://aws.amazon.com/SAML/Attributes/Role">
+        <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:anyType">arn:aws:iam::123456789012:role/admin,arn:aws:iam::123456789012:saml-provider/GoogleApps,</saml2:AttributeValue>
+        <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:anyType">arn:aws:iam::123456789012:role/read-only,arn:aws:iam::123456789012:saml-provider/GoogleApps,</saml2:AttributeValue>
+        <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:anyType">arn:aws:iam::123456789012:role/test,arn:aws:iam::123456789012:saml-provider/GoogleApps,</saml2:AttributeValue>
+      </saml2:Attribute>
+      <saml2:Attribute Name="https://aws.amazon.com/SAML/Attributes/SessionDuration">
+        <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:anyType">28800</saml2:AttributeValue>
+      </saml2:Attribute>
+    </saml2:AttributeStatement>
+    <saml2:AuthnStatement AuthnInstant="2017-07-24T10:31:38.000Z" SessionIndex="_b1dd2c0469d905dfb1e10751d6feae95">
+      <saml2:AuthnContext>
+        <saml2:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified</saml2:AuthnContextClassRef>
+      </saml2:AuthnContext>
+    </saml2:AuthnStatement>
+  </saml2:Assertion>
+</saml2p:Response>

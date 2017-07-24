@@ -167,7 +167,10 @@ class GoogleAuth:
         response_page = BeautifulSoup(sess.text, 'html.parser')
         challenge_url = sess.url.split("?")[0]
 
-        sms_token  = raw_input("Enter SMS token: G-") or None
+        try:
+            sms_token  = raw_input("Enter SMS token: G-") or None
+        except NameError:
+            sms_token = input("Enter SMS token: G-") or None
 
         payload = {
             'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
@@ -234,7 +237,10 @@ class GoogleAuth:
         challenge_url = sess.url.split("?")[0]
         challenge_id = challenge_url.split("totp/")[1]
 
-        mfa_token  = raw_input("MFA token: ") or None
+        try:
+            mfa_token  = raw_input("MFA token: ") or None
+        except NameError:
+            mfa_token  = input("MFA token: ") or None
 
         if not mfa_token:
             raise ValueError("MFA token required for % but none supplied" % self.username)
@@ -263,12 +269,29 @@ def pick_one(roles):
     while True:
         for i, role in enumerate(roles):
             print("[{:>3d}] {}".format(i+1, role))
-        choice = raw_input("Type the number (1 - {:d}) of the role to assume: ".format(len(roles)))
+
+        prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(roles))
+        try:
+            choice = raw_input(prompt)
+        except NameError:
+            choice = input(prompt)
+
         try:
             num = int(choice)
-            return roles.items()[num - 1]
+            return list(roles.items())[num - 1]
         except:
             print("Invalid choice, try again")
+
+def parse_roles(doc):
+    roles = {}
+    for x in doc.xpath('//*[@Name = "https://aws.amazon.com/SAML/Attributes/Role"]//text()'):
+        if "arn:aws:iam:" not in x:
+            continue
+
+        res = x.split(',')
+        roles[res[0]] = res[1]
+
+    return roles
 
 def cli():
     parser = argparse.ArgumentParser(
@@ -306,15 +329,24 @@ def cli():
     )
 
     if config.google_username is None:
-        config.google_username = raw_input("Google username: ")
+        try:
+            config.google_username = raw_input("Google username: ")
+        except NameError:
+            config.google_username = raw_input("Google username: ")
     else:
         print("Google username: " + config.google_username)
 
     if config.google_idp_id is None:
-        config.google_idp_id = raw_input("Google idp: ")
+        try:
+            config.google_idp_id = raw_input("Google idp: ")
+        except NameError:
+            config.google_idp_id = input("Google idp: ")
 
     if config.google_sp_id is None:
-        config.google_sp_id = raw_input("Google sp: ")
+        try:
+            config.google_sp_id = raw_input("Google sp: ")
+        except NameError:
+            config.google_sp_id = input("Google sp: ")
 
     passwd = getpass.getpass()
 
@@ -330,7 +362,7 @@ def cli():
 
     # Parse out the roles from the SAML so we can offer them as a choice
     doc = etree.fromstring(base64.b64decode(encoded_saml))
-    roles = dict([x.split(',') for x in doc.xpath('//*[@Name = "https://aws.amazon.com/SAML/Attributes/Role"]//text()')])
+    roles = parse_roles(doc)
 
     if not config.role_arn in roles:
         config.role_arn, config.provider = pick_one(roles)
