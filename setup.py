@@ -17,7 +17,9 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-VERSION = '0.0.8'
+version = {}
+with open(path.join(here, 'aws_google_auth/_version.py')) as fp:
+    exec(fp.read(), version)
 
 setup(
     name='aws-google-auth',
@@ -25,7 +27,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version=VERSION,
+    version=version['__version__'],
 
     description='Acquire AWS STS (temporary) credentials via Google Apps SAML Single Sign On',
     long_description=long_description,
@@ -33,7 +35,7 @@ setup(
     # The project's main homepage.
     url='https://github.com/cevoaustralia/aws-google-auth',
 
-    download_url='https://github.com/cevoaustralia/aws-google-auth/archive/%s.tar.gz' % VERSION,
+    download_url='https://github.com/cevoaustralia/aws-google-auth/archive/%s.tar.gz' % version['__version__'],
 
     # Author details
     author='Colin Panisset',
@@ -113,4 +115,7 @@ setup(
             'aws-google-auth=aws_google_auth:cli',
         ],
     },
+
+    test_suite='nose.collector',
+    tests_require=['nose'],
 )
