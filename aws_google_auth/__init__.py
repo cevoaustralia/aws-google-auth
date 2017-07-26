@@ -382,10 +382,7 @@ def cli():
     _store(config, token)
 
 def print_exports(token):
-    export_template = "export AWS_ACCESS_KEY_ID='{}' " +
-                      "AWS_SECRET_ACCESS_KEY='{}' " +
-                      "AWS_SESSION_TOKEN='{}' " +
-                      "AWS_SESSION_EXPIRATION='{}'"
+    export_template = "export AWS_ACCESS_KEY_ID='{}' AWS_SECRET_ACCESS_KEY='{}' AWS_SESSION_TOKEN='{}' AWS_SESSION_EXPIRATION='{}'"
 
     formatted = export_template.format(
         token['Credentials']['AccessKeyId'],
