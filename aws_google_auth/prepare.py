@@ -17,10 +17,11 @@ def get_prepared_config(
     def default_if_none(value, default):
         return value if value is not None else default
 
-    google_config.profile = default_if_none(profile, google_config.profile)
-
+    google_config.profile = profile
     _create_base_aws_cli_config_files_if_needed(google_config)
-    _load_google_config_from_stored_profile(google_config, google_config.profile)
+
+    if google_config.profile is not None:
+        _load_google_config_from_stored_profile(google_config, google_config.profile)
 
     google_config.region = default_if_none(region, google_config.region)
     google_config.google_username = default_if_none(google_username, google_config.google_username)
