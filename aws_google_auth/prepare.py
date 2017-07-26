@@ -18,9 +18,10 @@ def get_prepared_config(
         return value if value is not None else default
 
     google_config.profile = default_if_none(profile, google_config.profile)
-
     _create_base_aws_cli_config_files_if_needed(google_config)
-    _load_google_config_from_stored_profile(google_config, google_config.profile)
+
+    if google_config.profile is not None:
+        _load_google_config_from_stored_profile(google_config, google_config.profile)
 
     google_config.region = default_if_none(region, google_config.region)
     google_config.google_username = default_if_none(google_username, google_config.google_username)
@@ -42,7 +43,7 @@ def _create_google_default_config():
     config.region = session.get_config_variable('region') or 'eu-central-1'
 
     # aws cli profile to store config and access keys into
-    config.profile = session.profile or 'default'
+    config.profile = session.profile or None
 
     # output format: The AWS CLI output format that will be configured in the
     # adf profile (affects subsequent CLI calls)

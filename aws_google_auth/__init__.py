@@ -377,13 +377,21 @@ def cli():
                 DurationSeconds=config.duration)
 
     if config.profile is None:
-        print("export AWS_ACCESS_KEY_ID='{}'".format(token['Credentials']['AccessKeyId']))
-        print("export AWS_SECRET_ACCESS_KEY='{}'".format(token['Credentials']['SecretAccessKey']))
-        print("export AWS_SESSION_TOKEN='{}'".format(token['Credentials']['SessionToken']))
-        print("export AWS_SESSION_EXPIRATION='{}'".format(token['Credentials']['Expiration']))
+        print_exports(token)
 
     _store(config, token)
 
+def print_exports(token):
+    export_template = "export AWS_ACCESS_KEY_ID='{}' AWS_SECRET_ACCESS_KEY='{}' AWS_SESSION_TOKEN='{}' AWS_SESSION_EXPIRATION='{}'"
+
+    formatted = export_template.format(
+        token['Credentials']['AccessKeyId'],
+        token['Credentials']['SecretAccessKey'],
+        token['Credentials']['SessionToken'],
+        token['Credentials']['Expiration']
+    )
+
+    print(formatted)
 
 def _store(config, aws_session_token):
 
