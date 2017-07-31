@@ -312,8 +312,8 @@ def cli():
                         help='Credential duration ($DURATION)')
     parser.add_argument('-p', '--profile', default=PROFILE,
                         help='AWS profile ($AWS_PROFILE)')
-    parser.add_argument('-a', '--ask-role', default=ASK_ROLE, 
-                        help='Set true to always pick the role')
+    parser.add_argument('-a', '--ask-role', default=ASK_ROLE,
+                        ,action='store_true', help='Set true to always pick the role')
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s {version}'.format(version=_version.__version__))
 
