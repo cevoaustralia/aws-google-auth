@@ -96,6 +96,8 @@ Usage
                             Credential duration ($DURATION)
       -p PROFILE, --profile PROFILE
                             AWS profile ($AWS_PROFILE)
+      -a ASK_ROLE, --ask-role ASK_ROLE
+                            Set true to always pick the role
 
 
 Native Python
