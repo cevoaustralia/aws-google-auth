@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# Put the contents of this file in $HOME/.bash_aliases in order to get transparent
+# command-line integration with aws-google-auth
+
+# By default, if you have docker installed, these wrappers will use the docker image
+# If you want to override that, set USE_DOCKER to 'false' below
+AWS_GOOGLE_AUTH_USE_DOCKER=true
+
+# If you DO NOT want the Docker version to update your $HOME/.aws/credentials file, 
+# set AWS_GOOGLE_AUTH_DOCKER_UPDATE_PROFILE to 'false' below
+AWS_GOOGLE_AUTH_DOCKER_UPDATE_PROFILE=true
+
+_aws_google_auth_docker () {
+    local DOCKER_IMAGE_NAME=cevoaustralia/aws-google-auth
+    local AUTH_COMMAND=""
+    local DOCKER_OPTS=""
+    local PROFILE_OPTS=""
+
+    local DOCKER_IMG=$( docker images -q $DOCKER_IMAGE_NAME 2>/dev/null )
+    if [ -z "$DOCKER_IMG" ]; then
+        echo No local image for $DOCKER_IMAGE_NAME, pulling it ...
+        if ! docker pull $DOCKER_IMAGE_NAME >/dev/null; then
+            echo Cannot pull $DOCKER_IMAGE_NAME
+            return
+        fi
+    fi
+
+    if $AWS_GOOGLE_AUTH_DOCKER_UPDATE_PROFILE; then
+        local USERID=$( id -u )
+        local GID=$( id -g )
+        DOCKER_OPTS="$DOCKER_OPTS -v $HOME/.aws:/.aws -u $USERID:$GID"
+
+        # if a profile is specified, use it, otherwise force 'default'
+        PROFILE_OPTS="--profile default"
+        for arg in "$@"; do
+            if [ "x$arg" = "x--profile" ]; then
+                # a profile has been supplied already
+                PROFILE_OPTS=""
+            fi
+        done
+    fi
+
+    [ -n "$GOOGLE_USERNAME" ] && DOCKER_OPTS="$DOCKER_OPTS -e GOOGLE_USERNAME"
+    [ -n "$GOOGLE_IDP_ID" ] && DOCKER_OPTS="$DOCKER_OPTS -e GOOGLE_IDP_ID"
+    [ -n "$GOOGLE_SP_ID" ] && DOCKER_OPTS="$DOCKER_OPTS -e GOOGLE_SP_ID"
+    AUTH_COMMAND="docker run -it ${DOCKER_OPTS} ${DOCKER_IMAGE_NAME} ${PROFILE_OPTS}"
+
+    $AUTH_COMMAND "$@"
+    RES=$?
+    CONTAINER=$( docker ps -a --filter ancestor=$DOCKER_IMAGE_NAME --latest -q )
+    if [ $RES -eq 0 ]; then
+        RESULT=$( docker logs $CONTAINER | grep export | tr -d '\r' )
+        eval "$RESULT"
+    fi
+    docker rm $CONTAINER >/dev/null
+}
+
+_aws_google_auth_python () {
+    aws-google-auth "$@"
+}
+
+aws-google-auth () {
+    # Do we have Docker, and a local image to use?
+    if type -P docker >/dev/null && $AWS_GOOGLE_AUTH_USE_DOCKER; then
+        _aws_google_auth_docker "$@"
+    elif type -P aws-google-auth >/dev/null; then
+        _aws_google_auth_python "$@"
+    else
+        echo Docker is not installed, or you have told aws_google_auth not to use it
+        echo Python aws-google-auth is not installed either
+        echo Either install Docker, or install aws-google-auth via:
+        echo "    pip install --upgrade aws-google-auth"
+        return
+    fi
+
+}
+

@@ -106,6 +106,24 @@ Native Python
 
 *Note* You can skip prompts by either passing parameters to the command, or setting the specified Environment variables.
 
+Storage of profile credentials
+------------------------------
+
+Through the use of AWS profiles, using the ``-p`` or ``--profile`` flag,
+the ``aws-google-auth`` utility will store the supplied username, IDP
+and SP details in your ``./aws/config`` files.
+
+When re-authenticating using the same profile, the values will be
+remembered to speed up the re-authentication process.
+This enables an approach that enables you to enter your username, IPD
+and SP values once and then after only need to re-enter your password
+(and MFA if enabled).
+
+Creating an alias as below can be a quick and easy way to re-authenticate
+with a simple command shortcut.
+
+``alias aws-development='unset AWS_PROFILE; aws-google-auth -p aws-dev; export AWS_PROFILE=aws-dev'``
+
 Via Docker
 ~~~~~~~~~~~~~
 
@@ -122,19 +140,6 @@ value.
 If you have more than one role available to you, you'll be prompted to
 choose the role from a list; otherwise, if your credentials are correct,
 you'll just see the AWS keys printed on stdout.
-
-
-Storage of profile credentials
-------------------------------
-
-Through the use of AWS profiles, using the ``-p`` or ``--profile`` flag, the ``aws-google-auth`` utility will store the supplied username, IDP and SP details in your ``./aws/config`` files.
-
-When re-authenticating using the same profile, the values will be remembered to speed up the re-authentication process.
-This enables an approach that enables you to enter your username, IPD and SP values once and then after only need to re-enter your password (and MFA if enabled).
-
-Creating an alias as below can be a quick and easy way to re-authenticate with a simple command shortcut.
-
-``alias aws-development='unset AWS_PROFILE; aws-google-auth -p aws-dev; export AWS_PROFILE=aws-dev'``
 
 
 Notes on Authentication
