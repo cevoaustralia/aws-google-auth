@@ -337,7 +337,7 @@ def cli():
         try:
             config.google_username = raw_input("Google username: ")
         except NameError:
-            config.google_username = raw_input("Google username: ")
+            config.google_username = input("Google username: ")
     else:
         print("Google username: " + config.google_username)
 
