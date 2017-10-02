@@ -12,6 +12,8 @@ import json
 from bs4 import BeautifulSoup
 from lxml import etree
 import configparser
+from dateutil.parser import parse
+from datetime import tzinfo, timedelta, datetime
 
 from . import _version
 from . import prepare
@@ -23,6 +25,16 @@ USERNAME = os.getenv("GOOGLE_USERNAME")
 MAX_DURATION = 3600
 DURATION = int(os.getenv("DURATION") or MAX_DURATION)
 PROFILE = os.getenv("AWS_PROFILE")
+
+ZERO = timedelta(0)
+
+class UTC(tzinfo):
+  def utcoffset(self, dt):
+    return ZERO
+  def tzname(self, dt):
+    return "UTC"
+  def dst(self, dt):
+    return ZERO
 
 class GoogleAuth:
     def __init__(self, **kwargs):
@@ -410,11 +422,21 @@ def _store(config, aws_session_token):
             finally:
                 f.close()
 
+    def epoch_seconds(when):
+        utc = UTC()
+        epoch = datetime(1970, 1, 1, 0, 0, 0, 0, utc)
+        return (when - epoch).total_seconds() * 1000
+
     def credentials_storer(config_file, profile):
         config_file.set(profile, 'aws_access_key_id', aws_session_token['Credentials']['AccessKeyId'])
         config_file.set(profile, 'aws_secret_access_key', aws_session_token['Credentials']['SecretAccessKey'])
         config_file.set(profile, 'aws_session_token', aws_session_token['Credentials']['SessionToken'])
-        config_file.set(profile, 'aws_security_token', aws_session_token['Credentials']['SessionToken'])
+        config_file.set(profile, 'expiration', aws_session_token['Credentials']['Expiration'])
+
+        seconds = epoch_seconds(aws_session_token['Credentials']['Expiration'])
+        config_file.set(profile, 'expiration_timestamp', seconds)
+
+        config_file.set(profile, 'assumed_role_arn', aws_session_token['AssumedRoleUser']['Arn'])
 
     def config_storer(config_file, profile):
         config_file.set(profile, 'region', config.region)
