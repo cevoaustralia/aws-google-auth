@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Set some standard ANSI colours
+BLACK=30
+RED=31
+GREEN=32
+YELLOW=33
+BLUE=34
+MAGENTA=35
+CYAN=36
+WHITE=37
+
+# and control sequences
+FOREGROUND=30
+BACKGROUND=40
+
+RESET=0
+BOLD=1
+FAINT=2
+ITALIC=3
+UNDERLINE=4
+BLINK=5
+REVERSE=7
+
+n=$(date -u +%s)
+
+if [ $n -gt $AWS_EXPIRE ]; then
+    COLR=$( echo -e "\001\033[${RESET};${BLACK}m\002" )
+    RESET=$( echo -e "\001\033[${RESET}m\002" )
+else
+    x=$((AWS_EXPIRE - n))
+    h=$((x / 3600))
+    m=$(( (x - h * 3600) / 60 ))
+    s=$(( x - (h * 3600) - (m * 60) ))
+    COLR=$( echo -e "\001\033[${RESET};${GREEN}m\002" )
+    RST=$( echo -e "\001\033[${RESET}m\002" )
+    
+    if [ $h -lt 1 ]; then
+        if [ $m -lt 3 ]; then
+            COLR=$( echo -e "\001\033[${RESET};${REVERSE};${RED}m\002" )
+            RST=$( echo -e "\001\033[${RESET}m\002" )
+        elif [ $m -lt 7 ]; then
+            COLR=$( echo -e "\001\033[${RESET};${RED}m\002" )
+            RST=$( echo -e "\001\033[${RESET}m\002" )
+        elif [ $m -lt 15 ]; then
+            COLR=$( echo -e "\001\033[${RESET};${YELLOW}m\002" )
+            RST=$( echo -e "\001\033[${RESET}m\002" )
+        fi
+    fi
+fi
+
+printf "$COLR(%02d:%02d:%02d)$RST" $h $m $s
+
