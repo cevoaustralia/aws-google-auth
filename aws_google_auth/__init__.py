@@ -25,7 +25,7 @@ MAX_DURATION = 3600
 DURATION = int(os.getenv("DURATION") or MAX_DURATION)
 PROFILE = os.getenv("AWS_PROFILE")
 ASK_ROLE = os.getenv("AWS_ASK_ROLE") or False
-U2F_DISABLED = os.getenv("NO_U2F") or False
+U2F_DISABLED = os.getenv("U2F_DISABLED") or False
 
 
 UAGENT = "AWS Sign-in/%s (Cevo aws-google-auth)" % _version.__version__
