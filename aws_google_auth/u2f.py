@@ -40,7 +40,7 @@ def __appid_verifier__valid_facets(app_id, facets):
 appid.verifier.fetch_json = __appid_verifier__fetch_json
 appid.verifier.valid_facets = __appid_verifier__valid_facets
 
-def u2f_auth(challenge, facet):
+def u2f_auth(challenges, facet):
     devices = u2f.list_devices()
     for device in devices[:]:
         try:
@@ -53,16 +53,21 @@ def u2f_auth(challenge, facet):
         while devices:
             removed = []
             for device in devices:
-                try:
-                    return u2f.authenticate(device, json.dumps(challenge), facet)
-                except exc.APDUError as e:
-                    if e.code == APDU_USE_NOT_SATISFIED:
-                        if not prompted:
-                            print 'Touch the flashing U2F device to authenticate...'
-                            prompted = True
-                    else:
-                        removed.append(device)
-                except exc.DeviceError:
+                remove = True
+                for challenge in challenges:
+                    try:
+                        return u2f.authenticate(device, json.dumps(challenge), facet)
+                    except exc.APDUError as e:
+                        if e.code == APDU_USE_NOT_SATISFIED:
+                            remove = False
+                            if not prompted:
+                                print 'Touch the flashing U2F device to authenticate...'
+                                prompted = True
+                        else:
+                            pass
+                    except exc.DeviceError:
+                       pass
+                if remove:
                     removed.append(device)
             devices = [d for d in devices if d not in removed]
             for d in removed:

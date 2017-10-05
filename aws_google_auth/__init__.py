@@ -25,13 +25,17 @@ MAX_DURATION = 3600
 DURATION = int(os.getenv("DURATION") or MAX_DURATION)
 PROFILE = os.getenv("AWS_PROFILE")
 ASK_ROLE = os.getenv("AWS_ASK_ROLE") or False
+U2F_DISABLED = os.getenv("NO_U2F") or False
 
-try:
-    import u2f
 
-    UAGENT = "Mozilla/5.0 (X11; Fedora; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.79 Safari/537.36"
-except:
-    UAGENT = "AWS Sign-in/%s (Cevo aws-google-auth)" % _version.__version__
+UAGENT = "AWS Sign-in/%s (Cevo aws-google-auth)" % _version.__version__
+if not U2F_DISABLED:
+    try:
+        import u2f
+
+        UAGENT = "Mozilla/5.0 (X11; Fedora; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.79 Safari/537.36"
+    except ImportError:
+        print "Failed to import u2flib-host, u2f login unavailable"
 
 class GoogleAuth:
     def __init__(self, **kwargs):
@@ -184,11 +188,12 @@ class GoogleAuth:
         facet_url = urlparse.urlparse(challenge_url)
         facet = facet_url.scheme + "://" + facet_url.netloc
         app_id = challenges["appId"]
-        challenge = challenges["challenges"][0]
+        u2f_challenges = []
+        for c in challenges["challenges"]:
+            c["appId"] = app_id
+            u2f_challenges.append(c)
 
-        challenge["appId"] = app_id
-
-        auth_response = json.dumps(u2f.u2f_auth(challenge, facet))
+        auth_response = json.dumps(u2f.u2f_auth(u2f_challenges, facet))
 
         payload = {
             'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
