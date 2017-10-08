@@ -35,7 +35,7 @@ if not U2F_DISABLED:
 
         UAGENT = "Mozilla/5.0 (X11; Fedora; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.79 Safari/537.36"
     except ImportError:
-        print "Failed to import u2flib-host, u2f login unavailable"
+        print("Failed to import u2flib-host, u2f login unavailable")
 
 class GoogleAuth:
     def __init__(self, **kwargs):

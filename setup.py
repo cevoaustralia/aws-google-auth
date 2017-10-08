@@ -93,6 +93,9 @@ setup(
     #     'dev': ['check-manifest'],
     #     'test': ['coverage'],
     # },
+    extras_require={
+        'u2f': ['python-u2flib-host'],
+    },
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
