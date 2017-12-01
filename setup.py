@@ -29,7 +29,8 @@ setup(
     # https://packaging.python.org/en/latest/single_source_version.html
     version=version['__version__'],
 
-    description='Acquire AWS STS (temporary) credentials via Google Apps SAML Single Sign On',
+    description='Acquire AWS STS (temporary) credentials via Google Apps '
+                'SAML Single Sign On',
     long_description=long_description,
 
     # The project's main homepage.
@@ -83,7 +84,8 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     # install_requires=['peppercorn'],
-    install_requires=['boto3', 'lxml', 'requests', 'beautifulsoup4', 'configparser'],
+    install_requires=['boto3', 'lxml', 'requests', 'beautifulsoup4',
+        'configparser'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

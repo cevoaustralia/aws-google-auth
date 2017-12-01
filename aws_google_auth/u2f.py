@@ -14,6 +14,7 @@ https://www.gstatic.com/securitykey/origins.json which is not
 valid for the facet https://accounts.google.com)
 """
 
+
 def __appid_verifier__fetch_json(app_id):
     target = app_id
     while True:
@@ -29,16 +30,15 @@ def __appid_verifier__fetch_json(app_id):
             if resp.headers.get('FIDO-AppID-Redirect-Authorized') != \
                     'true':
                 raise ValueError('Redirect must set '
-                                    'FIDO-AppID-Redirect-Authorized: true')
+                                 'FIDO-AppID-Redirect-Authorized: true')
             target = resp.headers['location']
         else:
             return resp.json()
 
+
 def __appid_verifier__valid_facets(app_id, facets):
     return facets
 
-appid.verifier.fetch_json = __appid_verifier__fetch_json
-appid.verifier.valid_facets = __appid_verifier__valid_facets
 
 def u2f_auth(challenges, facet):
     devices = u2f.list_devices()
@@ -56,17 +56,19 @@ def u2f_auth(challenges, facet):
                 remove = True
                 for challenge in challenges:
                     try:
-                        return u2f.authenticate(device, json.dumps(challenge), facet)
+                        return u2f.authenticate(device, json.dumps(challenge),
+                                                facet)
                     except exc.APDUError as e:
                         if e.code == APDU_USE_NOT_SATISFIED:
                             remove = False
                             if not prompted:
-                                print('Touch the flashing U2F device to authenticate...')
+                                print('Touch the flashing U2F device to '
+                                      'authenticate...')
                                 prompted = True
                         else:
                             pass
                     except exc.DeviceError:
-                       pass
+                        pass
                 if remove:
                     removed.append(device)
             devices = [d for d in devices if d not in removed]
@@ -77,3 +79,7 @@ def u2f_auth(challenges, facet):
         for device in devices:
             device.close()
     raise RuntimeWarning("U2F Device Not Found")
+
+
+appid.verifier.fetch_json = __appid_verifier__fetch_json
+appid.verifier.valid_facets = __appid_verifier__valid_facets

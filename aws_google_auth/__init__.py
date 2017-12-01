@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from . import _version
+from . import prepare
+
 import argparse
 import getpass
 import base64
@@ -7,7 +10,6 @@ import boto3
 import os
 import sys
 import requests
-import time
 import json
 from bs4 import BeautifulSoup
 from lxml import etree
@@ -20,9 +22,6 @@ if sys.version_info >= (3, 0):
     import urllib.parse as urlparse
 else:
     import urlparse
-
-from . import _version
-from . import prepare
 
 REGION = os.getenv("AWS_DEFAULT_REGION") or "ap-southeast-2"
 IDP_ID = os.getenv("GOOGLE_IDP_ID")
@@ -39,7 +38,9 @@ if not U2F_DISABLED:
     try:
         from . import u2f
     except ImportError:
-        print("Failed to import U2F libraries, U2F login unavailable. Other methods can still continue.")
+        print("Failed to import U2F libraries, U2F login unavailable. Other "
+              "methods can still continue.")
+
 
 class GoogleAuth:
     def __init__(self, **kwargs):
@@ -142,7 +143,7 @@ class GoogleAuth:
         sess.raise_for_status()
         response_page = BeautifulSoup(sess.text, 'html.parser')
         error = response_page.find(class_='error-msg')
-        cap = response_page.find('input', {'name':'logincaptcha'})
+        cap = response_page.find('input', {'name': 'logincaptcha'})
 
         # Were there any errors logging in? Could be invalid username or password
         # There could also sometimes be a Captcha, which means Google thinks you,
@@ -176,7 +177,7 @@ class GoogleAuth:
 
         parsed = BeautifulSoup(self.session_state.text, 'html.parser')
         try:
-            saml_element = parsed.find('input', {'name':'SAMLResponse'}).get('value')
+            saml_element = parsed.find('input', {'name': 'SAMLResponse'}).get('value')
         except:
             raise StandardError('Could not find SAML response, check your credentials')
 
@@ -224,7 +225,7 @@ class GoogleAuth:
         challenge_url = sess.url.split("?")[0]
 
         try:
-            sms_token  = raw_input("Enter SMS token: G-") or None
+            sms_token = raw_input("Enter SMS token: G-") or None
         except NameError:
             sms_token = input("Enter SMS token: G-") or None
 
@@ -294,9 +295,9 @@ class GoogleAuth:
         challenge_id = challenge_url.split("totp/")[1]
 
         try:
-            mfa_token  = raw_input("MFA token: ") or None
+            mfa_token = raw_input("MFA token: ") or None
         except NameError:
-            mfa_token  = input("MFA token: ") or None
+            mfa_token = input("MFA token: ") or None
 
         if not mfa_token:
             raise ValueError("MFA token required for % but none supplied" % self.username)
@@ -321,6 +322,7 @@ class GoogleAuth:
 
         return sess
 
+
 def pick_one(roles):
     while True:
         for i, role in enumerate(roles):
@@ -338,6 +340,7 @@ def pick_one(roles):
         except:
             print("Invalid choice, try again")
 
+
 def parse_roles(doc):
     roles = {}
     for x in doc.xpath('//*[@Name = "https://aws.amazon.com/SAML/Attributes/Role"]//text()'):
@@ -348,6 +351,7 @@ def parse_roles(doc):
         roles[res[0]] = res[1]
 
     return roles
+
 
 def cli():
     parser = argparse.ArgumentParser(
@@ -424,7 +428,7 @@ def cli():
     doc = etree.fromstring(base64.b64decode(encoded_saml))
     roles = parse_roles(doc)
 
-    if (not config.role_arn in roles or config.ask_role):
+    if config.role_arn not in roles or config.ask_role:
         config.role_arn, config.provider = pick_one(roles)
 
     print("Assuming " + config.role_arn)
@@ -441,6 +445,7 @@ def cli():
 
     _store(config, token)
 
+
 def print_exports(token):
     export_template = "export AWS_ACCESS_KEY_ID='{}' AWS_SECRET_ACCESS_KEY='{}' AWS_SESSION_TOKEN='{}' AWS_SESSION_EXPIRATION='{}'"
 
@@ -452,6 +457,7 @@ def print_exports(token):
     )
 
     print(formatted)
+
 
 def _store(config, aws_session_token):
 

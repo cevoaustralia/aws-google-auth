@@ -1,4 +1,5 @@
 *.swp
 *.egg-info
+.eggs/
 *.pyc
 dist
