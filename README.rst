@@ -59,7 +59,11 @@ local system:
 
 .. code:: shell
 
+    # For basic installtion
     localhost$ sudo pip install aws-google-auth
+
+    # For installation with U2F support
+    localhost$ sudo pip install aws-google-auth[u2f]
 
 If you don't want to have the tool installed on your local system, or if
 you prefer to isolate changes, there is a Dockerfile provided, which you
@@ -125,6 +129,9 @@ If you have more than one role available to you, you'll be prompted to
 choose the role from a list; otherwise, if your credentials are correct,
 you'll just see the AWS keys printed on stdout.
 
+If you're using Docker with a U2F security key (Yubikey or similar) you won't
+be able to use Docker because of the Docker/Host isolation.
+
 
 Storage of profile credentials
 ------------------------------
@@ -166,11 +173,11 @@ by this tool are:
 | Google Prompt    | ``.../signin/challenge/az/2?...``   |
 |  (phone app)     |                                     |
 +------------------+-------------------------------------+
+| Security key     | ``.../signin/challenge/sk/...``     |
+|  (eg yubikey)    |                                     |
++------------------+-------------------------------------+
 | Backup code      | ``... (unknown yet) ...``           |
 |  (printed codes) |                                     |
-+------------------+-------------------------------------+
-| Security key     | ``... (unknown yet) ...``           |
-|  (eg yubikey)    |                                     |
 +------------------+-------------------------------------+
 
 Acknowledgements

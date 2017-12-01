@@ -13,6 +13,14 @@ from bs4 import BeautifulSoup
 from lxml import etree
 import configparser
 
+# In Python3, the libray 'urlparse' was renamed to 'urllib.parse'. For this to
+# maintain compatibility with both Python 2 and Python 3, the import must be
+# dynamically chosen based on the version detected.
+if sys.version_info >= (3, 0):
+    import urllib.parse as urlparse
+else:
+    import urlparse
+
 from . import _version
 from . import prepare
 
@@ -24,6 +32,14 @@ MAX_DURATION = 3600
 DURATION = int(os.getenv("DURATION") or MAX_DURATION)
 PROFILE = os.getenv("AWS_PROFILE")
 ASK_ROLE = os.getenv("AWS_ASK_ROLE") or False
+U2F_DISABLED = os.getenv("U2F_DISABLED") or False
+
+
+if not U2F_DISABLED:
+    try:
+        from . import u2f
+    except ImportError:
+        print("Failed to import U2F libraries, U2F login unavailable. Other methods can still continue.")
 
 class GoogleAuth:
     def __init__(self, **kwargs):
@@ -146,6 +162,8 @@ class GoogleAuth:
             sess = self.handle_sms(sess)
         elif "challenge/az/" in sess.url:
             sess = self.handle_prompt(sess)
+        elif "challenge/sk/" in sess.url:
+            sess = self.handle_sk(sess)
 
         # ... there are different URLs for backup codes (printed)
         # and security keys (eg yubikey) as well
@@ -163,6 +181,43 @@ class GoogleAuth:
             raise StandardError('Could not find SAML response, check your credentials')
 
         return saml_element
+
+    def handle_sk(self, sess):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        challenge_url = sess.url.split("?")[0]
+
+        challenges_txt = response_page.find('input', {'name': "id-challenge"}).get('value')
+        challenges = json.loads(challenges_txt)
+
+        facet_url = urlparse.urlparse(challenge_url)
+        facet = facet_url.scheme + "://" + facet_url.netloc
+        app_id = challenges["appId"]
+        u2f_challenges = []
+        for c in challenges["challenges"]:
+            c["appId"] = app_id
+            u2f_challenges.append(c)
+
+        auth_response = json.dumps(u2f.u2f_auth(u2f_challenges, facet))
+
+        payload = {
+            'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
+            'challengeType': response_page.find('input', {'name': 'challengeType'}).get('value'),
+            'continue': response_page.find('input', {'name': 'continue'}).get('value'),
+            'scc': response_page.find('input', {'name': 'scc'}).get('value'),
+            'sarp': response_page.find('input', {'name': 'sarp'}).get('value'),
+            'checkedDomains': response_page.find('input', {'name': 'checkedDomains'}).get('value'),
+            'pstMsg': response_page.find('input', {'name': 'pstMsg'}).get('value'),
+            'TL': response_page.find('input', {'name': 'TL'}).get('value'),
+            'gxf': response_page.find('input', {'name': 'gxf'}).get('value'),
+            'id-challenge': challenges_txt,
+            'id-assertion': auth_response,
+            'TrustDevice': 'on',
+        }
+
+        sess = self.session.post(challenge_url, data=payload)
+        sess.raise_for_status()
+
+        return sess
 
     def handle_sms(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
