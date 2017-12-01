@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 from lxml import etree
 import configparser
 
-# In Python3, the libray 'urlparse' was renamed to 'urllib.parse'. For this to
+# In Python3, the library 'urlparse' was renamed to 'urllib.parse'. For this to
 # maintain compatibility with both Python 2 and Python 3, the import must be
 # dynamically chosen based on the version detected.
 if sys.version_info >= (3, 0):

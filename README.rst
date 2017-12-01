@@ -129,8 +129,10 @@ If you have more than one role available to you, you'll be prompted to
 choose the role from a list; otherwise, if your credentials are correct,
 you'll just see the AWS keys printed on stdout.
 
-If you're using Docker with a U2F security key (Yubikey or similar) you won't
-be able to use Docker because of the Docker/Host isolation.
+If you have a U2F security key added to your Google account, you won't
+be able to use this via Docker; the Docker container will not be able to
+access any devices connected to the host ports. You will likely see the
+following error during runtime: "RuntimeWarning: U2F Device Not Found".
 
 
 Storage of profile credentials
