@@ -1,8 +1,9 @@
 from aws_google_auth import GoogleAuth
 
+
 def test_non_int():
     try:
-        foo = GoogleAuth(
+        GoogleAuth(
             username='foo',
             password='bar',
             idp_id='banana',
