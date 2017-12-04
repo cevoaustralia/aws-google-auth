@@ -14,6 +14,7 @@ import json
 from bs4 import BeautifulSoup
 from lxml import etree
 import configparser
+from tzlocal import get_localzone
 
 # In Python3, the library 'urlparse' was renamed to 'urllib.parse'. For this to
 # maintain compatibility with both Python 2 and Python 3, the import must be
@@ -440,6 +441,7 @@ def cli():
                 SAMLAssertion=encoded_saml,
                 DurationSeconds=config.duration)
 
+    print("Credentials Expiration: " + format(token['Credentials']['Expiration'].astimezone(get_localzone())))
     if config.profile is None:
         print_exports(token)
 
@@ -453,7 +455,7 @@ def print_exports(token):
         token['Credentials']['AccessKeyId'],
         token['Credentials']['SecretAccessKey'],
         token['Credentials']['SessionToken'],
-        token['Credentials']['Expiration']
+        token['Credentials']['Expiration'].strftime('%Y-%m-%dT%H:%M:%S%z')
     )
 
     print(formatted)
@@ -481,6 +483,7 @@ def _store(config, aws_session_token):
         config_file.set(profile, 'aws_secret_access_key', aws_session_token['Credentials']['SecretAccessKey'])
         config_file.set(profile, 'aws_session_token', aws_session_token['Credentials']['SessionToken'])
         config_file.set(profile, 'aws_security_token', aws_session_token['Credentials']['SessionToken'])
+        config_file.set(profile, 'aws_session_expiration', aws_session_token['Credentials']['Expiration'].strftime('%Y-%m-%dT%H:%M:%S%z'))
 
     def config_storer(config_file, profile):
         config_file.set(profile, 'region', config.region)
