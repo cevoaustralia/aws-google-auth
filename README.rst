@@ -81,6 +81,7 @@ Usage
     $ aws-google-auth --help
     usage: aws-google-auth [-h] [-v] [-u USERNAME] [-I IDP_ID] [-S SP_ID]
                            [-R REGION] [-d DURATION] [-p PROFILE]
+                           [-r AWS_ROLE_ARN ]
 
     Acquire temporary AWS credentials via Google SSO
 
@@ -102,6 +103,8 @@ Usage
                             AWS profile ($AWS_PROFILE)
       -a ASK_ROLE, --ask-role ASK_ROLE
                             Set true to always pick the role
+      -r AWS_ROLE_ARN, --role-arn AWS_ROLE_ARN
+                            The ARN of the role to assume
 
 
 Native Python
