@@ -4,12 +4,15 @@ aws-google-auth
 |travis-badge| |docker-badge| |pypi-badge|
 
 .. |travis-badge| image:: https://img.shields.io/travis/cevoaustralia/aws-google-auth.svg
+   :target: https://travis-ci.org/cevoaustralia/aws-google-auth
    :alt: Travis build badge
 
 .. |docker-badge| image:: https://img.shields.io/docker/build/cevoaustralia/aws-google-auth.svg
+   :target: https://hub.docker.com/r/cevoaustralia/aws-google-auth/
    :alt: Docker build status badge
 
 .. |pypi-badge| image:: https://img.shields.io/pypi/v/aws-google-auth.svg
+   :target: https://pypi.python.org/pypi/aws-google-auth/
    :alt: PyPI version badge
 
 This command-line tool allows you to acquire AWS temporary (STS)
@@ -59,7 +62,7 @@ local system:
 
 .. code:: shell
 
-    # For basic installtion
+    # For basic installation
     localhost$ sudo pip install aws-google-auth
 
     # For installation with U2F support
@@ -71,7 +74,11 @@ can build with:
 
 .. code:: shell
 
+    # Perform local build
     localhost$ cd ..../aws-google-auth && docker build -t aws-google-auth .
+
+    # Use the Docker Hub version
+    localhost$ docker pull cevoaustralia/aws-google-auth
 
 Usage
 -----
@@ -119,7 +126,7 @@ Via Docker
    and ``GOOGLE_SP_ID`` (see above under "Important Data" for how to
    find the last two; the first one is usually your email address)
 2. For Docker:
-   ``docker run -it -e GOOGLE_USERNAME -e GOOGLE_IDP_ID -e GOOGLE_SP_ID aws-google-auth``
+   ``docker run -it -e GOOGLE_USERNAME -e GOOGLE_IDP_ID -e GOOGLE_SP_ID cevoaustralia/aws-google-auth``
 
 You'll be prompted for your password. If you've set up an MFA token for
 your Google account, you'll also be prompted for the current token
@@ -182,7 +189,7 @@ by this tool are:
 |  (printed codes) |                                     |
 +------------------+-------------------------------------+
 
-Acknowledgements
+Acknowledgments
 ----------------
 
 This work is inspired by `keyme <https://github.com/wheniwork/keyme>`__
