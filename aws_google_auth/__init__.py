@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from . import _version
+from . import prepare
+
 import argparse
 import getpass
 import base64
@@ -7,14 +10,19 @@ import boto3
 import os
 import sys
 import requests
-import time
 import json
 from bs4 import BeautifulSoup
 from lxml import etree
 import configparser
+from tzlocal import get_localzone
 
-from . import _version
-from . import prepare
+# In Python3, the library 'urlparse' was renamed to 'urllib.parse'. For this to
+# maintain compatibility with both Python 2 and Python 3, the import must be
+# dynamically chosen based on the version detected.
+if sys.version_info >= (3, 0):
+    import urllib.parse as urlparse
+else:
+    import urlparse
 
 REGION = os.getenv("AWS_DEFAULT_REGION") or "ap-southeast-2"
 IDP_ID = os.getenv("GOOGLE_IDP_ID")
@@ -24,6 +32,16 @@ MAX_DURATION = 3600
 DURATION = int(os.getenv("DURATION") or MAX_DURATION)
 PROFILE = os.getenv("AWS_PROFILE")
 ASK_ROLE = os.getenv("AWS_ASK_ROLE") or False
+U2F_DISABLED = os.getenv("U2F_DISABLED") or False
+
+
+if not U2F_DISABLED:
+    try:
+        from . import u2f
+    except ImportError:
+        print("Failed to import U2F libraries, U2F login unavailable. Other "
+              "methods can still continue.")
+
 
 class GoogleAuth:
     def __init__(self, **kwargs):
@@ -126,7 +144,7 @@ class GoogleAuth:
         sess.raise_for_status()
         response_page = BeautifulSoup(sess.text, 'html.parser')
         error = response_page.find(class_='error-msg')
-        cap = response_page.find('input', {'name':'logincaptcha'})
+        cap = response_page.find('input', {'name': 'logincaptcha'})
 
         # Were there any errors logging in? Could be invalid username or password
         # There could also sometimes be a Captcha, which means Google thinks you,
@@ -146,6 +164,8 @@ class GoogleAuth:
             sess = self.handle_sms(sess)
         elif "challenge/az/" in sess.url:
             sess = self.handle_prompt(sess)
+        elif "challenge/sk/" in sess.url:
+            sess = self.handle_sk(sess)
 
         # ... there are different URLs for backup codes (printed)
         # and security keys (eg yubikey) as well
@@ -158,18 +178,55 @@ class GoogleAuth:
 
         parsed = BeautifulSoup(self.session_state.text, 'html.parser')
         try:
-            saml_element = parsed.find('input', {'name':'SAMLResponse'}).get('value')
+            saml_element = parsed.find('input', {'name': 'SAMLResponse'}).get('value')
         except:
             raise StandardError('Could not find SAML response, check your credentials')
 
         return saml_element
+
+    def handle_sk(self, sess):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        challenge_url = sess.url.split("?")[0]
+
+        challenges_txt = response_page.find('input', {'name': "id-challenge"}).get('value')
+        challenges = json.loads(challenges_txt)
+
+        facet_url = urlparse.urlparse(challenge_url)
+        facet = facet_url.scheme + "://" + facet_url.netloc
+        app_id = challenges["appId"]
+        u2f_challenges = []
+        for c in challenges["challenges"]:
+            c["appId"] = app_id
+            u2f_challenges.append(c)
+
+        auth_response = json.dumps(u2f.u2f_auth(u2f_challenges, facet))
+
+        payload = {
+            'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
+            'challengeType': response_page.find('input', {'name': 'challengeType'}).get('value'),
+            'continue': response_page.find('input', {'name': 'continue'}).get('value'),
+            'scc': response_page.find('input', {'name': 'scc'}).get('value'),
+            'sarp': response_page.find('input', {'name': 'sarp'}).get('value'),
+            'checkedDomains': response_page.find('input', {'name': 'checkedDomains'}).get('value'),
+            'pstMsg': response_page.find('input', {'name': 'pstMsg'}).get('value'),
+            'TL': response_page.find('input', {'name': 'TL'}).get('value'),
+            'gxf': response_page.find('input', {'name': 'gxf'}).get('value'),
+            'id-challenge': challenges_txt,
+            'id-assertion': auth_response,
+            'TrustDevice': 'on',
+        }
+
+        sess = self.session.post(challenge_url, data=payload)
+        sess.raise_for_status()
+
+        return sess
 
     def handle_sms(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
         challenge_url = sess.url.split("?")[0]
 
         try:
-            sms_token  = raw_input("Enter SMS token: G-") or None
+            sms_token = raw_input("Enter SMS token: G-") or None
         except NameError:
             sms_token = input("Enter SMS token: G-") or None
 
@@ -239,9 +296,9 @@ class GoogleAuth:
         challenge_id = challenge_url.split("totp/")[1]
 
         try:
-            mfa_token  = raw_input("MFA token: ") or None
+            mfa_token = raw_input("MFA token: ") or None
         except NameError:
-            mfa_token  = input("MFA token: ") or None
+            mfa_token = input("MFA token: ") or None
 
         if not mfa_token:
             raise ValueError("MFA token required for % but none supplied" % self.username)
@@ -266,6 +323,7 @@ class GoogleAuth:
 
         return sess
 
+
 def pick_one(roles):
     while True:
         for i, role in enumerate(roles):
@@ -282,6 +340,7 @@ def pick_one(roles):
             return list(roles.items())[num - 1]
         except:
             print("Invalid choice, try again")
+
 
 def parse_roles(doc):
     roles = {}
@@ -375,7 +434,7 @@ def cli(cli_args):
     doc = etree.fromstring(base64.b64decode(encoded_saml))
     roles = parse_roles(doc)
 
-    if (not config.role_arn in roles or config.ask_role):
+    if config.role_arn not in roles or config.ask_role:
         config.role_arn, config.provider = pick_one(roles)
 
     print("Assuming " + config.role_arn)
@@ -387,10 +446,12 @@ def cli(cli_args):
                 SAMLAssertion=encoded_saml,
                 DurationSeconds=config.duration)
 
+    print("Credentials Expiration: " + format(token['Credentials']['Expiration'].astimezone(get_localzone())))
     if config.profile is None:
         print_exports(token)
 
     _store(config, token)
+
 
 def print_exports(token):
     export_template = "export AWS_ACCESS_KEY_ID='{}' AWS_SECRET_ACCESS_KEY='{}' AWS_SESSION_TOKEN='{}' AWS_SESSION_EXPIRATION='{}'"
@@ -399,10 +460,11 @@ def print_exports(token):
         token['Credentials']['AccessKeyId'],
         token['Credentials']['SecretAccessKey'],
         token['Credentials']['SessionToken'],
-        token['Credentials']['Expiration']
+        token['Credentials']['Expiration'].strftime('%Y-%m-%dT%H:%M:%S%z')
     )
 
     print(formatted)
+
 
 def _store(config, aws_session_token):
 
@@ -426,6 +488,7 @@ def _store(config, aws_session_token):
         config_file.set(profile, 'aws_secret_access_key', aws_session_token['Credentials']['SecretAccessKey'])
         config_file.set(profile, 'aws_session_token', aws_session_token['Credentials']['SessionToken'])
         config_file.set(profile, 'aws_security_token', aws_session_token['Credentials']['SessionToken'])
+        config_file.set(profile, 'aws_session_expiration', aws_session_token['Credentials']['Expiration'].strftime('%Y-%m-%dT%H:%M:%S%z'))
 
     def config_storer(config_file, profile):
         config_file.set(profile, 'region', config.region)
