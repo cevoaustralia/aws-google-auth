@@ -122,5 +122,5 @@ setup(
     },
 
     test_suite='nose.collector',
-    tests_require=['nose', 'mock', 'python-coveralls'],
+    tests_require=['nose', 'mock'],
 )
