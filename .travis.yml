@@ -9,6 +9,8 @@ sudo: false
 dist: trusty
 install:
   - pip install .
+  - pip install coverage
+  - pip install coveralls
 script:
   - coverage run --source=aws_google_auth/ setup.py test
 after_success:
