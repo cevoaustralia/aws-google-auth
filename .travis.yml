@@ -12,7 +12,9 @@ install:
   - pip install coverage
   - pip install coveralls
 script:
-  - coverage run --source=aws_google_auth/ setup.py test
+  - coverage run --source=aws_google_auth/ --omit=aws_google_auth/tests/* setup.py test
+after_script:
+  - coverage report
 after_success:
   - coveralls
 
