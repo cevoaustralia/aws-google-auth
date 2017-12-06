@@ -7,8 +7,12 @@ python:
   - "3.6"
 sudo: false
 dist: trusty
-install: pip install .
-script: python setup.py test
+install:
+  - pip install .
+script:
+  - coverage run --source=aws_google_auth/ setup.py test
+after_success:
+  - coveralls
 
 # These are the stages. There's always a default 'Test' stage, where one of each
 # is automatically run for every python version in the matrix defined above

@@ -294,7 +294,8 @@ def parse_roles(doc):
 
     return roles
 
-def cli():
+
+def parse_args(args):
     parser = argparse.ArgumentParser(
         prog="aws-google-auth",
         description="Acquire temporary AWS credentials via Google SSO",
@@ -317,7 +318,12 @@ def cli():
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s {version}'.format(version=_version.__version__))
 
-    args = parser.parse_args()
+    return parser.parse_args(args)
+
+
+def cli(cli_args):
+
+    args = parse_args(args=cli_args)
 
     if args.duration > MAX_DURATION:
         print("Duration must be less than or equal to %d" % MAX_DURATION)
@@ -440,6 +446,6 @@ def _store(config, aws_session_token):
 
 if __name__ == '__main__':
     try:
-        cli()
+        cli(sys.argv[1:])
     except KeyboardInterrupt:
         pass
