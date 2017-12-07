@@ -17,7 +17,8 @@ def get_prepared_config(
     def default_if_none(value, default):
         return value if value is not None else default
 
-    google_config.profile = default_if_none(profile, google_config.profile)
+    # If no profile is specified, default to "sts" so we don't clobber the user's default.
+    google_config.profile = default_if_none(profile, google_config.profile) or "sts"
     _create_base_aws_cli_config_files_if_needed(google_config)
 
     if google_config.profile is not None:

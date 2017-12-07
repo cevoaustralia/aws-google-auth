@@ -447,9 +447,8 @@ def cli(cli_args):
                 DurationSeconds=config.duration)
 
     print("Credentials Expiration: " + format(token['Credentials']['Expiration'].astimezone(get_localzone())))
-    if config.profile is None:
-        print_exports(token)
 
+    print_exports(token)
     _store(config, token)
 
 
@@ -469,6 +468,7 @@ def print_exports(token):
 def _store(config, aws_session_token):
 
     def store_config(profile, config_location, storer):
+        assert (profile is not None), "Can not store config/credentials if the AWS_PROFILE is None."
         config_file = configparser.RawConfigParser()
         config_file.read(config_location)
 
