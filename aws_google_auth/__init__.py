@@ -442,10 +442,12 @@ def cli():
                 DurationSeconds=config.duration)
 
     print("Credentials Expiration: " + format(token['Credentials']['Expiration'].astimezone(get_localzone())))
-    if config.profile is None:
-        print_exports(token)
-    else:
-        _store(config, token)
+
+    # Set the profile to "default" if none set.
+    config.profile = config.profile or "default"
+
+    print_exports(token)
+    _store(config, token)
 
 
 def print_exports(token):
