@@ -109,7 +109,7 @@ Usage
       -d DURATION, --duration DURATION
                             Credential duration ($DURATION)
       -p PROFILE, --profile PROFILE
-                            AWS profile ($AWS_PROFILE)
+                            AWS profile ($AWS_PROFILE) (defaults to 'sts')
       -a ASK_ROLE, --ask-role ASK_ROLE
                             Set true to always pick the role
 

@@ -371,7 +371,7 @@ def parse_args(args):
     parser.add_argument('-d', '--duration', type=int, default=DURATION,
                         help='Credential duration ($DURATION)')
     parser.add_argument('-p', '--profile', default=PROFILE,
-                        help='AWS profile ($AWS_PROFILE)')
+                        help='AWS profile ($AWS_PROFILE) (defaults to \'sts\')')
     parser.add_argument('-a', '--ask-role', default=ASK_ROLE,
                         action='store_true', help='Set true to always pick the role')
     parser.add_argument('-V', '--version', action='version',
