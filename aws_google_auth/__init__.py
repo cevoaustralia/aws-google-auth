@@ -380,6 +380,13 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
+def main():
+    try:
+        cli(sys.argv[1:])
+    except KeyboardInterrupt:
+        pass
+
+
 def cli(cli_args):
 
     args = parse_args(args=cli_args)
@@ -508,7 +515,4 @@ def _store(config, aws_session_token):
 
 
 if __name__ == '__main__':
-    try:
-        cli(sys.argv[1:])
-    except KeyboardInterrupt:
-        pass
+    main()
