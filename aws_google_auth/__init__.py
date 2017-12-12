@@ -4,25 +4,32 @@ from . import _version
 from . import prepare
 
 import argparse
-import getpass
 import base64
 import boto3
-import os
-import sys
-import requests
+import configparser
+import getpass
 import json
+import logging
+import os
+import requests
+import sys
 from bs4 import BeautifulSoup
 from lxml import etree
-import configparser
 from tzlocal import get_localzone
+
+# Set up the Logger.
+logging.basicConfig(level=logging.WARN)
+logger = logging.getLogger(__name__)
 
 # In Python3, the library 'urlparse' was renamed to 'urllib.parse'. For this to
 # maintain compatibility with both Python 2 and Python 3, the import must be
 # dynamically chosen based on the version detected.
 if sys.version_info >= (3, 0):
     import urllib.parse as urlparse
+    logger.debug("Detected Python 3, using urllib.parse.")
 else:
     import urlparse
+    logger.debug("Detected Python 2, using urllib.")
 
 REGION = os.getenv("AWS_DEFAULT_REGION") or "ap-southeast-2"
 IDP_ID = os.getenv("GOOGLE_IDP_ID")
@@ -35,12 +42,15 @@ ASK_ROLE = os.getenv("AWS_ASK_ROLE") or False
 U2F_DISABLED = os.getenv("U2F_DISABLED") or False
 
 
-if not U2F_DISABLED:
+if U2F_DISABLED:
+    logger.info("User has disabled U2F support.")
+else:
     try:
         from . import u2f
+        logger.debug("Successfully imported u2f module.")
     except ImportError:
-        print("Failed to import U2F libraries, U2F login unavailable. Other "
-              "methods can still continue.")
+        logger.warn("Failed to import U2F libraries, U2F login unavailable."
+                    " Other methods can still continue.")
 
 
 class GoogleAuth:
@@ -54,7 +64,8 @@ class GoogleAuth:
         sp_id: Google's assigned SP identifier for your AWS SAML app
 
         Optionally, you can supply:
-        duration_seconds: number of seconds for the session to be active (max 3600)
+        duration_seconds: number of seconds for the session to be active
+        (max 3600)
         """
 
         self.version = _version.__version__
@@ -67,11 +78,12 @@ class GoogleAuth:
             try:
                 self.duration_seconds = int(kwargs.pop('duration_seconds'))
             except ValueError as e:
+                logger.error("Value Error: duration_seconds must be an integer.")
                 raise ValueError('GoogleAuth: duration_seconds must be an integer')
 
-            if self.duration_seconds > 3600:
-                print("WARNING: Clamping duration_seconds to 3600")
-                self.duration_seconds = 3600
+            if self.duration_seconds > MAX_DURATION:
+                logger.warn("Clamping duration_seconds to {}.".format(MAX_DURATION))
+                self.duration_seconds = MAX_DURATION
 
         self.login_url = "https://accounts.google.com/o/saml2/initsso?idpid=%s&spid=%s&forceauthn=false" % (self.idp_id, self.sp_id)
 
@@ -146,25 +158,37 @@ class GoogleAuth:
         error = response_page.find(class_='error-msg')
         cap = response_page.find('input', {'name': 'logincaptcha'})
 
-        # Were there any errors logging in? Could be invalid username or password
-        # There could also sometimes be a Captcha, which means Google thinks you,
-        # or someone using the same outbound IP address as you, is a bot.
+        # Were there any errors logging in? Could be invalid username or
+        # password. There could also sometimes be a Captcha, which means
+        # Google thinks you (or someone using the same outbound IP address
+        # as you) is a bot.
         if error is not None:
+            logger.error("Google returned an error: {}".format(error))
             raise ValueError('Invalid username or password')
 
         if cap is not None:
+            logger.error("User has a CAPTCHA on their account. This requires"
+                         "them to log into a web browser to remove it.")
             raise ValueError('Captcha Required. Manually Login to remove this.')
 
         self.session.headers['Referer'] = sess.url
 
         # Was there an MFA challenge?
         if "challenge/totp/" in sess.url:
+            logger.info("Google has requested we use a TOTP challenge."
+                        " Moving forward with that method.")
             sess = self.handle_totp(sess)
         elif "challenge/ipp/" in sess.url:
+            logger.info("Google has requested we use a SMS challenge."
+                        " Moving forward with that method.")
             sess = self.handle_sms(sess)
         elif "challenge/az/" in sess.url:
+            logger.info("Google has requested we use a Prompt challenge."
+                        " Moving forward with that method.")
             sess = self.handle_prompt(sess)
         elif "challenge/sk/" in sess.url:
+            logger.info("Google has requested we use a Security Key challenge."
+                        " Moving forward with that method.")
             sess = self.handle_sk(sess)
 
         # ... there are different URLs for backup codes (printed)
@@ -330,10 +354,7 @@ def pick_one(roles):
             print("[{:>3d}] {}".format(i+1, role))
 
         prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(roles))
-        try:
-            choice = raw_input(prompt)
-        except NameError:
-            choice = input(prompt)
+        choice = get_user_input(prompt)
 
         try:
             num = int(choice)
@@ -380,6 +401,18 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
+# A Python 2 and Python 3 compatible input wrapper
+def get_user_input(prompt):
+    try:
+        user_input = raw_input(prompt)
+        logger.debug("User replied with '{}'".format(user_input))
+        return user_input
+    except NameError:
+        user_input = input(prompt)
+        logger.debug("User replied with '{}'".format(user_input))
+        return user_input
+
+
 def main():
     try:
         cli(sys.argv[1:])
@@ -392,7 +425,8 @@ def cli(cli_args):
     args = parse_args(args=cli_args)
 
     if args.duration > MAX_DURATION:
-        print("Duration must be less than or equal to %d" % MAX_DURATION)
+        logger.warn("Duration must be less than or equal to {}, setting to "
+                    "{}.".format(MAX_DURATION, MAX_DURATION))
         args.duration = MAX_DURATION
 
     config = prepare.get_prepared_config(
@@ -406,26 +440,17 @@ def cli(cli_args):
     )
 
     if config.google_username is None:
-        try:
-            config.google_username = raw_input("Google username: ")
-        except NameError:
-            config.google_username = input("Google username: ")
+        config.google_username = get_user_input("Google Username: ")
     else:
         print("Google username: " + config.google_username)
 
     if config.google_idp_id is None:
-        try:
-            config.google_idp_id = raw_input("Google idp: ")
-        except NameError:
-            config.google_idp_id = input("Google idp: ")
+        config.google_idp_id = get_user_input("Google IDP: ")
 
     if config.google_sp_id is None:
-        try:
-            config.google_sp_id = raw_input("Google sp: ")
-        except NameError:
-            config.google_sp_id = input("Google sp: ")
+        config.google_sp_id = get_user_input("Google SP: ")
 
-    passwd = getpass.getpass()
+    passwd = getpass.getpass("Google Password: ")
 
     google = GoogleAuth(
         username=config.google_username,
@@ -434,17 +459,33 @@ def cli(cli_args):
         sp_id=config.google_sp_id
     )
 
+    # ------------------ #
+    # GET SAML ASSERTION #
+    # ------------------ #
+
     google.do_login()
     encoded_saml = google.parse_saml()
+    base64_decoded_saml = base64.b64decode(encoded_saml)
+    logger.info("Obtained SAML Assertion from Google.")
+    logger.debug("SAML Assertion: {}".format(base64_decoded_saml))
 
     # Parse out the roles from the SAML so we can offer them as a choice
-    doc = etree.fromstring(base64.b64decode(encoded_saml))
+    doc = etree.fromstring(base64_decoded_saml)
     roles = parse_roles(doc)
 
-    if config.role_arn not in roles or config.ask_role:
-        config.role_arn, config.provider = pick_one(roles)
+    # ----------------------------------- #
+    # ASSUME AWS ROLE, GET AWS STS TOKENS #
+    # ----------------------------------- #
 
-    print("Assuming " + config.role_arn)
+    if config.role_arn not in roles:
+        logger.warn("The Role ARN specified is not in the list of available roles.")
+        config.role_arn, config.provider = pick_one(roles)
+    elif config.ask_role:
+        logger.debug("ASK_ROLE detected, forcing prompt.")
+        config.role_arn, config.provider = pick_one(roles)
+    else:
+        logger.info("Do not need to prompt user, going forward with role "
+                    "having ARN '{}'".format(config.role_arn))
 
     sts = boto3.client('sts', region_name=config.region)
     token = sts.assume_role_with_saml(
@@ -452,8 +493,15 @@ def cli(cli_args):
                 PrincipalArn=config.provider,
                 SAMLAssertion=encoded_saml,
                 DurationSeconds=config.duration)
+    logger.debug("Token acquired: {}".format(token))
+    logger.info("Obtained STS Tokens from AWS.")
 
     print("Credentials Expiration: " + format(token['Credentials']['Expiration'].astimezone(get_localzone())))
+
+    # --------------------------------------------------------- #
+    # WRITE CREDENTIALS TO ~/.AWS/CREDENTIALS AND ~/.AWS/CONFIG #
+    # --------------------------------------------------------- #
+
     if config.profile is None:
         print_exports(token)
 
