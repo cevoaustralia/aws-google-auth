@@ -11,7 +11,8 @@ def get_prepared_config(
         google_idp_id,
         google_sp_id,
         duration,
-        ask_role
+        ask_role,
+        role_arn
 ):
 
     def default_if_none(value, default):
@@ -30,6 +31,7 @@ def get_prepared_config(
     google_config.google_sp_id = default_if_none(google_sp_id, google_config.google_sp_id)
     google_config.duration = default_if_none(duration, google_config.duration)
     google_config.ask_role = default_if_none(ask_role, google_config.ask_role)
+    google_config.role_arn = default_if_none(role_arn, google_config.role_arn)
 
     return google_config
 

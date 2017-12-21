@@ -117,7 +117,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'aws-google-auth=aws_google_auth:cli',
+            'aws-google-auth=aws_google_auth:main',
         ],
     },
 

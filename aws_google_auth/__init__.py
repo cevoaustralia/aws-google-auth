@@ -32,6 +32,7 @@ MAX_DURATION = 3600
 DURATION = int(os.getenv("DURATION") or MAX_DURATION)
 PROFILE = os.getenv("AWS_PROFILE")
 ASK_ROLE = os.getenv("AWS_ASK_ROLE") or False
+ROLE_ARN = os.getenv("AWS_ROLE_ARN")
 U2F_DISABLED = os.getenv("U2F_DISABLED") or False
 
 
@@ -371,13 +372,22 @@ def parse_args(args):
     parser.add_argument('-d', '--duration', type=int, default=DURATION,
                         help='Credential duration ($DURATION)')
     parser.add_argument('-p', '--profile', default=PROFILE,
-                        help='AWS profile (defaults to value of $AWS_PROFILE, then falls back to \'sts\')')
-    parser.add_argument('-a', '--ask-role', default=ASK_ROLE,
+                        help='AWS profile ($AWS_PROFILE)')
+    role_group = parser.add_mutually_exclusive_group()
+    role_group.add_argument('-a', '--ask-role', default=ASK_ROLE,
                         action='store_true', help='Set true to always pick the role')
+    role_group.add_argument('-r', '--role-arn', help='The ARN of the role to assume')
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s {version}'.format(version=_version.__version__))
 
     return parser.parse_args(args)
+
+
+def main():
+    try:
+        cli(sys.argv[1:])
+    except KeyboardInterrupt:
+        pass
 
 
 def cli(cli_args):
@@ -395,7 +405,8 @@ def cli(cli_args):
         args.idp_id,
         args.sp_id,
         args.duration,
-        args.ask_role
+        args.ask_role,
+        args.role_arn
     )
 
     if config.google_username is None:
@@ -434,7 +445,9 @@ def cli(cli_args):
     doc = etree.fromstring(base64.b64decode(encoded_saml))
     roles = parse_roles(doc)
 
-    if config.role_arn not in roles or config.ask_role:
+    if config.role_arn in roles and not config.ask_role:
+        config.provider = roles[config.role_arn]
+    else:
         config.role_arn, config.provider = pick_one(roles)
 
     print("Assuming " + config.role_arn)
@@ -508,7 +521,4 @@ def _store(config, aws_session_token):
 
 
 if __name__ == '__main__':
-    try:
-        cli(sys.argv[1:])
-    except KeyboardInterrupt:
-        pass
+    main()
