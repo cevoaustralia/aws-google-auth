@@ -45,6 +45,7 @@ class TestPersistConfig(unittest.TestCase):
         default_sp_id = 'default_sp_id'
         default_duration = 'default_duration'
         ask_role = 'default_ask_role'
+        role_arn = 'default_role_arn'
 
         # when configuration is prepared for not existing profile
         config = prepare.get_prepared_config(
@@ -54,7 +55,8 @@ class TestPersistConfig(unittest.TestCase):
             default_idp_id,
             default_sp_id,
             default_duration,
-            ask_role
+            ask_role,
+            role_arn
         )
 
         # then the supplied values are merged with the defaults
@@ -65,6 +67,7 @@ class TestPersistConfig(unittest.TestCase):
         self.assertEquals(config.google_sp_id, default_sp_id)
         self.assertEquals(config.duration, default_duration)
         self.assertEquals(config.ask_role, ask_role)
+        self.assertEquals(config.role_arn, role_arn)
 
     def test_when_there_is_no_profile_use_default_values(self):
 
@@ -82,6 +85,7 @@ class TestPersistConfig(unittest.TestCase):
         sp_id = None
         duration = None
         ask_role = None
+        role_arn = None
 
         # when configuration is prepared for not existing profile
         config = prepare.get_prepared_config(
@@ -91,7 +95,8 @@ class TestPersistConfig(unittest.TestCase):
             idp_id,
             sp_id,
             duration,
-            ask_role
+            ask_role,
+            role_arn
         )
 
         # then the defaults are returned
@@ -103,3 +108,4 @@ class TestPersistConfig(unittest.TestCase):
         self.assertEquals(config.duration, 3600)
         self.assertEquals(config.ask_role, False)
         self.assertEquals(config.profile, "sts")
+        self.assertEquals(config.role_arn, None)
