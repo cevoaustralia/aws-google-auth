@@ -107,5 +107,5 @@ class TestPersistConfig(unittest.TestCase):
         self.assertEquals(config.google_sp_id, None)
         self.assertEquals(config.duration, 3600)
         self.assertEquals(config.ask_role, False)
-        self.assertEquals(config.profile, None)
+        self.assertEquals(config.profile, "sts")
         self.assertEquals(config.role_arn, None)
