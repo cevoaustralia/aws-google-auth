@@ -372,10 +372,11 @@ def parse_args(args):
     parser.add_argument('-d', '--duration', type=int, default=DURATION,
                         help='Credential duration ($DURATION)')
     parser.add_argument('-p', '--profile', default=PROFILE,
-                        help='AWS profile ($AWS_PROFILE)')
+                        help='AWS profile (defaults to value of $AWS_PROFILE, then falls back to \'sts\')')
+
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', default=ASK_ROLE,
-                        action='store_true', help='Set true to always pick the role')
+                            action='store_true', help='Set true to always pick the role')
     role_group.add_argument('-r', '--role-arn', help='The ARN of the role to assume')
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s {version}'.format(version=_version.__version__))
