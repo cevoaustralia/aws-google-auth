@@ -1,6 +1,5 @@
 language: python
 python:
-  - "2.6"
   - "2.7"
   - "3.4"
   - "3.5"
@@ -11,7 +10,9 @@ install:
   - pip install .
   - pip install coverage
   - pip install coveralls
+  - pip install flake8
 script:
+  - flake8 --ignore E501,E722
   - coverage run --source=aws_google_auth/ --omit=aws_google_auth/tests/* setup.py test
 after_script:
   - coverage report

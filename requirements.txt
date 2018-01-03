@@ -1,6 +1,5 @@
-
+beautifulsoup4
 boto3
+configparser
 lxml
 requests
-beautifulsoup4
-configparser
