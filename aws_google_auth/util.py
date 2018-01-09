@@ -34,3 +34,13 @@ class Util:
                 os.utime(file_name, None)
             finally:
                 f.close()
+
+    # This method returns <VALUE> if (and only if) value is not none, and
+    # <DEFAULT> otherwise. This differs from "value or default" because it
+    # won't override "False" or "0", values that could be valid defaults.
+    @staticmethod
+    def default_if_none(value, default):
+        if value is not None:
+            return value
+        else:
+            return default

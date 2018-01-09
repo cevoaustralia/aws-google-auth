@@ -25,6 +25,7 @@ def parse_args(args):
     parser.add_argument('-R', '--region', help='AWS region endpoint ($AWS_DEFAULT_REGION)')
     parser.add_argument('-d', '--duration', type=int, help='Credential duration ($DURATION)')
     parser.add_argument('-p', '--profile', help='AWS profile (defaults to value of $AWS_PROFILE, then falls back to \'sts\')')
+    parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
 
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
@@ -45,30 +46,55 @@ def main():
 def cli(cli_args):
     args = parse_args(args=cli_args)
 
-    # If there are arguments that are needed, we can interactively prompt the
-    # user. Note, the environment variables here are also in configuration.py
-    # but we need to check the presense here to know if we need to prompot.
-    # This is intentional. Any non-required params just get passed directly in,
-    # as we don't care if they were set or not.
-    username = args.username or os.getenv("GOOGLE_USERNAME") or util.Util.get_input("Google username: ")
-    idp_id = args.idp_id or os.getenv("GOOGLE_IDP_ID") or util.Util.get_input("Google IDP ID: ")
-    sp_id = args.sp_id or os.getenv("GOOGLE_SP_ID") or util.Util.get_input("Google SP ID: ")
+    # Create a blank configuration object (has the defaults pre-filled)
+    config = configuration.Configuration()
+
+    # Have the configuration update itself via the ~/.aws/config on disk.
+    config.read(args.profile)
+
+    # Override anything found in the environment variables. We only want to
+    # override "None" values (not "False" or "0"), hence why we're not using
+    # the common "or" method here. Instead we use util.Util.default_if_none().
+    config.ask_role = util.Util.default_if_none(os.getenv('AWS_ASK_ROLE'), config.ask_role)
+    config.duration = util.Util.default_if_none(os.getenv('DURATION'), config.duration)
+    config.idp_id = util.Util.default_if_none(os.getenv('GOOGLE_IDP_ID'), config.idp_id)
+    config.profile = util.Util.default_if_none(os.getenv('AWS_PROFILE'), config.profile)
+    config.region = util.Util.default_if_none(os.getenv('AWS_DEFAULT_REGION'), config.region)
+    config.role_arn = util.Util.default_if_none(os.getenv('AWS_ROLE_ARN'), config.role_arn)
+    config.sp_id = util.Util.default_if_none(os.getenv('GOOGLE_SP_ID'), config.sp_id)
+    config.u2f_disabled = util.Util.default_if_none(os.getenv('U2F_DISABLED'), config.u2f_disabled)
+    config.username = util.Util.default_if_none(os.getenv('GOOGLE_USERNAME'), config.username)
+
+    # Override the options (again, as this is higher priority) with anything
+    # the user specified on the command line.
+    config.ask_role = util.Util.default_if_none(args.ask_role, config.ask_role)
+    config.duration = util.Util.default_if_none(args.duration, config.duration)
+    config.idp_id = util.Util.default_if_none(args.idp_id, config.idp_id)
+    config.profile = util.Util.default_if_none(args.profile, config.profile)
+    config.region = util.Util.default_if_none(args.region, config.region)
+    config.role_arn = util.Util.default_if_none(args.role_arn, config.role_arn)
+    config.sp_id = util.Util.default_if_none(args.sp_id, config.sp_id)
+    config.u2f_disabled = util.Util.default_if_none(args.disable_u2f, config.u2f_disabled)
+    config.username = util.Util.default_if_none(args.username, config.username)
+
+    # There are some mandatory arguments. Make sure the user supplied them.
+    if config.username is None:
+        config.username = util.Util.get_input("Google username: ")
+    if config.idp_id is None:
+        config.idp_id = util.Util.get_input("Google IDP ID: ")
+    if config.sp_id is None:
+        config.sp_id = util.Util.get_input("Google SP ID: ")
 
     # There is no way (intentional) to pass in the password via the command
     # line nor environment variables. This prevents password leakage.
-    passwd = getpass.getpass("Google Password: ")
+    config.password = getpass.getpass("Google Password: ")
 
-    # Build the configuration with all the user's options
-    config = configuration.Configuration(
-        ask_role=args.ask_role,
-        duration=args.duration,
-        idp_id=idp_id,
-        profile=args.profile,
-        region=args.region,
-        role_arn=args.role_arn,
-        sp_id=sp_id,
-        username=username,
-        password=passwd)
+    # Validate Options
+    try:
+        config.raise_if_invalid()
+    except AssertionError:
+        print("Invalid parameters.")
+        raise
 
     google_client = google.Google(config)
     google_client.do_login()
