@@ -107,18 +107,19 @@ class Configuration:
         with open(self.config_file, 'w+') as f:
             config_parser.write(f)
 
-        # Write to the credentials file
-        credentials_parser = configparser.RawConfigParser()
-        credentials_parser.read(self.credentials_file)
-        if not credentials_parser.has_section(self.profile):
-            credentials_parser.add_section(self.profile)
-        credentials_parser.set(self.profile, 'aws_access_key_id', amazon_object.access_key_id)
-        credentials_parser.set(self.profile, 'aws_secret_access_key', amazon_object.secret_access_key)
-        credentials_parser.set(self.profile, 'aws_security_token', amazon_object.session_token)
-        credentials_parser.set(self.profile, 'aws_session_expiration', amazon_object.expiration.strftime('%Y-%m-%dT%H:%M:%S%z'))
-        credentials_parser.set(self.profile, 'aws_session_token', amazon_object.session_token)
-        with open(self.credentials_file, 'w+') as f:
-            credentials_parser.write(f)
+        # Write to the credentials file (only if we have credentials)
+        if amazon_object is not None:
+            credentials_parser = configparser.RawConfigParser()
+            credentials_parser.read(self.credentials_file)
+            if not credentials_parser.has_section(self.profile):
+                credentials_parser.add_section(self.profile)
+            credentials_parser.set(self.profile, 'aws_access_key_id', amazon_object.access_key_id)
+            credentials_parser.set(self.profile, 'aws_secret_access_key', amazon_object.secret_access_key)
+            credentials_parser.set(self.profile, 'aws_security_token', amazon_object.session_token)
+            credentials_parser.set(self.profile, 'aws_session_expiration', amazon_object.expiration.strftime('%Y-%m-%dT%H:%M:%S%z'))
+            credentials_parser.set(self.profile, 'aws_session_token', amazon_object.session_token)
+            with open(self.credentials_file, 'w+') as f:
+                credentials_parser.write(f)
 
     # Read from the configuration file and override ALL values currently stored
     # in the configuration object. As this is potentially destructive, it's
