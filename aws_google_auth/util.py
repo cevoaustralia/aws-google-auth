@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import sys
 
 
 class Util:
@@ -44,3 +45,10 @@ class Util:
             return value
         else:
             return default
+
+    @staticmethod
+    def unicode_to_string_if_needed(string):
+        if sys.version_info >= (3, 0):
+            return string
+        else:
+            return string.encode('utf-8')
