@@ -43,7 +43,7 @@ def exit_if_unsupported_python():
         print("")
         print("For debugging, it appears you're running: '{}'.".format(str(sys.version_info)))
         print("")
-        print("See https://github.com/cevoaustralia/aws-google-auth/pull/38 for more information.")
+        print("See https://github.com/cevoaustralia/aws-google-auth/issues/41 for more information.")
         sys.exit(1)
 
 
