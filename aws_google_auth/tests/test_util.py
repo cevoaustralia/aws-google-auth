@@ -27,3 +27,6 @@ class TestUtilMethods(unittest.TestCase):
             self.assertIn("unicode", str(value_unicode.__class__))
             self.assertEqual(util.Util.unicode_to_string_if_needed(value_unicode), value_string)
             self.assertEqual(util.Util.unicode_to_string_if_needed(value_string), value_string)
+        self.assertEqual(util.Util.unicode_to_string_if_needed(None), None)
+        self.assertEqual(util.Util.unicode_to_string_if_needed(1234), 1234)
+        self.assertEqual(util.Util.unicode_to_string_if_needed("nop"), "nop")
