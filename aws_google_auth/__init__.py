@@ -36,6 +36,17 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
+def exit_if_unsupported_python():
+    if sys.version_info[0] == 2 and sys.version_info[1] < 7:
+        print("aws-google-auth requires Python 2.7 or higher. Please consider upgrading. Support "
+              "for Python 2.6 and lower was dropped because this tool's dependencies dropped support.")
+        print("")
+        print("For debugging, it appears you're running: '{}'.".format(str(sys.version_info)))
+        print("")
+        print("See https://github.com/cevoaustralia/aws-google-auth/pull/38 for more information.")
+        sys.exit(1)
+
+
 def main():
     try:
         cli(sys.argv[1:])
@@ -44,6 +55,8 @@ def main():
 
 
 def cli(cli_args):
+    exit_if_unsupported_python()
+
     args = parse_args(args=cli_args)
 
     # Create a blank configuration object (has the defaults pre-filled)
