@@ -40,17 +40,17 @@ class TestConfigurationPersistence(unittest.TestCase):
 
     def test_creating_new_profile(self):
         self.assertTrue(self.config_parser.has_section(self.c.profile))
-        self.assertEqual(self.config_parser[self.c.profile].get('aws_google_auth_idp_id'), self.c.idp_id)
-        self.assertEqual(self.config_parser[self.c.profile].get('aws_google_auth_role_arn'), self.c.role_arn)
-        self.assertEqual(self.config_parser[self.c.profile].get('aws_google_auth_sp_id'), self.c.sp_id)
-        self.assertEqual(self.config_parser[self.c.profile].get('aws_google_auth_username'), self.c.username)
+        self.assertEqual(self.config_parser[self.c.profile].get('google_config.idp_id'), self.c.idp_id)
+        self.assertEqual(self.config_parser[self.c.profile].get('google_config.role_arn'), self.c.role_arn)
+        self.assertEqual(self.config_parser[self.c.profile].get('google_config.sp_id'), self.c.sp_id)
+        self.assertEqual(self.config_parser[self.c.profile].get('google_config.username'), self.c.username)
         self.assertEqual(self.config_parser[self.c.profile].get('region'), self.c.region)
-        self.assertEqual(self.config_parser[self.c.profile].getboolean('aws_google_auth_ask_role'), self.c.ask_role)
-        self.assertEqual(self.config_parser[self.c.profile].getboolean('aws_google_auth_u2f_disabled'), self.c.u2f_disabled)
-        self.assertEqual(self.config_parser[self.c.profile].getint('aws_google_auth_duration'), self.c.duration)
+        self.assertEqual(self.config_parser[self.c.profile].getboolean('google_config.ask_role'), self.c.ask_role)
+        self.assertEqual(self.config_parser[self.c.profile].getboolean('google_config.u2f_disabled'), self.c.u2f_disabled)
+        self.assertEqual(self.config_parser[self.c.profile].getint('google_config.duration'), self.c.duration)
 
     def test_password_not_written(self):
-        self.assertIsNone(self.config_parser[self.c.profile].get('aws_google_auth_password', None))
+        self.assertIsNone(self.config_parser[self.c.profile].get('google_config.password', None))
         self.assertIsNone(self.config_parser[self.c.profile].get('password', None))
 
         # Check for password leakage (It didn't get written in an odd way)
