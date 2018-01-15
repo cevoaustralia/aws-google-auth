@@ -111,11 +111,11 @@ class Configuration:
         config_parser.set(profile, 'region', self.region)
         config_parser.set(profile, 'google_config.ask_role', self.ask_role)
         config_parser.set(profile, 'google_config.duration', self.duration)
-        config_parser.set(profile, 'google_config.idp_id', self.idp_id)
+        config_parser.set(profile, 'google_config.google_idp_id', self.idp_id)
         config_parser.set(profile, 'google_config.role_arn', self.role_arn)
-        config_parser.set(profile, 'google_config.sp_id', self.sp_id)
+        config_parser.set(profile, 'google_config.google_sp_id', self.sp_id)
         config_parser.set(profile, 'google_config.u2f_disabled', self.u2f_disabled)
-        config_parser.set(profile, 'google_config.username', self.username)
+        config_parser.set(profile, 'google_config.google_username', self.username)
         with open(self.config_file, 'w+') as f:
             config_parser.write(f)
 
@@ -148,9 +148,9 @@ class Configuration:
             self.profile = profile
             self.ask_role = util.Util.default_if_none(config_parser[profile_string].getboolean('google_config.ask_role', None), self.ask_role)
             self.duration = util.Util.default_if_none(config_parser[profile_string].getint('google_config.duration', None), self.duration)
-            self.idp_id = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.idp_id', None), self.idp_id))
+            self.idp_id = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.google_idp_id', None), self.idp_id))
             self.region = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('region', None), self.region))
             self.role_arn = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.role_arn', None), self.role_arn))
-            self.sp_id = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.sp_id', None), self.sp_id))
+            self.sp_id = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.google_sp_id', None), self.sp_id))
             self.u2f_disabled = util.Util.default_if_none(config_parser[profile_string].getboolean('google_config.u2f_disabled', None), self.u2f_disabled)
-            self.username = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.username', None), self.username))
+            self.username = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.google_username', None), self.username))
