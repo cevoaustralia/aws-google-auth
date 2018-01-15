@@ -25,6 +25,17 @@ class Configuration:
         self.u2f_disabled = False
         self.username = None
 
+    # For the "~/.aws/config" file, we use the format "[profile testing]"
+    # for the 'testing' profile. The credential file will just be "[testing]"
+    # in that case. See https://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html
+    # for more information.
+    @staticmethod
+    def config_profile(profile):
+        if str(profile).lower() == 'default':
+            return profile
+        else:
+            return 'profile {}'.format(str(profile))
+
     @property
     def max_duration(self):
         return 3600
@@ -45,8 +56,8 @@ class Configuration:
             if not os.path.exists(file):
                 util.Util.touch(file)
 
-    # Will raise exeptions if the configuration is invalid, otherwise returns
-    # None. Use this at any point to validate the conifguration is in a good
+    # Will raise exceptions if the configuration is invalid, otherwise returns
+    # None. Use this at any point to validate the configuration is in a good
     # state.
     def raise_if_invalid(self):
         # ask_role
@@ -92,18 +103,19 @@ class Configuration:
         assert (self.profile is not None), "Can not store config/credentials if the AWS_PROFILE is None."
 
         # Write to the configuration file
+        profile = Configuration.config_profile(self.profile)
         config_parser = configparser.RawConfigParser()
         config_parser.read(self.config_file)
-        if not config_parser.has_section(self.profile):
-            config_parser.add_section(self.profile)
-        config_parser.set(self.profile, 'region', self.region)
-        config_parser.set(self.profile, 'google_config.ask_role', self.ask_role)
-        config_parser.set(self.profile, 'google_config.duration', self.duration)
-        config_parser.set(self.profile, 'google_config.idp_id', self.idp_id)
-        config_parser.set(self.profile, 'google_config.role_arn', self.role_arn)
-        config_parser.set(self.profile, 'google_config.sp_id', self.sp_id)
-        config_parser.set(self.profile, 'google_config.u2f_disabled', self.u2f_disabled)
-        config_parser.set(self.profile, 'google_config.username', self.username)
+        if not config_parser.has_section(profile):
+            config_parser.add_section(profile)
+        config_parser.set(profile, 'region', self.region)
+        config_parser.set(profile, 'google_config.ask_role', self.ask_role)
+        config_parser.set(profile, 'google_config.duration', self.duration)
+        config_parser.set(profile, 'google_config.idp_id', self.idp_id)
+        config_parser.set(profile, 'google_config.role_arn', self.role_arn)
+        config_parser.set(profile, 'google_config.sp_id', self.sp_id)
+        config_parser.set(profile, 'google_config.u2f_disabled', self.u2f_disabled)
+        config_parser.set(profile, 'google_config.username', self.username)
         with open(self.config_file, 'w+') as f:
             config_parser.write(f)
 
@@ -129,16 +141,16 @@ class Configuration:
     def read(self, profile):
         self.ensure_config_files_exist()
 
-        profile = util.Util.default_if_none(profile, self.profile)
+        profile_string = Configuration.config_profile(profile)
         config_parser = configparser.RawConfigParser()
         config_parser.read(self.config_file)
-        if config_parser.has_section(profile):
+        if config_parser.has_section(profile_string):
             self.profile = profile
-            self.ask_role = util.Util.default_if_none(config_parser[profile].getboolean('google_config.ask_role', None), self.ask_role)
-            self.duration = util.Util.default_if_none(config_parser[profile].getint('google_config.duration', None), self.duration)
-            self.idp_id = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile].get('google_config.idp_id', None), self.idp_id))
-            self.region = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile].get('region', None), self.region))
-            self.role_arn = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile].get('google_config.role_arn', None), self.role_arn))
-            self.sp_id = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile].get('google_config.sp_id', None), self.sp_id))
-            self.u2f_disabled = util.Util.default_if_none(config_parser[profile].getboolean('google_config.u2f_disabled', None), self.u2f_disabled)
-            self.username = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile].get('google_config.username', None), self.username))
+            self.ask_role = util.Util.default_if_none(config_parser[profile_string].getboolean('google_config.ask_role', None), self.ask_role)
+            self.duration = util.Util.default_if_none(config_parser[profile_string].getint('google_config.duration', None), self.duration)
+            self.idp_id = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.idp_id', None), self.idp_id))
+            self.region = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('region', None), self.region))
+            self.role_arn = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.role_arn', None), self.role_arn))
+            self.sp_id = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.sp_id', None), self.sp_id))
+            self.u2f_disabled = util.Util.default_if_none(config_parser[profile_string].getboolean('google_config.u2f_disabled', None), self.u2f_disabled)
+            self.username = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.username', None), self.username))

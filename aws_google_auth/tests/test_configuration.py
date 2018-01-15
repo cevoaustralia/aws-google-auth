@@ -6,6 +6,13 @@ from aws_google_auth import configuration
 
 class TestConfigurationMethods(unittest.TestCase):
 
+    def test_config_profile(self):
+        self.assertEqual(configuration.Configuration.config_profile('default'), 'default')
+        self.assertEqual(configuration.Configuration.config_profile('DEFAULT'), 'DEFAULT')
+        self.assertEqual(configuration.Configuration.config_profile('testing'), 'profile testing')
+        self.assertEqual(configuration.Configuration.config_profile(None), 'profile None')
+        self.assertEqual(configuration.Configuration.config_profile(123456), 'profile 123456')
+
     def test_duration_invalid_values(self):
         # Duration must be an integer
         c = configuration.Configuration()
