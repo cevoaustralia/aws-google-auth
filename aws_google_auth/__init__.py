@@ -65,30 +65,62 @@ def cli(cli_args):
     # Have the configuration update itself via the ~/.aws/config on disk.
     config.read(args.profile)
 
-    # Override anything found in the environment variables. We only want to
-    # override "None" values (not "False" or "0"), hence why we're not using
-    # the common "or" method here. Instead we use util.Util.default_if_none().
-    config.ask_role = util.Util.default_if_none(os.getenv('AWS_ASK_ROLE'), config.ask_role)
-    config.duration = util.Util.default_if_none(os.getenv('DURATION'), config.duration)
-    config.idp_id = util.Util.default_if_none(os.getenv('GOOGLE_IDP_ID'), config.idp_id)
-    config.profile = util.Util.default_if_none(os.getenv('AWS_PROFILE'), config.profile)
-    config.region = util.Util.default_if_none(os.getenv('AWS_DEFAULT_REGION'), config.region)
-    config.role_arn = util.Util.default_if_none(os.getenv('AWS_ROLE_ARN'), config.role_arn)
-    config.sp_id = util.Util.default_if_none(os.getenv('GOOGLE_SP_ID'), config.sp_id)
-    config.u2f_disabled = util.Util.default_if_none(os.getenv('U2F_DISABLED'), config.u2f_disabled)
-    config.username = util.Util.default_if_none(os.getenv('GOOGLE_USERNAME'), config.username)
+    # Shortening Convenience functions
+    coalesce = util.Util.coalesce
 
-    # Override the options (again, as this is higher priority) with anything
-    # the user specified on the command line.
-    config.ask_role = util.Util.default_if_none(args.ask_role, config.ask_role)
-    config.duration = util.Util.default_if_none(args.duration, config.duration)
-    config.idp_id = util.Util.default_if_none(args.idp_id, config.idp_id)
-    config.profile = util.Util.default_if_none(args.profile, config.profile)
-    config.region = util.Util.default_if_none(args.region, config.region)
-    config.role_arn = util.Util.default_if_none(args.role_arn, config.role_arn)
-    config.sp_id = util.Util.default_if_none(args.sp_id, config.sp_id)
-    config.u2f_disabled = util.Util.default_if_none(args.disable_u2f, config.u2f_disabled)
-    config.username = util.Util.default_if_none(args.username, config.username)
+    # Ask Role (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.ask_role = coalesce(
+        args.ask_role,
+        os.getenv('AWS_ASK_ROLE'),
+        config.ask_role)
+
+    # Duration (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.duration = coalesce(
+        args.duration,
+        os.getenv('DURATION'),
+        config.duration)
+
+    # IDP ID (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.idp_id = coalesce(
+        args.idp_id,
+        os.getenv('GOOGLE_IDP_ID'),
+        config.idp_id)
+
+    # Profile (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.profile = coalesce(
+        args.profile,
+        os.getenv('AWS_PROFILE'),
+        config.profile)
+
+    # Region (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.region = coalesce(
+        args.region,
+        os.getenv('AWS_DEFAULT_REGION'),
+        config.region)
+
+    # ROLE ARN (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.role_arn = coalesce(
+        args.role_arn,
+        os.getenv('AWS_ROLE_ARN'),
+        config.role_arn)
+
+    # SP ID (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.sp_id = coalesce(
+        args.sp_id,
+        os.getenv('GOOGLE_SP_ID'),
+        config.sp_id)
+
+    # U2F Disabled (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.u2f_disabled = coalesce(
+        args.disable_u2f,
+        os.getenv('U2F_DISABLED'),
+        config.u2f_disabled)
+
+    # Username (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.username = coalesce(
+        args.username,
+        os.getenv('GOOGLE_USERNAME'),
+        config.username)
 
     # There are some mandatory arguments. Make sure the user supplied them.
     if config.username is None:

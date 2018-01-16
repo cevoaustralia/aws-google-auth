@@ -141,16 +141,45 @@ class Configuration:
     def read(self, profile):
         self.ensure_config_files_exist()
 
+        # Shortening Convenience functions
+        coalesce = util.Util.coalesce
+        unicode_to_string = util.Util.unicode_to_string_if_needed
+
         profile_string = Configuration.config_profile(profile)
         config_parser = configparser.RawConfigParser()
         config_parser.read(self.config_file)
+
         if config_parser.has_section(profile_string):
             self.profile = profile
-            self.ask_role = util.Util.default_if_none(config_parser[profile_string].getboolean('google_config.ask_role', None), self.ask_role)
-            self.duration = util.Util.default_if_none(config_parser[profile_string].getint('google_config.duration', None), self.duration)
-            self.idp_id = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.google_idp_id', None), self.idp_id))
-            self.region = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('region', None), self.region))
-            self.role_arn = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.role_arn', None), self.role_arn))
-            self.sp_id = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.google_sp_id', None), self.sp_id))
-            self.u2f_disabled = util.Util.default_if_none(config_parser[profile_string].getboolean('google_config.u2f_disabled', None), self.u2f_disabled)
-            self.username = util.Util.unicode_to_string_if_needed(util.Util.default_if_none(config_parser[profile_string].get('google_config.google_username', None), self.username))
+
+            # Ask Role
+            read_ask_role = config_parser[profile_string].getboolean('google_config.ask_role', None)
+            self.ask_role = coalesce(read_ask_role, self.ask_role)
+
+            # Duration
+            read_duration = config_parser[profile_string].getint('google_config.duration', None)
+            self.duration = coalesce(read_duration, self.duration)
+
+            # IDP ID
+            read_idp_id = unicode_to_string(config_parser[profile_string].get('google_config.google_idp_id', None))
+            self.idp_id = coalesce(read_idp_id, self.idp_id)
+
+            # Region
+            read_region = unicode_to_string(config_parser[profile_string].get('region', None))
+            self.region = coalesce(read_region, self.region)
+
+            # Role ARN
+            read_role_arn = unicode_to_string(config_parser[profile_string].get('google_config.role_arn', None))
+            self.role_arn = coalesce(read_role_arn, self.role_arn)
+
+            # SP ID
+            read_sp_id = unicode_to_string(config_parser[profile_string].get('google_config.google_sp_id', None))
+            self.sp_id = coalesce(read_sp_id, self.sp_id)
+
+            # U2F Disabled
+            read_u2f_disabled = config_parser[profile_string].getboolean('google_config.u2f_disabled', None)
+            self.u2f_disabled = coalesce(read_u2f_disabled, self.u2f_disabled)
+
+            # Username
+            read_username = unicode_to_string(config_parser[profile_string].get('google_config.google_username', None))
+            self.username = coalesce(read_username, self.username)

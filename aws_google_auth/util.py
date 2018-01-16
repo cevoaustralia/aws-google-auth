@@ -35,15 +35,15 @@ class Util:
             finally:
                 f.close()
 
-    # This method returns <VALUE> if (and only if) value is not none, and
-    # <DEFAULT> otherwise. This differs from "value or default" because it
-    # won't override "False" or "0", values that could be valid defaults.
+    # This method returns the first non-None value in args. If all values are
+    # None, None will be returned. If there are no arguments, None will be
+    # returned.
     @staticmethod
-    def default_if_none(value, default):
-        if value is not None:
-            return value
-        else:
-            return default
+    def coalesce(*args):
+        for number, value in enumerate(args):
+            if value is not None:
+                return value
+        return None
 
     @staticmethod
     def unicode_to_string_if_needed(object):
