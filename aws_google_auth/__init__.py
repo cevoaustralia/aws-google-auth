@@ -57,16 +57,24 @@ def main():
 def cli(cli_args):
     exit_if_unsupported_python()
 
+    # Shortening Convenience functions
+    coalesce = util.Util.coalesce
+
     args = parse_args(args=cli_args)
 
     # Create a blank configuration object (has the defaults pre-filled)
     config = configuration.Configuration()
 
     # Have the configuration update itself via the ~/.aws/config on disk.
-    config.read(args.profile)
+    # Profile (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.profile = coalesce(
+        args.profile,
+        os.getenv('AWS_PROFILE'),
+        config.profile)
 
-    # Shortening Convenience functions
-    coalesce = util.Util.coalesce
+    # Now that we've established the profile, we can read the configuration and
+    # fill in all the other variables.
+    config.read(config.profile)
 
     # Ask Role (Option priority = ARGS, ENV_VAR, DEFAULT)
     config.ask_role = coalesce(
@@ -85,12 +93,6 @@ def cli(cli_args):
         args.idp_id,
         os.getenv('GOOGLE_IDP_ID'),
         config.idp_id)
-
-    # Profile (Option priority = ARGS, ENV_VAR, DEFAULT)
-    config.profile = coalesce(
-        args.profile,
-        os.getenv('AWS_PROFILE'),
-        config.profile)
 
     # Region (Option priority = ARGS, ENV_VAR, DEFAULT)
     config.region = coalesce(
