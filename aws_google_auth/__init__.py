@@ -175,13 +175,13 @@ class GoogleAuth:
 
     def parse_saml(self):
         if self.session_state is None:
-            raise StandardError('You must use do_login() before calling parse_saml()')
+            raise Exception('You must use do_login() before calling parse_saml()')
 
         parsed = BeautifulSoup(self.session_state.text, 'html.parser')
         try:
             saml_element = parsed.find('input', {'name': 'SAMLResponse'}).get('value')
         except:
-            raise StandardError('Could not find SAML response, check your credentials')
+            raise Exception('Could not find SAML response, check your credentials')
 
         return saml_element
 
