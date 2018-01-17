@@ -159,7 +159,15 @@ This enables an approach that enables you to enter your username, IPD and SP val
 
 Creating an alias as below can be a quick and easy way to re-authenticate with a simple command shortcut.
 
-``alias aws-development='unset AWS_PROFILE; aws-google-auth -p aws-dev; export AWS_PROFILE=aws-dev'``
+```
+alias aws-development='unset AWS_PROFILE; aws-google-auth -I $GOOGLE_IDP_ID -S $GOOGLE_SP_ID -u $USERNAME -p aws-dev ; export AWS_PROFILE=aws-dev'
+```
+
+Or, if you've alredy established a profile with valid cached values:
+
+```
+alias aws-development='unset AWS_PROFILE; aws-google-auth -p aws-dev ; export AWS_PROFILE=aws-dev'
+```
 
 
 Notes on Authentication
