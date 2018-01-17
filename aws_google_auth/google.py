@@ -175,7 +175,7 @@ class Google:
             try:
                 auth_response = json.dumps(u2f.u2f_auth(u2f_challenges, facet))
                 break
-            except RuntimeWarning as e:
+            except RuntimeWarning:
                 print("No U2F device found. {} attempts remaining.".format(attempts_remaining))
                 if attempts_remaining <= 0:
                     break
