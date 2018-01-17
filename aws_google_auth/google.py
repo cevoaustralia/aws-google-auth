@@ -168,7 +168,24 @@ class Google:
             c["appId"] = app_id
             u2f_challenges.append(c)
 
-        auth_response = json.dumps(u2f.u2f_auth(u2f_challenges, facet))
+        # Prompt the user up to attempts_remaining times to insert their U2F device.
+        attempts_remaining = 5
+        auth_response = None
+        while True:
+            try:
+                auth_response = json.dumps(u2f.u2f_auth(u2f_challenges, facet))
+                break
+            except RuntimeWarning as e:
+                print("No U2F device found. {} attempts remaining.".format(attempts_remaining))
+                if attempts_remaining <= 0:
+                    break
+                else:
+                    input("Insert your U2F device and press enter to try again...")
+                    attempts_remaining -= 1
+
+        # If we exceed the number of attempts, raise an error and let the program exit.
+        if auth_response is None:
+            raise RuntimeError("No U2F device found. Please check your setup.")
 
         payload = {
             'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
