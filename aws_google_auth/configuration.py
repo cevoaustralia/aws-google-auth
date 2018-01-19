@@ -5,6 +5,7 @@ import botocore.session
 import configparser
 
 from . import util
+from . import amazon
 
 
 class Configuration:
@@ -21,6 +22,7 @@ class Configuration:
         self.profile = "sts"
         self.region = "ap-southeast-2"
         self.role_arn = None
+        self.__saml_cache = None
         self.sp_id = None
         self.u2f_disabled = False
         self.username = None
@@ -48,17 +50,36 @@ class Configuration:
     def config_file(self):
         return os.path.expanduser(self.__boto_session.get_config_variable('config_file'))
 
+    @property
+    def saml_cache_file(self):
+        return self.credentials_file.replace('credentials', 'saml_cache.xml')
+
     def ensure_config_files_exist(self):
-        for file in [self.config_file, self.credentials_file]:
+        for file in [self.config_file, self.credentials_file, self.saml_cache_file]:
             directory = os.path.dirname(file)
             if not os.path.exists(directory):
                 os.mkdir(directory, 0o700)
             if not os.path.exists(file):
                 util.Util.touch(file)
 
+    # Will return a SAML cache, ONLY if it's valid. If invalid or not set, will
+    # return None. If the SAML cache isn't valid, we'll remove it from the
+    # in-memory object. On the next write(), it will be purged from disk.
+    def saml_cache_reader(self):
+        if not amazon.Amazon.is_valid_saml_assertion(self.__saml_cache):
+            self.__saml_cache = None
+        return self.__saml_cache
+
+    def saml_cache_writer(self, value):
+        self.__saml_cache = value
+
+    saml_cache = property(saml_cache_reader, saml_cache_writer)
+
     # Will raise exceptions if the configuration is invalid, otherwise returns
     # None. Use this at any point to validate the configuration is in a good
-    # state.
+    # state. There are no checks here regarding SAML caching, as that's just a
+    # user-performance improvement, and an invalid cache isn't an invalid
+    # configuration.
     def raise_if_invalid(self):
         # ask_role
         assert (self.ask_role.__class__ is bool), "Expected ask_role to be a boolean. Got {}.".format(self.ask_role.__class__)
@@ -133,6 +154,10 @@ class Configuration:
             with open(self.credentials_file, 'w+') as f:
                 credentials_parser.write(f)
 
+        if self.__saml_cache is not None:
+            with open(self.saml_cache_file, 'w') as f:
+                f.write(self.__saml_cache.decode("utf-8"))
+
     # Read from the configuration file and override ALL values currently stored
     # in the configuration object. As this is potentially destructive, it's
     # important to only run this in the beginning of the object initialization.
@@ -172,6 +197,10 @@ class Configuration:
             read_role_arn = unicode_to_string(config_parser[profile_string].get('google_config.role_arn', None))
             self.role_arn = coalesce(read_role_arn, self.role_arn)
 
+            # SAML Cache
+            read_saml_cache = unicode_to_string(config_parser[profile_string].get('google_config.google_saml_cache', None))
+            self.__saml_cache = coalesce(read_saml_cache, self.__saml_cache)
+
             # SP ID
             read_sp_id = unicode_to_string(config_parser[profile_string].get('google_config.google_sp_id', None))
             self.sp_id = coalesce(read_sp_id, self.sp_id)
@@ -183,3 +212,7 @@ class Configuration:
             # Username
             read_username = unicode_to_string(config_parser[profile_string].get('google_config.google_username', None))
             self.username = coalesce(read_username, self.username)
+
+            # SAML Cache
+            with open(self.saml_cache_file, 'r') as f:
+                self.__saml_cache = f.read().encode("utf-8")
