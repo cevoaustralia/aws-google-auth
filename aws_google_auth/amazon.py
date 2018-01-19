@@ -84,13 +84,8 @@ class Amazon:
             not_on_or_after = datetime.strptime(not_on_or_after_str, "%Y-%m-%dT%H:%M:%S.%fZ")
 
             if not_before <= now < not_on_or_after:
-                # print("VALID")
-                # print("Valid for another {}".format(not_on_or_after - now))
                 return True
             else:
-                # print("INVALID/EXPIRED")
-                # print(not_before)
-                # print(not_on_or_after)
                 return False
         except Exception as e:
             print(e)
