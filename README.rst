@@ -88,17 +88,14 @@ Usage
 
 .. code:: shell
 
-    $ aws-google-auth --help
-    usage: aws-google-auth [-h] [-v] [-u USERNAME] [-I IDP_ID] [-S SP_ID]
-                           [-R REGION] [-d DURATION] [-p PROFILE]
-                           [-r AWS_ROLE_ARN ]
+    $ aws-google-auth -h
+    usage: aws-google-auth [-h] [-u USERNAME] [-I IDP_ID] [-S SP_ID] [-R REGION]
+                           [-d DURATION] [-p PROFILE] [-D] [-a | -r ROLE_ARN] [-V]
 
     Acquire temporary AWS credentials via Google SSO
 
     optional arguments:
       -h, --help            show this help message and exit
-      -v, --version         show program's version number and exit
-
       -u USERNAME, --username USERNAME
                             Google Apps username ($GOOGLE_USERNAME)
       -I IDP_ID, --idp-id IDP_ID
@@ -110,12 +107,13 @@ Usage
       -d DURATION, --duration DURATION
                             Credential duration ($DURATION)
       -p PROFILE, --profile PROFILE
-                            AWS profile (defaults to value of $AWS_PROFILE,
-                            then falls back to 'sts')
-      -a ASK_ROLE, --ask-role ASK_ROLE
-                            Set true to always pick the role
-      -r AWS_ROLE_ARN, --role-arn AWS_ROLE_ARN
+                            AWS profile (defaults to value of $AWS_PROFILE, then
+                            falls back to 'sts')
+      -D, --disable-u2f     Disable U2F functionality.
+      -a, --ask-role        Set true to always pick the role
+      -r ROLE_ARN, --role-arn ROLE_ARN
                             The ARN of the role to assume
+      -V, --version         show program's version number and exit
 
 
 Native Python
