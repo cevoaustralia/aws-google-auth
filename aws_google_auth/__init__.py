@@ -26,7 +26,7 @@ def parse_args(args):
     parser.add_argument('-d', '--duration', type=int, help='Credential duration ($DURATION)')
     parser.add_argument('-p', '--profile', help='AWS profile (defaults to value of $AWS_PROFILE, then falls back to \'sts\')')
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
-    parser.add_argument('-c', '--saml-cache', action='store_true', help='Cache the SAML Assertion.')
+    parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
 
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
