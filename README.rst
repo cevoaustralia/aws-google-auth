@@ -90,7 +90,8 @@ Usage
 
     $ aws-google-auth -h
     usage: aws-google-auth [-h] [-u USERNAME] [-I IDP_ID] [-S SP_ID] [-R REGION]
-                           [-d DURATION] [-p PROFILE] [-D] [-a | -r ROLE_ARN] [-V]
+                           [-d DURATION] [-p PROFILE] [-D] [--no-cache]
+                           [-a | -r ROLE_ARN] [-V]
 
     Acquire temporary AWS credentials via Google SSO
 
@@ -110,6 +111,7 @@ Usage
                             AWS profile (defaults to value of $AWS_PROFILE, then
                             falls back to 'sts')
       -D, --disable-u2f     Disable U2F functionality.
+      --no-cache            Do not cache the SAML Assertion.
       -a, --ask-role        Set true to always pick the role
       -r ROLE_ARN, --role-arn ROLE_ARN
                             The ARN of the role to assume
