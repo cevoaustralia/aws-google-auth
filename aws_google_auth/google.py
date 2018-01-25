@@ -5,6 +5,7 @@ from . import _version
 import sys
 import requests
 import json
+import base64
 from bs4 import BeautifulSoup
 
 # In Python3, the library 'urlparse' was renamed to 'urllib.parse'. For this to
@@ -151,7 +152,7 @@ class Google:
         except:
             raise RuntimeError('Could not find SAML response, check your credentials')
 
-        return saml_element
+        return base64.b64decode(saml_element)
 
     def handle_sk(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')

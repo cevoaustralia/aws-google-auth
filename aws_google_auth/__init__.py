@@ -26,6 +26,7 @@ def parse_args(args):
     parser.add_argument('-d', '--duration', type=int, help='Credential duration ($DURATION)')
     parser.add_argument('-p', '--profile', help='AWS profile (defaults to value of $AWS_PROFILE, then falls back to \'sts\')')
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
+    parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
 
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
@@ -124,30 +125,42 @@ def cli(cli_args):
         os.getenv('GOOGLE_USERNAME'),
         config.username)
 
-    # There are some mandatory arguments. Make sure the user supplied them.
-    if config.username is None:
-        config.username = util.Util.get_input("Google username: ")
-    if config.idp_id is None:
-        config.idp_id = util.Util.get_input("Google IDP ID: ")
-    if config.sp_id is None:
-        config.sp_id = util.Util.get_input("Google SP ID: ")
+    # If there is a valid cache and the user opted to use it, use that instead
+    # of prompting the user for input (it will also ignroe any set variables
+    # such as username or sp_id and idp_id, as those are built into the SAML
+    # response). The user does not need to be prompted for a password if the
+    # SAML cache is used.
+    if args.saml_cache and config.saml_cache:
+        saml_xml = config.saml_cache
+    else:
+        # No cache, continue without.
+        if config.username is None:
+            config.username = util.Util.get_input("Google username: ")
+        if config.idp_id is None:
+            config.idp_id = util.Util.get_input("Google IDP ID: ")
+        if config.sp_id is None:
+            config.sp_id = util.Util.get_input("Google SP ID: ")
 
-    # There is no way (intentional) to pass in the password via the command
-    # line nor environment variables. This prevents password leakage.
-    config.password = getpass.getpass("Google Password: ")
+        # There is no way (intentional) to pass in the password via the command
+        # line nor environment variables. This prevents password leakage.
+        config.password = getpass.getpass("Google Password: ")
 
-    # Validate Options
-    try:
+        # Validate Options
         config.raise_if_invalid()
-    except AssertionError:
-        print("Invalid parameters.")
-        raise
 
-    google_client = google.Google(config)
-    google_client.do_login()
-    encoded_saml = google_client.parse_saml()
+        google_client = google.Google(config)
+        google_client.do_login()
+        saml_xml = google_client.parse_saml()
 
-    amazon_client = amazon.Amazon(config, encoded_saml)
+        # We now have a new SAML value that can get cached (If the user asked
+        # for it to be)
+        if args.saml_cache:
+            config.saml_cache = saml_xml
+
+    # The amazon_client now has the SAML assertion it needed (Either via the
+    # cache or freshly generated). From here, we can get the roles and continue
+    # the rest of the workflow regardless of cache.
+    amazon_client = amazon.Amazon(config, saml_xml)
     roles = amazon_client.roles
 
     # Determine the provider and the role arn (if the the user provided isn't an option)
