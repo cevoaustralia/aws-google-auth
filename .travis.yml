@@ -25,6 +25,10 @@ after_success:
 # to publish multiple times.
 jobs:
   include:
+  - stage: Docker Build Test
+    script: docker build -f Dockerfile .
+  - stage: Docker Build Test
+    script: docker build -f Dockerfile.python2 .
   - stage: deploy
     python: '2.7'
     install: skip
