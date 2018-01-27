@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+from collections import OrderedDict
 
 
 class Util:
@@ -13,16 +14,25 @@ class Util:
             return input(prompt)
 
     @staticmethod
-    def pick_a_role(roles):
+    def pick_a_role(roles, aliases):
+        enriched_roles = {}
+        for role, principal in roles.items():
+            enriched_roles['{} {}'.format(aliases[role.split(':')[4]], role)] = principal
+        enriched_roles = OrderedDict(sorted(enriched_roles.items(), key=lambda t: t[0]))
+
+        ordered_roles = OrderedDict()
+        for role, principal in enriched_roles.items():
+            ordered_roles[role.split(' ')[1]] = principal
+
         while True:
-            for i, role in enumerate(roles):
+            for i, role in enumerate(enriched_roles):
                 print("[{:>3d}] {}".format(i + 1, role))
 
-            prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(roles))
+            prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(enriched_roles))
             choice = Util.get_input(prompt)
 
             try:
-                return list(roles.items())[int(choice) - 1]
+                return list(ordered_roles.items())[int(choice) - 1]
             except IndexError:
                 print("Invalid choice, try again.")
 

@@ -167,7 +167,8 @@ def cli(cli_args):
     if config.role_arn in roles and not config.ask_role:
         config.provider = roles[config.role_arn]
     else:
-        config.role_arn, config.provider = util.Util.pick_a_role(roles)
+        aliases = amazon_client.resolve_aws_aliases(roles)
+        config.role_arn, config.provider = util.Util.pick_a_role(roles, aliases)
 
     print("Assuming " + config.role_arn)
     print("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())))
