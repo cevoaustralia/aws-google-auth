@@ -18,16 +18,20 @@ class Util:
         if aliases:
             enriched_roles = {}
             for role, principal in roles.items():
-                enriched_roles['{} {}'.format(aliases[role.split(':')[4]], role)] = principal
-            enriched_roles = OrderedDict(sorted(enriched_roles.items(), key=lambda t: t[0]))
+                enriched_roles[role] = [
+                    aliases[role.split(':')[4]],
+                    role.split('role/')[1],
+                    principal
+                ]
+            enriched_roles = OrderedDict(sorted(enriched_roles.items(), key=lambda t: t[1]))
 
             ordered_roles = OrderedDict()
-            for role, principal in enriched_roles.items():
-                ordered_roles[role.split(' ')[1]] = principal
+            for role, role_property in enriched_roles.items():
+                ordered_roles[role] = role_property[2]
 
             while True:
-                for i, role in enumerate(enriched_roles):
-                    print("[{:>3d}] {}".format(i + 1, role))
+                for i, (role, role_property) in enumerate(enriched_roles.items()):
+                    print("[{:>3d}] {}@{}".format(i + 1, role_property[0], role_property[1]))
 
                 prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(enriched_roles))
                 choice = Util.get_input(prompt)

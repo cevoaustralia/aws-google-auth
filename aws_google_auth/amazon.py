@@ -85,7 +85,14 @@ class Amazon:
                 account_alias = response['AccountAliases'][0]
                 aws_dict[role.split(':')[4]] = account_alias
             except:
-                aws_dict[role.split(':')[4]] = "AliasNotAvailable"
+                sts = boto3.client('sts',
+                                   aws_access_key_id=saml['Credentials']['AccessKeyId'],
+                                   aws_secret_access_key=saml['Credentials']['SecretAccessKey'],
+                                   aws_session_token=saml['Credentials']['SessionToken'],
+                                   region_name=self.config.region)
+
+                account_id = sts.get_caller_identity().get('Account')
+                aws_dict[role.split(':')[4]] = 'Account {}'.format(account_id)
 
         threads = []
         aws_id_alias = {}
