@@ -27,6 +27,7 @@ def parse_args(args):
     parser.add_argument('-p', '--profile', help='AWS profile (defaults to value of $AWS_PROFILE, then falls back to \'sts\')')
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
     parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
+    parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
 
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
@@ -119,6 +120,12 @@ def cli(cli_args):
         os.getenv('U2F_DISABLED'),
         config.u2f_disabled)
 
+    # Resolve AWS aliases enabled (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.resolve_aliases = coalesce(
+        args.resolve_aliases,
+        os.getenv('RESOLVE_AWS_ALIASES'),
+        config.resolve_aliases)
+
     # Username (Option priority = ARGS, ENV_VAR, DEFAULT)
     config.username = coalesce(
         args.username,
@@ -167,8 +174,11 @@ def cli(cli_args):
     if config.role_arn in roles and not config.ask_role:
         config.provider = roles[config.role_arn]
     else:
-        aliases = amazon_client.resolve_aws_aliases(roles)
-        config.role_arn, config.provider = util.Util.pick_a_role(roles, aliases)
+        if config.resolve_aliases:
+            aliases = amazon_client.resolve_aws_aliases(roles)
+            config.role_arn, config.provider = util.Util.pick_a_role(roles, aliases)
+        else:
+            config.role_arn, config.provider = util.Util.pick_a_role(roles)
 
     print("Assuming " + config.role_arn)
     print("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())))

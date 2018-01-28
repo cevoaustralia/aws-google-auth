@@ -25,6 +25,7 @@ class Configuration:
         self.__saml_cache = None
         self.sp_id = None
         self.u2f_disabled = False
+        self.resolve_aliases = False
         self.username = None
 
     # For the "~/.aws/config" file, we use the format "[profile testing]"
