@@ -2,6 +2,7 @@
 
 import os
 from collections import OrderedDict
+from tabulate import tabulate
 
 
 class Util:
@@ -23,16 +24,18 @@ class Util:
                     role.split('role/')[1],
                     principal
                 ]
-            enriched_roles = OrderedDict(sorted(enriched_roles.items(), key=lambda t: t[1]))
+            enriched_roles = OrderedDict(sorted(enriched_roles.items(), key=lambda t: (t[1][0], t[1][1])))
 
             ordered_roles = OrderedDict()
             for role, role_property in enriched_roles.items():
                 ordered_roles[role] = role_property[2]
 
-            while True:
-                for i, (role, role_property) in enumerate(enriched_roles.items()):
-                    print("[{:>3d}] {}@{}".format(i + 1, role_property[0], role_property[1]))
+            enriched_roles_tab = []
+            for i, (role, role_property) in enumerate(enriched_roles.items()):
+                enriched_roles_tab.append([i + 1, role_property[0], role_property[1]])
 
+            while True:
+                print(tabulate(enriched_roles_tab, headers=['No', 'AWS account', 'Role'], ))
                 prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(enriched_roles))
                 choice = Util.get_input(prompt)
 

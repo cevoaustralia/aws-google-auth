@@ -92,7 +92,7 @@ class Amazon:
                                    region_name=self.config.region)
 
                 account_id = sts.get_caller_identity().get('Account')
-                aws_dict[role.split(':')[4]] = 'Account {}'.format(account_id)
+                aws_dict[role.split(':')[4]] = '{}'.format(account_id)
 
         threads = []
         aws_id_alias = {}
