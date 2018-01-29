@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-import boto3
 import base64
-from lxml import etree
 from datetime import datetime
+from threading import Thread
+
+import boto3
+from lxml import etree
 
 
 class Amazon:
@@ -67,6 +69,42 @@ class Amazon:
                 res = x.split(',')
                 roles[res[0]] = res[1]
         return roles
+
+    def resolve_aws_aliases(self, roles):
+        def resolve_aws_alias(role, principal, aws_dict):
+            saml = self.sts_client.assume_role_with_saml(RoleArn=role,
+                                                         PrincipalArn=principal,
+                                                         SAMLAssertion=self.base64_encoded_saml)
+            iam = boto3.client('iam',
+                               aws_access_key_id=saml['Credentials']['AccessKeyId'],
+                               aws_secret_access_key=saml['Credentials']['SecretAccessKey'],
+                               aws_session_token=saml['Credentials']['SessionToken'],
+                               region_name=self.config.region)
+            try:
+                response = iam.list_account_aliases()
+                account_alias = response['AccountAliases'][0]
+                aws_dict[role.split(':')[4]] = account_alias
+            except:
+                sts = boto3.client('sts',
+                                   aws_access_key_id=saml['Credentials']['AccessKeyId'],
+                                   aws_secret_access_key=saml['Credentials']['SecretAccessKey'],
+                                   aws_session_token=saml['Credentials']['SessionToken'],
+                                   region_name=self.config.region)
+
+                account_id = sts.get_caller_identity().get('Account')
+                aws_dict[role.split(':')[4]] = '{}'.format(account_id)
+
+        threads = []
+        aws_id_alias = {}
+        for number, (role, principal) in enumerate(roles.items()):
+            t = Thread(target=resolve_aws_alias, args=(role, principal, aws_id_alias))
+            t.start()
+            threads.append(t)
+
+        for t in threads:
+            t.join()
+
+        return aws_id_alias
 
     @staticmethod
     def is_valid_saml_assertion(saml_xml):
