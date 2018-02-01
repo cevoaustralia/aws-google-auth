@@ -2,7 +2,10 @@
 
 import os
 import botocore.session
-import configparser
+try:
+    from backports import configparser
+except ImportError:
+    import configparser
 
 from . import util
 from . import amazon
