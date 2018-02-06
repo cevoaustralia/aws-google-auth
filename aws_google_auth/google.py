@@ -138,6 +138,8 @@ class Google:
             sess = self.handle_sk(sess)
         elif "challenge/iap/" in sess.url:
             sess = self.handle_iap(sess)
+        elif "selectchallenge/" in sess.url:
+            sess = self.handle_selectchallenge(sess)
 
         # ... there are different URLs for backup codes (printed)
         # and security keys (eg yubikey) as well
@@ -378,4 +380,29 @@ class Google:
         sess = self.session.post(challenge_url, data=payload)
         sess.raise_for_status()
 
+        return sess
+
+    def handle_selectchallenge(self, sess):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        challenge_id = response_page.find('input', {'name': 'challengeId'}).get('value')
+
+        payload = {
+            'challengeId': challenge_id,
+            'challengeType': response_page.find('input', {'name': 'challengeType'}).get('value'),
+            'continue': response_page.find('input', {'name': 'continue'}).get('value'),
+            'scc': response_page.find('input', {'name': 'scc'}).get('value'),
+            'sarp': response_page.find('input', {'name': 'sarp'}).get('value'),
+            'checkedDomains': response_page.find('input', {'name': 'checkedDomains'}).get('value'),
+            'pstMsg': response_page.find('input', {'name': 'pstMsg'}).get('value'),
+            'TL': response_page.find('input', {'name': 'TL'}).get('value'),
+            'gxf': response_page.find('input', {'name': 'gxf'}).get('value'),
+            'subAction': 'selectChallenge',
+            'SendMethod': 'SMS',
+        }
+
+        # Choose SMS challenge
+        sess = self.session.post('https://accounts.google.com/signin/challenge/ipp/'+str(challenge_id), data=payload)
+        sess.raise_for_status()
+
+        sess = self.handle_sms(sess)
         return sess
