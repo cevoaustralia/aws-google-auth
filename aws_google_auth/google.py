@@ -127,6 +127,9 @@ class Google:
 
         self.session.headers['Referer'] = sess.url
 
+        if "selectchallenge/" in sess.url:
+            sess = self.handle_selectchallenge(sess)
+
         # Was there an MFA challenge?
         if "challenge/totp/" in sess.url:
             sess = self.handle_totp(sess)
@@ -138,8 +141,6 @@ class Google:
             sess = self.handle_sk(sess)
         elif "challenge/iap/" in sess.url:
             sess = self.handle_iap(sess)
-        elif "selectchallenge/" in sess.url:
-            sess = self.handle_selectchallenge(sess)
 
         # ... there are different URLs for backup codes (printed)
         # and security keys (eg yubikey) as well
@@ -317,7 +318,6 @@ class Google:
     def handle_iap(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
         challenge_url = sess.url.split("?")[0]
-        challenge_id = challenge_url.split("iap/")[1]
         try:
             phone_number = raw_input('Enter your phone number:') or None
         except NameError:
@@ -352,6 +352,7 @@ class Google:
             'sendMethod': send_method,
         }
 
+        # Submit phone number and desired method (SMS or voice call)
         sess = self.session.post(challenge_url, data=payload)
         sess.raise_for_status()
 
@@ -359,9 +360,9 @@ class Google:
         challenge_url = sess.url.split("?")[0]
 
         try:
-            token = raw_input("Enter "+send_method+" token: G-") or None
+            token = raw_input("Enter " + send_method + " token: G-") or None
         except NameError:
-            token = input("Enter "+send_method+" token: G-") or None
+            token = input("Enter " + send_method + " token: G-") or None
 
         payload = {
             'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
@@ -401,8 +402,7 @@ class Google:
         }
 
         # Choose SMS challenge
-        sess = self.session.post('https://accounts.google.com/signin/challenge/ipp/'+str(challenge_id), data=payload)
+        sess = self.session.post('https://accounts.google.com/signin/challenge/ipp/' + str(challenge_id), data=payload)
         sess.raise_for_status()
 
-        sess = self.handle_sms(sess)
         return sess
