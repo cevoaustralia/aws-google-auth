@@ -1,5 +1,9 @@
 from .. import exit_if_unsupported_python
-from io import BytesIO as StringIO
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 import unittest
 import sys
