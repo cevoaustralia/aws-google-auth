@@ -1,4 +1,4 @@
-from .. import *
+from .. import exit_if_unsupported_python
 from io import BytesIO as StringIO
 
 import unittest
