@@ -68,6 +68,7 @@ class TestDurationProcessing(unittest.TestCase):
 
 
 class TestIDPProcessing(unittest.TestCase):
+
     def test_default(self):
         config = resolve_config([])
         self.assertEqual(None, config.idp_id)
@@ -105,6 +106,7 @@ class TestSPProcessing(unittest.TestCase):
 
 
 class TestRegionProcessing(unittest.TestCase):
+
     def test_default(self):
         config = resolve_config([])
         self.assertEqual(None, config.region)
@@ -139,6 +141,7 @@ class TestRoleProcessing(unittest.TestCase):
 
 
 class TestAskRoleProcessing(unittest.TestCase):
+
     def test_default(self):
         config = resolve_config([])
         self.assertFalse(config.ask_role)
@@ -154,6 +157,7 @@ class TestAskRoleProcessing(unittest.TestCase):
 
 
 class TestU2FDisabledProcessing(unittest.TestCase):
+
     def test_default(self):
         config = resolve_config([])
         self.assertFalse(config.u2f_disabled)

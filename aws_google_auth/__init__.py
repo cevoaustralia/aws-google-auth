@@ -81,10 +81,10 @@ def resolve_config(cli_args):
     config.read(config.profile)
 
     # Ask Role (Option priority = ARGS, ENV_VAR, DEFAULT)
-    config.ask_role = coalesce(
+    config.ask_role = bool(coalesce(
         args.ask_role,
-        bool(os.getenv('AWS_ASK_ROLE')),
-        config.ask_role)
+        os.getenv('AWS_ASK_ROLE'),
+        config.ask_role))
 
     # Duration (Option priority = ARGS, ENV_VAR, DEFAULT)
     config.duration = int(coalesce(
