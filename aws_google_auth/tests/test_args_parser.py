@@ -77,7 +77,7 @@ class TestPythonFailOnVersion(unittest.TestCase):
 
     def test_ask_and_supply_role(self):
 
-        with self.assertRaises(SystemExit) as se:
+        with self.assertRaises(SystemExit):
             parse_args(['-a', '-r', 'da-role'])
 
     def test_invalid_duration(self):
@@ -86,5 +86,5 @@ class TestPythonFailOnVersion(unittest.TestCase):
         :return:
         """
 
-        with self.assertRaises(SystemExit) as se:
+        with self.assertRaises(SystemExit):
             parse_args(['-d', 'abce'])
