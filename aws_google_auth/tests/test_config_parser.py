@@ -137,6 +137,7 @@ class TestRoleProcessing(unittest.TestCase):
         config = resolve_config([])
         self.assertEqual("4567-role", config.role_arn)
 
+
 class TestAskRoleProcessing(unittest.TestCase):
     def test_default(self):
         config = resolve_config([])
@@ -151,7 +152,8 @@ class TestAskRoleProcessing(unittest.TestCase):
         config = resolve_config([])
         self.assertTrue(config.ask_role)
 
-class TestAskRoleProcessing(unittest.TestCase):
+
+class TestU2FDisabledProcessing(unittest.TestCase):
     def test_default(self):
         config = resolve_config([])
         self.assertFalse(config.u2f_disabled)
