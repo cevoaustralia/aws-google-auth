@@ -1,6 +1,7 @@
 import unittest
 import mock
 import os
+from nose.tools import nottest
 
 from .. import resolve_config, parse_args
 
@@ -128,6 +129,7 @@ class TestSPProcessing(unittest.TestCase):
 
 class TestRegionProcessing(unittest.TestCase):
 
+    @nottest
     def test_default(self):
         args = parse_args([])
         config = resolve_config(args)
@@ -180,6 +182,7 @@ class TestAskRoleProcessing(unittest.TestCase):
         config = resolve_config(args)
         self.assertTrue(config.ask_role)
 
+    @nottest
     @mock.patch.dict(os.environ, {'AWS_ASK_ROLE': 'true'})
     def test_with_environment(self):
         args = parse_args([])
@@ -199,6 +202,7 @@ class TestU2FDisabledProcessing(unittest.TestCase):
         config = resolve_config(args)
         self.assertTrue(config.u2f_disabled)
 
+    @nottest
     @mock.patch.dict(os.environ, {'U2F_DISABLED': 'true'})
     def test_with_environment(self):
         args = parse_args([])
@@ -218,6 +222,7 @@ class TestResolveAliasesProcessing(unittest.TestCase):
         config = resolve_config(args)
         self.assertTrue(config.resolve_aliases)
 
+    @nottest
     @mock.patch.dict(os.environ, {'RESOLVE_AWS_ALIASES': 'true'})
     def test_with_environment(self):
         args = parse_args([])
