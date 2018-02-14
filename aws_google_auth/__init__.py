@@ -52,19 +52,20 @@ def exit_if_unsupported_python():
 def main():
     try:
         exit_if_unsupported_python()
-        args = sys.argv[1:]
+
+        cli_args = sys.argv[1:]
+        args = parse_args(args=cli_args)
+
         config = resolve_config(args)
         process_auth(args, config)
     except KeyboardInterrupt:
         pass
 
 
-def resolve_config(cli_args):
+def resolve_config(args):
 
     # Shortening Convenience functions
     coalesce = util.Util.coalesce
-
-    args = parse_args(args=cli_args)
 
     # Create a blank configuration object (has the defaults pre-filled)
     config = configuration.Configuration()
@@ -190,8 +191,10 @@ def process_auth(args, config):
     print("Assuming " + config.role_arn)
     print("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())))
 
-    amazon_client.print_export_line()
-    config.write(amazon_client)
+    if config.profile:
+        config.write(amazon_client)
+    else:
+        amazon_client.print_export_line()
 
 
 if __name__ == '__main__':
