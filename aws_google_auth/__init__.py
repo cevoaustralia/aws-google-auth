@@ -164,7 +164,7 @@ def cli(cli_args):
             else:
                 config.password = getpass.getpass("Google Password: ")
         else:
-        config.password = getpass.getpass("Google Password: ")
+            config.password = getpass.getpass("Google Password: ")
 
         # Validate Options
         config.raise_if_invalid()
