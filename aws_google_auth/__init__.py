@@ -11,7 +11,6 @@ import getpass
 import os
 import sys
 
-from google import ExpectedGoogleException
 from tzlocal import get_localzone
 
 
@@ -54,7 +53,7 @@ def exit_if_unsupported_python():
 def main():
     try:
         cli(sys.argv[1:])
-    except ExpectedGoogleException as ex:
+    except google.ExpectedGoogleException as ex:
         print(ex.message)
         sys.exit(1)
     except KeyboardInterrupt:
