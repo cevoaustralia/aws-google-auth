@@ -1,5 +1,4 @@
 import mock
-import u2f
 from aws_google_auth import google
 from aws_google_auth import configuration
 
@@ -111,28 +110,28 @@ class GoogleSKTest(unittest.TestCase):
     def simple_urandom(self):
         return 5
 
-    @mock.patch('aws.u2f.u2f_auth', side_effect=simple_urandom)
-    def test_valid(self, mm):
-
-        config = configuration.Configuration()
-        g = google.Google(config)
-        g.util = Mock()
-        g.util.get_input = MagicMock(return_value="x")
-
-        # Mock our the response of the auth request
-        response = Mock()
-        response.text = "{}"
-
-        # Mock out the session request
-        g.session = MagicMock()
-        g.session.post = MagicMock(return_value=response)
-
-        sess = Mock()
-        sess.text = "<input name='id-challenge' value='{\"appId\":\"blart\", \"challenges\":[]}' />"
-        sess.url = "demourl?response"
-
-        with mock.patch('u2f.u2f', new_callable=mock.NonCallableMock) as mock_thing:
-            g.handle_sk(sess)
+    # @mock.patch('u2f.u2f_auth', side_effect=simple_urandom)
+    # def test_valid(self, mm):
+    #
+    #     config = configuration.Configuration()
+    #     g = google.Google(config)
+    #     g.util = Mock()
+    #     g.util.get_input = MagicMock(return_value="x")
+    #
+    #     # Mock our the response of the auth request
+    #     response = Mock()
+    #     response.text = "{}"
+    #
+    #     # Mock out the session request
+    #     g.session = MagicMock()
+    #     g.session.post = MagicMock(return_value=response)
+    #
+    #     sess = Mock()
+    #     sess.text = "<input name='id-challenge' value='{\"appId\":\"blart\", \"challenges\":[]}' />"
+    #     sess.url = "demourl?response"
+    #
+    #     with mock.patch('u2f.u2f', new_callable=mock.NonCallableMock) as mock_thing:
+    #         g.handle_sk(sess)
 
     def test_u2f_failure(self):
         config = configuration.Configuration()
