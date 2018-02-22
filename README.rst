@@ -194,6 +194,11 @@ by this tool are:
 | SMS (or voice    | ``.../signin/challenge/ipp/2?...``  |
 |  call)           |                                     |
 +------------------+-------------------------------------+
+| SMS (or voice    | ``.../signin/challenge/iap/...``    |
+|  call) with      |                                     |
+|  number          |                                     |
+|  submission      |                                     |
++------------------+-------------------------------------+
 | Google Prompt    | ``.../signin/challenge/az/2?...``   |
 |  (phone app)     |                                     |
 +------------------+-------------------------------------+
