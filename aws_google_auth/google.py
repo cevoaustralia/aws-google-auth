@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from . import _version
+from . import util
 
 import sys
 import requests
@@ -40,13 +41,16 @@ class Google:
 
         self.version = _version.__version__
         self.config = config
+        self.util = util.Util()
+        self.session = requests.Session()
+        self.session_state = None
 
     @property
     def login_url(self):
         return "https://accounts.google.com/o/saml2/initsso?idpid={}&spid={}&forceauthn=false".format(self.config.idp_id, self.config.sp_id)
 
     def do_login(self):
-        self.session = requests.Session()
+        # self.session = requests.Session()
         self.session.headers['User-Agent'] = "AWS Sign-in/{} (Cevo aws-google-auth)".format(self.version)
         sess = self.session.get(self.login_url)
         sess.raise_for_status()
@@ -54,7 +58,7 @@ class Google:
         # Collect information from the page source
         first_page = BeautifulSoup(sess.text, 'html.parser')
         gxf = first_page.find('input', {'name': 'gxf'}).get('value')
-        self.cont = first_page.find('input', {'name': 'continue'}).get('value')
+        cont = first_page.find('input', {'name': 'continue'}).get('value')
         page = first_page.find('input', {'name': 'Page'}).get('value')
         sign_in = first_page.find('input', {'name': 'signIn'}).get('value')
         account_login_url = first_page.find('form', {'id': 'gaia_loginform'}).get('action')
@@ -63,7 +67,7 @@ class Google:
             'bgresponse': 'js_disabled',
             'checkConnection': '',
             'checkedDomains': 'youtube',
-            'continue': self.cont,
+            'continue': cont,
             'Email': self.config.username,
             'gxf': gxf,
             'identifier-captcha-input': '',
@@ -129,7 +133,12 @@ class Google:
 
         # Was there an MFA challenge?
         if "challenge/totp/" in sess.url:
-            sess = self.handle_totp(sess)
+            error_msg = ""
+            while error_msg is not None:
+                sess = self.handle_totp(sess)
+                error_msg = self.parse_error_message(sess)
+                if error_msg is not None:
+                    print error_msg
         elif "challenge/ipp/" in sess.url:
             sess = self.handle_sms(sess)
         elif "challenge/az/" in sess.url:
@@ -174,14 +183,15 @@ class Google:
         auth_response = None
         while True:
             try:
-                auth_response = json.dumps(u2f.u2f_auth(u2f_challenges, facet))
+                x = u2f.u2f_auth
+                auth_response = json.dumps(x(u2f_challenges, facet))
                 break
-            except RuntimeWarning:
+            except RuntimeWarning as ex:
                 print("No U2F device found. {} attempts remaining.".format(attempts_remaining))
                 if attempts_remaining <= 0:
                     break
                 else:
-                    input("Insert your U2F device and press enter to try again...")
+                    self.util.get_input("Insert your U2F device and press enter to try again...")
                     attempts_remaining -= 1
 
         # If we exceed the number of attempts, raise an error and let the program exit.
@@ -212,10 +222,7 @@ class Google:
         response_page = BeautifulSoup(sess.text, 'html.parser')
         challenge_url = sess.url.split("?")[0]
 
-        try:
-            sms_token = raw_input("Enter SMS token: G-") or None
-        except NameError:
-            sms_token = input("Enter SMS token: G-") or None
+        sms_token = self.util.get_input("Enter SMS token: G-") or None
 
         payload = {
             'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
@@ -277,15 +284,15 @@ class Google:
 
     def handle_totp(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
+
         tl = response_page.find('input', {'name': 'TL'}).get('value')
         gxf = response_page.find('input', {'name': 'gxf'}).get('value')
+        cont = response_page.find('input', {'name': 'continue'}).get('value')
+
         challenge_url = sess.url.split("?")[0]
         challenge_id = challenge_url.split("totp/")[1]
 
-        try:
-            mfa_token = raw_input("MFA token: ") or None
-        except NameError:
-            mfa_token = input("MFA token: ") or None
+        mfa_token = self.util.get_input("MFA token: ") or None
 
         if not mfa_token:
             raise ValueError("MFA token required for {} but none supplied.".format(self.config.username))
@@ -293,7 +300,7 @@ class Google:
         payload = {
             'challengeId': challenge_id,
             'challengeType': 6,
-            'continue': self.cont,
+            'continue': cont,
             'scc': 1,
             'sarp': 1,
             'checkedDomains': 'youtube',
