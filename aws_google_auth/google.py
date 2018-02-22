@@ -170,7 +170,7 @@ class Google:
                 sess = self.handle_totp(sess)
                 error_msg = self.parse_error_message(sess)
                 if error_msg is not None:
-                    print error_msg
+                    print(error_msg)
         elif "challenge/ipp/" in sess.url:
             sess = self.handle_sms(sess)
         elif "challenge/az/" in sess.url:

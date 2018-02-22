@@ -55,7 +55,7 @@ def main():
     try:
         cli(sys.argv[1:])
     except ExpectedGoogleException as ex:
-        print ex.message
+        print(ex.message)
         sys.exit(1)
     except KeyboardInterrupt:
         pass
