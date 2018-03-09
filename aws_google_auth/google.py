@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+# -*- coding: utf8 -*-
 from . import _version
 
 import sys
@@ -15,6 +15,7 @@ if sys.version_info >= (3, 0):
     import urllib.parse as urlparse
 else:
     import urlparse
+
 
 # The U2F USB Library is optional, if it's there, include it.
 try:
@@ -43,7 +44,8 @@ class Google:
 
     @property
     def login_url(self):
-        return "https://accounts.google.com/o/saml2/initsso?idpid={}&spid={}&forceauthn=false".format(self.config.idp_id, self.config.sp_id)
+        return "https://accounts.google.com/o/saml2/initsso?idpid={}&spid={}&forceauthn=false".format(
+            self.config.idp_id, self.config.sp_id)
 
     def do_login(self):
         self.session = requests.Session()
@@ -122,6 +124,8 @@ class Google:
         if error is not None:
             raise ValueError('Invalid username or password')
 
+        self.check_extra_step(response_page)
+
         if cap is not None:
             raise ValueError('Captcha Required. Manually Login to remove this.')
 
@@ -146,6 +150,17 @@ class Google:
         # and security keys (eg yubikey) as well
         # save for later
         self.session_state = sess
+
+    @staticmethod
+    def check_extra_step(response):
+        extra_step = response.find(text='This extra step shows that it’s really you trying to sign in')
+        if extra_step:
+            print(extra_step)
+            msg = response.find(id='contactAdminMessage')
+            if msg:
+                raise ValueError(msg.text)
+            else:
+                raise ValueError(response)
 
     def parse_saml(self):
         if self.session_state is None:
