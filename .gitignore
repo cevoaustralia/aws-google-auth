@@ -4,3 +4,6 @@
 *.pyc
 dist
 build/
+.idea/
+Pipfile
+Pipfile.lock
