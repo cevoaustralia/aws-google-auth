@@ -32,6 +32,7 @@ def parse_args(args):
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
     role_group.add_argument('-r', '--role-arn', help='The ARN of the role to assume')
+
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s {version}'.format(version=_version.__version__))
 
