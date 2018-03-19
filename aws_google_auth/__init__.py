@@ -52,18 +52,21 @@ def exit_if_unsupported_python():
 
 def main():
     try:
-        cli(sys.argv[1:])
+        exit_if_unsupported_python()
+
+        cli_args = sys.argv[1:]
+        args = parse_args(args=cli_args)
+
+        config = resolve_config(args)
+        process_auth(args, config)
     except KeyboardInterrupt:
         pass
 
 
-def cli(cli_args):
-    exit_if_unsupported_python()
+def resolve_config(args):
 
     # Shortening Convenience functions
     coalesce = util.Util.coalesce
-
-    args = parse_args(args=cli_args)
 
     # Create a blank configuration object (has the defaults pre-filled)
     config = configuration.Configuration()
@@ -80,16 +83,16 @@ def cli(cli_args):
     config.read(config.profile)
 
     # Ask Role (Option priority = ARGS, ENV_VAR, DEFAULT)
-    config.ask_role = coalesce(
+    config.ask_role = bool(coalesce(
         args.ask_role,
         os.getenv('AWS_ASK_ROLE'),
-        config.ask_role)
+        config.ask_role))
 
     # Duration (Option priority = ARGS, ENV_VAR, DEFAULT)
-    config.duration = coalesce(
+    config.duration = int(coalesce(
         args.duration,
         os.getenv('DURATION'),
-        config.duration)
+        config.duration))
 
     # IDP ID (Option priority = ARGS, ENV_VAR, DEFAULT)
     config.idp_id = coalesce(
@@ -132,6 +135,11 @@ def cli(cli_args):
         args.username,
         os.getenv('GOOGLE_USERNAME'),
         config.username)
+
+    return config
+
+
+def process_auth(args, config):
 
     # If there is a valid cache and the user opted to use it, use that instead
     # of prompting the user for input (it will also ignroe any set variables
@@ -184,8 +192,10 @@ def cli(cli_args):
     print("Assuming " + config.role_arn)
     print("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())))
 
-    amazon_client.print_export_line()
-    config.write(amazon_client)
+    if config.profile:
+        config.write(amazon_client)
+    else:
+        amazon_client.print_export_line()
 
 
 if __name__ == '__main__':
