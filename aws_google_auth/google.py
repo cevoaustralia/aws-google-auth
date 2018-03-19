@@ -25,6 +25,12 @@ except ImportError:
           "methods can still continue.")
 
 
+class ExpectedGoogleException(Exception):
+
+    def __init__(self, *args):
+        super(ExpectedGoogleException, self).__init__(*args)
+
+
 class Google:
     def __init__(self, config):
         """The Google object holds authentication state
@@ -47,11 +53,41 @@ class Google:
         return "https://accounts.google.com/o/saml2/initsso?idpid={}&spid={}&forceauthn=false".format(
             self.config.idp_id, self.config.sp_id)
 
+    @staticmethod
+    def check_for_failure(sess):
+
+        if isinstance(sess.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = sess.reason.decode('utf-8')
+            except UnicodeDecodeError:
+                reason = sess.reason.decode('iso-8859-1')
+        else:
+            reason = sess.reason
+
+        if sess.status_code == 403:
+            raise ExpectedGoogleException(u'%s accessing %s' % (reason, sess.url))
+
+        sess.raise_for_status()
+
+    @staticmethod
+    def parse_error_message(sess):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        error = response_page.find('span', {'id': 'errorMsg'})
+
+        if error is None:
+            return None
+        else:
+            return error.text
+
     def do_login(self):
         self.session = requests.Session()
         self.session.headers['User-Agent'] = "AWS Sign-in/{} (Cevo aws-google-auth)".format(self.version)
         sess = self.session.get(self.login_url)
-        sess.raise_for_status()
+        self.check_for_failure(sess)
 
         # Collect information from the page source
         first_page = BeautifulSoup(sess.text, 'html.parser')
@@ -94,7 +130,7 @@ class Google:
 
         # POST to account login info page, to collect profile and session info
         sess = self.session.post(account_login_url, data=payload)
-        sess.raise_for_status()
+        self.check_for_failure(sess)
         self.session.headers['Referer'] = sess.url
 
         # Collect ProfileInformation, SessionState, signIn, and Password Challenge URL
@@ -113,7 +149,7 @@ class Google:
 
         # POST to Authenticate Password
         sess = self.session.post(passwd_challenge_url, data=payload)
-        sess.raise_for_status()
+        self.check_for_failure(sess)
         response_page = BeautifulSoup(sess.text, 'html.parser')
         error = response_page.find(class_='error-msg')
         cap = response_page.find('input', {'name': 'logincaptcha'})
@@ -122,12 +158,12 @@ class Google:
         # There could also sometimes be a Captcha, which means Google thinks you,
         # or someone using the same outbound IP address as you, is a bot.
         if error is not None:
-            raise ValueError('Invalid username or password')
+            raise ExpectedGoogleException('Invalid username or password')
 
         self.check_extra_step(response_page)
 
         if cap is not None:
-            raise ValueError('Captcha Required. Manually Login to remove this.')
+            raise ExpectedGoogleException('Captcha Required. Manually Login to remove this.')
 
         self.session.headers['Referer'] = sess.url
 
@@ -136,7 +172,12 @@ class Google:
 
         # Was there an MFA challenge?
         if "challenge/totp/" in sess.url:
-            sess = self.handle_totp(sess)
+            error_msg = ""
+            while error_msg is not None:
+                sess = self.handle_totp(sess)
+                error_msg = self.parse_error_message(sess)
+                if error_msg is not None:
+                    print(error_msg)
         elif "challenge/ipp/" in sess.url:
             sess = self.handle_sms(sess)
         elif "challenge/az/" in sess.url:
@@ -206,7 +247,7 @@ class Google:
 
         # If we exceed the number of attempts, raise an error and let the program exit.
         if auth_response is None:
-            raise RuntimeError("No U2F device found. Please check your setup.")
+            raise ExpectedGoogleException("No U2F device found. Please check your setup.")
 
         payload = {
             'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
@@ -224,7 +265,7 @@ class Google:
         }
 
         sess = self.session.post(challenge_url, data=payload)
-        sess.raise_for_status()
+        self.check_for_failure(sess)
 
         return sess
 
@@ -253,7 +294,7 @@ class Google:
 
         # Submit IPP (SMS code)
         sess = self.session.post(challenge_url, data=payload)
-        sess.raise_for_status()
+        self.check_for_failure(sess)
 
         return sess
 
@@ -291,7 +332,7 @@ class Google:
         }
 
         sess = self.session.post(challenge_url, data=payload)
-        sess.raise_for_status()
+        self.check_for_failure(sess)
 
         return sess
 
@@ -326,7 +367,7 @@ class Google:
 
         # Submit TOTP
         sess = self.session.post(challenge_url, data=payload)
-        sess.raise_for_status()
+        self.check_for_failure(sess)
 
         return sess
 
