@@ -53,10 +53,6 @@ def exit_if_unsupported_python():
 
 def main():
     try:
-        cli(sys.argv[1:])
-    except google.ExpectedGoogleException as ex:
-        print(ex.message)
-        sys.exit(1)
         exit_if_unsupported_python()
 
         cli_args = sys.argv[1:]
@@ -64,6 +60,9 @@ def main():
 
         config = resolve_config(args)
         process_auth(args, config)
+    except google.ExpectedGoogleException as ex:
+        print(ex.message)
+        sys.exit(1)
     except KeyboardInterrupt:
         pass
 
@@ -72,8 +71,6 @@ def resolve_config(args):
 
     # Shortening Convenience functions
     coalesce = util.Util.coalesce
-
-    args = parse_args(args=cli_args)
 
     # Create a blank configuration object (has the defaults pre-filled)
     config = configuration.Configuration()
