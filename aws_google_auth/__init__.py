@@ -41,7 +41,7 @@ def parse_args(args):
 
 
 def exit_if_unsupported_python():
-    if sys.version_info[0] == 2 and sys.version_info[1] < 7:
+    if sys.version_info.major == 2 and sys.version_info.minor < 7:
         print("aws-google-auth requires Python 2.7 or higher. Please consider upgrading. Support "
               "for Python 2.6 and lower was dropped because this tool's dependencies dropped support.")
         print("")
