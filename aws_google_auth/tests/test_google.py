@@ -50,10 +50,11 @@ class GoogleSAMLParseTest(unittest.TestCase):
         g = google.Google(config)
 
         g.session_state = Mock()
+        #                                          Base64 encoded `blart\n`
         g.session_state.text = "<input name='SAMLResponse' value='YmxhcnQK'>"
 
         result = g.parse_saml()
-        self.assertEqual('blart\n', result)
+        self.assertEqual(b'blart\n', result)
 
 
 class GooglePromptTest(unittest.TestCase):
