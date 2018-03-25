@@ -30,7 +30,7 @@ class GoogleSAMLParseTest(unittest.TestCase):
         with self.assertRaises(RuntimeError) as ex:
             g.parse_saml()
 
-        self.assertEquals("You must use do_login() before calling parse_saml()", ex.exception.message)
+        self.assertEquals("You must use do_login() before calling parse_saml()", str(ex.exception.args[0]))
 
     def test_invalid_saml(self):
 
@@ -43,7 +43,7 @@ class GoogleSAMLParseTest(unittest.TestCase):
         with self.assertRaises(RuntimeError) as ex:
             g.parse_saml()
 
-        self.assertEquals("Could not find SAML response, check your credentials", ex.exception.message)
+        self.assertEquals("Could not find SAML response, check your credentials", str(ex.exception.args[0]))
 
     def test_valid_saml(self):
         config = configuration.Configuration()
@@ -153,7 +153,7 @@ class GooglePromptTest(unittest.TestCase):
     #     with self.assertRaises(ExpectedGoogleException) as ex:
     #         g.handle_sk(sess)
     #
-    #     self.assertEqual("No U2F device found. Please check your setup.", ex.exception.message)
+    #     self.assertEqual("No U2F device found. Please check your setup.", str(ex.exception.args[0]))
     #     self.assertEqual(g.util.get_input.mock_calls,
     #                      [mock.call("Insert your U2F device and press enter to try again..."),
     #                       mock.call("Insert your U2F device and press enter to try again..."),
