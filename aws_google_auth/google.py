@@ -239,8 +239,10 @@ class Google:
         auth_response = None
         while True:
             try:
-                x = u2f.u2f_auth
-                auth_response = json.dumps(x(u2f_challenges, facet))
+                auth_response = json.dumps(u2f.u2f_auth(u2f_challenges, facet))
+                break
+            except NameError:
+                print("No U2F library found. Please install 'python-u2flib-host'")
                 break
             except RuntimeWarning:
                 print("No U2F device found. {} attempts remaining.".format(attempts_remaining))
