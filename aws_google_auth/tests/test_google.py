@@ -5,7 +5,7 @@ from aws_google_auth import configuration
 import unittest
 from mock import Mock, MagicMock
 
-from aws_google_auth.google import ExpectedGoogleException
+# from aws_google_auth.google import ExpectedGoogleException
 
 
 class GoogleTest(unittest.TestCase):
