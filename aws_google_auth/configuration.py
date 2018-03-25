@@ -11,7 +11,7 @@ from . import util
 from . import amazon
 
 
-class Configuration:
+class Configuration(object):
 
     def __init__(self, **kwargs):
         self.options = {}
@@ -69,15 +69,16 @@ class Configuration:
     # Will return a SAML cache, ONLY if it's valid. If invalid or not set, will
     # return None. If the SAML cache isn't valid, we'll remove it from the
     # in-memory object. On the next write(), it will be purged from disk.
-    def saml_cache_reader(self):
+    @property
+    def saml_cache(self):
         if not amazon.Amazon.is_valid_saml_assertion(self.__saml_cache):
             self.__saml_cache = None
+
         return self.__saml_cache
 
-    def saml_cache_writer(self, value):
+    @saml_cache.setter
+    def saml_cache(self, value):
         self.__saml_cache = value
-
-    saml_cache = property(saml_cache_reader, saml_cache_writer)
 
     # Will raise exceptions if the configuration is invalid, otherwise returns
     # None. Use this at any point to validate the configuration is in a good

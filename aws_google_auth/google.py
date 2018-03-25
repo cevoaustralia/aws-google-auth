@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+# -*- coding: utf8 -*-
 from . import _version
 from . import util
 
@@ -17,12 +17,19 @@ if sys.version_info >= (3, 0):
 else:
     import urlparse
 
+
 # The U2F USB Library is optional, if it's there, include it.
 try:
     from . import u2f
 except ImportError:
     print("Failed to import U2F libraries, U2F login unavailable. Other "
           "methods can still continue.")
+
+
+class ExpectedGoogleException(Exception):
+
+    def __init__(self, *args):
+        super(ExpectedGoogleException, self).__init__(*args)
 
 
 class Google:
@@ -47,13 +54,44 @@ class Google:
 
     @property
     def login_url(self):
-        return "https://accounts.google.com/o/saml2/initsso?idpid={}&spid={}&forceauthn=false".format(self.config.idp_id, self.config.sp_id)
+        return "https://accounts.google.com/o/saml2/initsso?idpid={}&spid={}&forceauthn=false".format(
+            self.config.idp_id, self.config.sp_id)
+
+    @staticmethod
+    def check_for_failure(sess):
+
+        if isinstance(sess.reason, bytes):
+            # We attempt to decode utf-8 first because some servers
+            # choose to localize their reason strings. If the string
+            # isn't utf-8, we fall back to iso-8859-1 for all other
+            # encodings. (See PR #3538)
+            try:
+                reason = sess.reason.decode('utf-8')
+            except UnicodeDecodeError:
+                reason = sess.reason.decode('iso-8859-1')
+        else:
+            reason = sess.reason
+
+        if sess.status_code == 403:
+            raise ExpectedGoogleException(u'%s accessing %s' % (reason, sess.url))
+
+        sess.raise_for_status()
+
+    @staticmethod
+    def parse_error_message(sess):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        error = response_page.find('span', {'id': 'errorMsg'})
+
+        if error is None:
+            return None
+        else:
+            return error.text
 
     def do_login(self):
         # self.session = requests.Session()
         self.session.headers['User-Agent'] = "AWS Sign-in/{} (Cevo aws-google-auth)".format(self.version)
         sess = self.session.get(self.login_url)
-        sess.raise_for_status()
+        self.check_for_failure(sess)
 
         # Collect information from the page source
         first_page = BeautifulSoup(sess.text, 'html.parser')
@@ -96,7 +134,7 @@ class Google:
 
         # POST to account login info page, to collect profile and session info
         sess = self.session.post(account_login_url, data=payload)
-        sess.raise_for_status()
+        self.check_for_failure(sess)
         self.session.headers['Referer'] = sess.url
 
         # Collect ProfileInformation, SessionState, signIn, and Password Challenge URL
@@ -115,7 +153,7 @@ class Google:
 
         # POST to Authenticate Password
         sess = self.session.post(passwd_challenge_url, data=payload)
-        sess.raise_for_status()
+        self.check_for_failure(sess)
         response_page = BeautifulSoup(sess.text, 'html.parser')
         error = response_page.find(class_='error-msg')
         cap = response_page.find('input', {'name': 'logincaptcha'})
@@ -124,12 +162,17 @@ class Google:
         # There could also sometimes be a Captcha, which means Google thinks you,
         # or someone using the same outbound IP address as you, is a bot.
         if error is not None:
-            raise ValueError('Invalid username or password')
+            raise ExpectedGoogleException('Invalid username or password')
+
+        self.check_extra_step(response_page)
 
         if cap is not None:
-            raise ValueError('Captcha Required. Manually Login to remove this.')
+            raise ExpectedGoogleException('Captcha Required. Manually Login to remove this.')
 
         self.session.headers['Referer'] = sess.url
+
+        if "selectchallenge/" in sess.url:
+            sess = self.handle_selectchallenge(sess)
 
         # Was there an MFA challenge?
         if "challenge/totp/" in sess.url:
@@ -138,18 +181,31 @@ class Google:
                 sess = self.handle_totp(sess)
                 error_msg = self.parse_error_message(sess)
                 if error_msg is not None:
-                    print error_msg
+                    print(error_msg)
         elif "challenge/ipp/" in sess.url:
             sess = self.handle_sms(sess)
         elif "challenge/az/" in sess.url:
             sess = self.handle_prompt(sess)
         elif "challenge/sk/" in sess.url:
             sess = self.handle_sk(sess)
+        elif "challenge/iap/" in sess.url:
+            sess = self.handle_iap(sess)
 
         # ... there are different URLs for backup codes (printed)
         # and security keys (eg yubikey) as well
         # save for later
         self.session_state = sess
+
+    @staticmethod
+    def check_extra_step(response):
+        extra_step = response.find(text='This extra step shows that it’s really you trying to sign in')
+        if extra_step:
+            print(extra_step)
+            msg = response.find(id='contactAdminMessage')
+            if msg:
+                raise ValueError(msg.text)
+            else:
+                raise ValueError(response)
 
     def parse_saml(self):
         if self.session_state is None:
@@ -196,7 +252,7 @@ class Google:
 
         # If we exceed the number of attempts, raise an error and let the program exit.
         if auth_response is None:
-            raise RuntimeError("No U2F device found. Please check your setup.")
+            raise ExpectedGoogleException("No U2F device found. Please check your setup.")
 
         payload = {
             'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
@@ -214,7 +270,7 @@ class Google:
         }
 
         sess = self.session.post(challenge_url, data=payload)
-        sess.raise_for_status()
+        self.check_for_failure(sess)
 
         return sess
 
@@ -240,7 +296,7 @@ class Google:
 
         # Submit IPP (SMS code)
         sess = self.session.post(challenge_url, data=payload)
-        sess.raise_for_status()
+        self.check_for_failure(sess)
 
         return sess
 
@@ -278,7 +334,7 @@ class Google:
         }
 
         sess = self.session.post(challenge_url, data=payload)
-        sess.raise_for_status()
+        self.check_for_failure(sess)
 
         return sess
 
@@ -313,6 +369,98 @@ class Google:
 
         # Submit TOTP
         sess = self.session.post(challenge_url, data=payload)
+        self.check_for_failure(sess)
+
+        return sess
+
+    def handle_iap(self, sess):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        challenge_url = sess.url.split("?")[0]
+        try:
+            phone_number = raw_input('Enter your phone number:') or None
+        except NameError:
+            phone_number = input('Enter your phone number:') or None
+
+        while True:
+            try:
+                choice = int(input('Type 1 to receive a code by SMS or 2 for a voice call:'))
+            except ValueError:
+                print("Not an integer! Try again.")
+                continue
+            else:
+                if choice == 1:
+                    send_method = 'SMS'
+                elif choice == 2:
+                    send_method = 'VOICE'
+                else:
+                    continue
+                break
+
+        payload = {
+            'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
+            'challengeType': response_page.find('input', {'name': 'challengeType'}).get('value'),
+            'continue': self.cont,
+            'scc': response_page.find('input', {'name': 'scc'}).get('value'),
+            'sarp': response_page.find('input', {'name': 'sarp'}).get('value'),
+            'checkedDomains': response_page.find('input', {'name': 'checkedDomains'}).get('value'),
+            'pstMsg': response_page.find('input', {'name': 'pstMsg'}).get('value'),
+            'TL': response_page.find('input', {'name': 'TL'}).get('value'),
+            'gxf': response_page.find('input', {'name': 'gxf'}).get('value'),
+            'phoneNumber': phone_number,
+            'sendMethod': send_method,
+        }
+
+        # Submit phone number and desired method (SMS or voice call)
+        sess = self.session.post(challenge_url, data=payload)
+        sess.raise_for_status()
+
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        challenge_url = sess.url.split("?")[0]
+
+        try:
+            token = raw_input("Enter " + send_method + " token: G-") or None
+        except NameError:
+            token = input("Enter " + send_method + " token: G-") or None
+
+        payload = {
+            'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
+            'challengeType': response_page.find('input', {'name': 'challengeType'}).get('value'),
+            'continue': response_page.find('input', {'name': 'continue'}).get('value'),
+            'scc': response_page.find('input', {'name': 'scc'}).get('value'),
+            'sarp': response_page.find('input', {'name': 'sarp'}).get('value'),
+            'checkedDomains': response_page.find('input', {'name': 'checkedDomains'}).get('value'),
+            'pstMsg': response_page.find('input', {'name': 'pstMsg'}).get('value'),
+            'TL': response_page.find('input', {'name': 'TL'}).get('value'),
+            'gxf': response_page.find('input', {'name': 'gxf'}).get('value'),
+            'pin': token,
+        }
+
+        # Submit SMS/VOICE token
+        sess = self.session.post(challenge_url, data=payload)
+        sess.raise_for_status()
+
+        return sess
+
+    def handle_selectchallenge(self, sess):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        challenge_id = response_page.find('input', {'name': 'challengeId'}).get('value')
+
+        payload = {
+            'challengeId': challenge_id,
+            'challengeType': response_page.find('input', {'name': 'challengeType'}).get('value'),
+            'continue': response_page.find('input', {'name': 'continue'}).get('value'),
+            'scc': response_page.find('input', {'name': 'scc'}).get('value'),
+            'sarp': response_page.find('input', {'name': 'sarp'}).get('value'),
+            'checkedDomains': response_page.find('input', {'name': 'checkedDomains'}).get('value'),
+            'pstMsg': response_page.find('input', {'name': 'pstMsg'}).get('value'),
+            'TL': response_page.find('input', {'name': 'TL'}).get('value'),
+            'gxf': response_page.find('input', {'name': 'gxf'}).get('value'),
+            'subAction': 'selectChallenge',
+            'SendMethod': 'SMS',
+        }
+
+        # Choose SMS challenge
+        sess = self.session.post('https://accounts.google.com/signin/challenge/ipp/' + str(challenge_id), data=payload)
         sess.raise_for_status()
 
         return sess
