@@ -51,11 +51,10 @@ def exit_if_unsupported_python():
         sys.exit(1)
 
 
-def main():
+def main(cli_args):
     try:
         exit_if_unsupported_python()
 
-        cli_args = sys.argv[1:]
         args = parse_args(args=cli_args)
 
         config = resolve_config(args)
@@ -203,4 +202,5 @@ def process_auth(args, config):
 
 
 if __name__ == '__main__':
-    main()
+    cli_args = sys.argv[1:]
+    main(cli_args)
