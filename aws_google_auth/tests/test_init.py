@@ -22,7 +22,7 @@ class TestInit(unittest.TestCase):
         aws_google_auth.resolve_config.return_value = mock_config
 
         # Function under test
-        aws_google_auth.main()
+        aws_google_auth.main([])
 
         self.assertTrue(exit_if_unsupported_python.called)
         self.assertTrue(resolve_config.called)
