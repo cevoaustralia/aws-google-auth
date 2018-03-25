@@ -5,6 +5,8 @@ from aws_google_auth import configuration
 import unittest
 from mock import Mock, MagicMock
 
+from aws_google_auth.google import ExpectedGoogleException
+
 
 class GoogleTest(unittest.TestCase):
 
@@ -151,9 +153,10 @@ class GoogleSKTest(unittest.TestCase):
         sess.text = "<input name='id-challenge' value='{\"appId\":\"blart\", \"challenges\":[]}' />"
         sess.url = "demourl?response"
 
-        with self.assertRaises(RuntimeError) as ex:
+        with self.assertRaises(Exception) as ex:
             g.handle_sk(sess)
 
+        self.assertEqual(type(ex.exception), ExpectedGoogleException)
         self.assertEqual("No U2F device found. Please check your setup.", ex.exception.message)
         self.assertEqual(g.util.get_input.mock_calls,
                          [mock.call("Insert your U2F device and press enter to try again..."),

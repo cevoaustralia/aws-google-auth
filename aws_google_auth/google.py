@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
-from . import _version
-from . import util
+from aws_google_auth import _version
+from aws_google_auth import util
 
 import sys
 import requests
@@ -20,7 +20,7 @@ else:
 
 # The U2F USB Library is optional, if it's there, include it.
 try:
-    from . import u2f
+    from aws_google_auth import u2f
 except ImportError:
     print("Failed to import U2F libraries, U2F login unavailable. Other "
           "methods can still continue.")
