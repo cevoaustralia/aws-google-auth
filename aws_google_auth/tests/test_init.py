@@ -121,12 +121,10 @@ class TestInit(unittest.TestCase):
                           call.write(mock_amazon_client)],
                          mock_config.mock_calls)
 
-        self.assertEqual([call(
-                             {
-                                'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
+        self.assertEqual([call({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
                                 'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'
-                             }
-                            )], mock_amazon_client.resolve_aws_aliases.mock_calls)
+                                })],
+                         mock_amazon_client.resolve_aws_aliases.mock_calls)
 
         self.assertEqual([call({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
                                 'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'}, [])
