@@ -144,7 +144,7 @@ def resolve_config(args):
     config.keyring = coalesce(
         args.keyring,
         config.keyring)
-    
+
     return config
 
 
