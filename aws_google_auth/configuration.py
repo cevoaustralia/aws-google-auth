@@ -19,6 +19,7 @@ class Configuration(object):
 
         # Set up some defaults. These can be overridden as fit.
         self.ask_role = False
+        self.keyring = False
         self.duration = self.max_duration
         self.idp_id = None
         self.password = None
@@ -89,6 +90,9 @@ class Configuration(object):
         # ask_role
         assert (self.ask_role.__class__ is bool), "Expected ask_role to be a boolean. Got {}.".format(self.ask_role.__class__)
 
+        # keyring
+        assert (self.keyring.__class__ is bool), "Expected keyring to be a boolean. Got {}.".format(self.keyring.__class__)
+
         # duration
         assert (self.duration.__class__ is int), "Expected duration to be an integer. Got {}.".format(self.duration.__class__)
         assert (self.duration > 0), "Expected duration to be greater than 0. Got {}.".format(self.duration)
@@ -136,6 +140,7 @@ class Configuration(object):
             config_parser.add_section(profile)
         config_parser.set(profile, 'region', self.region)
         config_parser.set(profile, 'google_config.ask_role', self.ask_role)
+        config_parser.set(profile, 'google_config.keyring', self.keyring)
         config_parser.set(profile, 'google_config.duration', self.duration)
         config_parser.set(profile, 'google_config.google_idp_id', self.idp_id)
         config_parser.set(profile, 'google_config.role_arn', self.role_arn)
@@ -185,6 +190,10 @@ class Configuration(object):
             # Ask Role
             read_ask_role = config_parser[profile_string].getboolean('google_config.ask_role', None)
             self.ask_role = coalesce(read_ask_role, self.ask_role)
+
+            # Keyring
+            read_keyring = config_parser[profile_string].getboolean('google_config.keyring', None)
+            self.keyring = coalesce(read_keyring, self.keyring)
 
             # Duration
             read_duration = config_parser[profile_string].getint('google_config.duration', None)
