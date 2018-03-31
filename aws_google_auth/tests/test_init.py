@@ -70,6 +70,7 @@ class TestInit(unittest.TestCase):
         mock_config = Mock()
         mock_config.profile = False
         mock_config.saml_cache = False
+        mock_config.keyring = False
         mock_config.username = None
         mock_config.idp_id = None
         mock_config.sp_id = None
@@ -293,6 +294,7 @@ class TestInit(unittest.TestCase):
 
         mock_config = Mock()
         mock_config.saml_cache = False
+        mock_config.keyring = False
         mock_config.username = None
         mock_config.idp_id = None
         mock_config.sp_id = None
