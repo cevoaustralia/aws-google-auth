@@ -51,7 +51,7 @@ def exit_if_unsupported_python():
         sys.exit(1)
 
 
-def main(cli_args):
+def cli(cli_args):
     try:
         exit_if_unsupported_python()
 
@@ -201,6 +201,10 @@ def process_auth(args, config):
         amazon_client.print_export_line()
 
 
-if __name__ == '__main__':
+def main():
     cli_args = sys.argv[1:]
-    main(cli_args)
+    cli(cli_args)
+
+
+if __name__ == '__main__':
+    main()
