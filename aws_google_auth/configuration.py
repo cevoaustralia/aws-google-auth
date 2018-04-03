@@ -44,7 +44,7 @@ class Configuration(object):
 
     @property
     def max_duration(self):
-        return 3600
+        return 43200
 
     @property
     def credentials_file(self):
