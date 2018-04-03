@@ -11,6 +11,20 @@ class TestInit(unittest.TestCase):
     def setUp(self):
         pass
 
+    @patch('aws_google_auth.cli', spec=True)
+    def test_main_method_has_no_parameters(self, mock_cli):
+        """
+        This is the entrypoint for the cli tool, and should require no parameters
+
+        :param mock_cli:
+        :return:
+        """
+
+        # Function under test
+        aws_google_auth.main()
+
+        self.assertTrue(mock_cli.called)
+
     @patch('aws_google_auth.exit_if_unsupported_python', spec=True)
     @patch('aws_google_auth.resolve_config', spec=True)
     @patch('aws_google_auth.process_auth', spec=True)
@@ -22,7 +36,7 @@ class TestInit(unittest.TestCase):
         aws_google_auth.resolve_config.return_value = mock_config
 
         # Function under test
-        aws_google_auth.main([])
+        aws_google_auth.cli([])
 
         self.assertTrue(exit_if_unsupported_python.called)
         self.assertTrue(resolve_config.called)
