@@ -117,6 +117,10 @@ Usage
                             The ARN of the role to assume
       -V, --version         show program's version number and exit
 
+**Note** that if you want longer than the default 3600 seconds (1 hour)
+duration, you must also modify the IAM Role to permit this. See
+`the AWS documentation <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_manage_modify.html>`__
+for more information.
 
 Native Python
 ~~~~~~~~~~~~~
