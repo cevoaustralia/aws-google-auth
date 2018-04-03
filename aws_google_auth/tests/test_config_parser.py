@@ -57,7 +57,7 @@ class TestDurationProcessing(unittest.TestCase):
     def test_default(self):
         args = parse_args([])
         config = resolve_config(args)
-        self.assertEqual(3600, config.duration)
+        self.assertEqual(43200, config.duration)
 
     def test_cli_param_supplied(self):
         args = parse_args(['-d', "500"])

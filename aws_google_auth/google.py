@@ -42,7 +42,7 @@ class Google:
         sp_id: Google's assigned SP identifier for your AWS SAML app
 
         Optionally, you can supply:
-        duration_seconds: number of seconds for the session to be active (max 3600)
+        duration_seconds: number of seconds for the session to be active (max 43200)
         """
 
         self.version = _version.__version__
