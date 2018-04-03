@@ -2,7 +2,7 @@ FROM alpine:3.5
 
 RUN apk add --update-cache py2-pip ca-certificates py2-certifi py2-lxml \
                            python-dev cython cython-dev libusb-dev build-base \
-                           eudev-dev linux-headers
+                           eudev-dev linux-headers libffi-dev openssl-dev
 
 ADD . /build/
 RUN pip install -e /build/[u2f]

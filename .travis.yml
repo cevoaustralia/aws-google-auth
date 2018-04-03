@@ -8,6 +8,7 @@ sudo: false
 dist: trusty
 install:
   - pip install .
+  - pip install keyrings.alt
   - pip install coverage
   - pip install coveralls
   - pip install flake8

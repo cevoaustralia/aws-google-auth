@@ -8,6 +8,7 @@ from . import amazon
 
 import argparse
 import getpass
+import keyring
 import os
 import sys
 
@@ -33,6 +34,7 @@ def parse_args(args):
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
     role_group.add_argument('-r', '--role-arn', help='The ARN of the role to assume')
+    parser.add_argument('-k', '--keyring', action='store_true', help='Use keyring for storing the password.')
 
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s {version}'.format(version=_version.__version__))
@@ -139,11 +141,14 @@ def resolve_config(args):
         os.getenv('GOOGLE_USERNAME'),
         config.username)
 
+    config.keyring = coalesce(
+        args.keyring,
+        config.keyring)
+
     return config
 
 
 def process_auth(args, config):
-
     # If there is a valid cache and the user opted to use it, use that instead
     # of prompting the user for input (it will also ignroe any set variables
     # such as username or sp_id and idp_id, as those are built into the SAML
@@ -162,7 +167,15 @@ def process_auth(args, config):
 
         # There is no way (intentional) to pass in the password via the command
         # line nor environment variables. This prevents password leakage.
-        config.password = getpass.getpass("Google Password: ")
+        if config.keyring:
+            keyring_password = keyring.get_password(
+                "aws-google-auth", config.username)
+            if keyring_password:
+                config.password = keyring_password
+            else:
+                config.password = getpass.getpass("Google Password: ")
+        else:
+            config.password = getpass.getpass("Google Password: ")
 
         # Validate Options
         config.raise_if_invalid()
@@ -170,6 +183,11 @@ def process_auth(args, config):
         google_client = google.Google(config)
         google_client.do_login()
         saml_xml = google_client.parse_saml()
+
+        # If we logged in correctly and we are using keyring then store the password
+        if config.keyring and keyring_password is None:
+            keyring.set_password(
+                "aws-google-auth", config.username, config.password)
 
         # We now have a new SAML value that can get cached (If the user asked
         # for it to be)

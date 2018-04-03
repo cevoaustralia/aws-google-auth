@@ -31,6 +31,7 @@ class TestInit(unittest.TestCase):
         self.assertEqual([call()], exit_if_unsupported_python.mock_calls)
 
         self.assertEqual([call(Namespace(ask_role=False,
+                                         keyring=False,
                                          disable_u2f=False,
                                          duration=None,
                                          idp_id=None,
@@ -45,6 +46,7 @@ class TestInit(unittest.TestCase):
                          resolve_config.mock_calls)
 
         self.assertEqual([call(Namespace(ask_role=False,
+                                         keyring=False,
                                          disable_u2f=False,
                                          duration=None,
                                          idp_id=None,
@@ -68,6 +70,7 @@ class TestInit(unittest.TestCase):
         mock_config = Mock()
         mock_config.profile = False
         mock_config.saml_cache = False
+        mock_config.keyring = False
         mock_config.username = None
         mock_config.idp_id = None
         mock_config.sp_id = None
@@ -145,6 +148,7 @@ class TestInit(unittest.TestCase):
 
         mock_config = Mock()
         mock_config.saml_cache = False
+        mock_config.keyring = False
         mock_config.username = None
         mock_config.idp_id = None
         mock_config.sp_id = None
@@ -290,6 +294,7 @@ class TestInit(unittest.TestCase):
 
         mock_config = Mock()
         mock_config.saml_cache = False
+        mock_config.keyring = False
         mock_config.username = None
         mock_config.idp_id = None
         mock_config.sp_id = None
