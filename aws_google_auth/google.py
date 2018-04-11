@@ -196,12 +196,8 @@ class Google:
     def check_extra_step(response):
         extra_step = response.find(text='This extra step shows that it’s really you trying to sign in')
         if extra_step:
-            print(extra_step)
-            msg = response.find(id='contactAdminMessage')
-            if msg:
-                raise ValueError(msg.text)
-            else:
-                raise ValueError(response)
+            if response.find(id='contactAdminMessage'):
+                raise ValueError(response.find(id='contactAdminMessage').text)
 
     def parse_saml(self):
         if self.session_state is None:
