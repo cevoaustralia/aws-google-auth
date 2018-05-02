@@ -2,6 +2,8 @@
 
 import os
 import botocore.session
+import six
+
 try:
     from backports import configparser
 except ImportError:
@@ -114,7 +116,7 @@ class Configuration(object):
         assert (self.username.__class__ is str), "Expected username to be a string. Got {}.".format(self.username.__class__)
 
         # password
-        assert (self.password.__class__ in (str, unicode)), "Expected password to be a string. Got {}.".format(self.password.__class__)
+        assert (self.password.__class__ in six.string_types), "Expected password to be a string. Got {}.".format(self.password.__class__)
 
         # role_arn (Can be blank, we'll just prompt)
         if self.role_arn is not None:
