@@ -340,12 +340,9 @@ class Google:
         Sometimes there is an additional numerical code on the response page that needs to be selected
         on the prompt from a list of multiple choice. Print it if it's there.
         """
-        approval_msg = response.find("div", { "id": "azApprovalMsg" })
-        if approval_msg:
-            # the code has no id or any distinctive attributes, except a class that looks auto-generated...
-            num_code = approval_msg.find("b")
-            if num_code:
-                print("numerical code for prompt: {}".format(num_code.string))
+        num_code = response.find("div", { "jsname": "EKvSSd" })
+        if num_code:
+            print("numerical code for prompt: {}".format(num_code.string))
 
     def handle_totp(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
