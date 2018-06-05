@@ -340,7 +340,7 @@ class Google:
         Sometimes there is an additional numerical code on the response page that needs to be selected
         on the prompt from a list of multiple choice. Print it if it's there.
         """
-        num_code = response.find("div", { "jsname": "EKvSSd" })
+        num_code = response.find("div", {"jsname": "EKvSSd"})
         if num_code:
             print("numerical code for prompt: {}".format(num_code.string))
 
