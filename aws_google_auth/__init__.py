@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 from . import _version
 from . import configuration
@@ -13,6 +14,7 @@ import os
 import sys
 
 from tzlocal import get_localzone
+from six import print_ as print
 
 
 def parse_args(args):
