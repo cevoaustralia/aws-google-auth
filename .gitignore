@@ -7,5 +7,3 @@ build/
 .idea/
 Pipfile
 Pipfile.lock
-.mypy_cache/
-.vscode/

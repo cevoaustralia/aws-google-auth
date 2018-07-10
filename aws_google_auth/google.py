@@ -184,8 +184,7 @@ class Google:
         elif "challenge/iap/" in sess.url:
             sess = self.handle_iap(sess)
         elif "challenge/ootp/5" in sess.url:
-            print("Offline Google App ootp not implemented")
-            raise NotImplementedError
+            raise NotImplementedError('Offline Google App OOTP not implemented')
 
         # ... there are different URLs for backup codes (printed)
         # and security keys (eg yubikey) as well
