@@ -12,7 +12,6 @@ from bs4 import BeautifulSoup
 from six.moves import urllib_parse, input
 from six import print_ as print
 
-
 # The U2F USB Library is optional, if it's there, include it.
 try:
     from . import u2f
@@ -440,24 +439,24 @@ class Google:
 
     def handle_selectchallenge(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
+        # Known mfa methods, 5 is disabled till its implemented
+        auth_methods = {
+            2: 'TOTP (Google Authenticator)',
+            3: 'SMS',
+            4: 'OOTP (Google Prompt)'
+            #5: 'OOTP (Google App Offline Security Code)'
+        }
+
         unavailable_challenge_ids = [int(i.attrs.get('data-unavailable')) for i in response_page.find_all(
             lambda tag: tag.name == 'form' and 'data-unavailable' in tag.attrs)]
+
+        # ootp via google app offline code isn't implemented. make sure its not valid.
+        unavailable_challenge_ids.append(5)
 
         challenge_ids = [int(i.get('value')) for i in response_page.find_all(
             'input', {'name': 'challengeId'}) if int(i.get('value')) not in unavailable_challenge_ids]
 
         challenge_ids.sort()
-
-        # Known mfa methods
-        auth_methods = {
-            2: 'TOTP (Google Authenticator)',
-            3: 'SMS',
-            4: 'OOTP (Google Prompt)',
-            5: 'OOTP (Google App Offline Security Code)'
-        }
-
-        # Remove app ootp as we haven't implemented it yet
-        del auth_methods[5]
 
         auth_methods = {
             k: auth_methods[k] for k in challenge_ids if k in auth_methods and k not in unavailable_challenge_ids}
