@@ -70,6 +70,38 @@ class Google:
 
         sess.raise_for_status()
 
+        return sess
+
+    def post(self, url, data=None, json=None):
+        try:
+            response = self.check_for_failure(self.session.post(url, data=data, json=json))
+        except requests.exceptions.ConnectionError as e:
+            print('There was a connection error, check your network settings: {}'.format(e))
+            sys.exit(1)
+        except requests.exceptions.Timeout as e:
+            print('The connection timed out, please try again: {}'.format(e))
+            sys.exit(1)
+        except requests.exceptions.TooManyRedirects as e:
+            print('The number of redirects exceeded the maximum allowed: {}'.format(e))
+            sys.exit(1)
+   
+        return response
+    
+    def get(self, url):
+        try:
+            response = self.check_for_failure(self.session.get(url))
+        except requests.exceptions.ConnectionError as e:
+            print('There was a connection error, check your network settings: {}'.format(e))
+            sys.exit(1)
+        except requests.exceptions.Timeout as e:
+            print('The connection timed out, please try again: {}'.format(e))
+            sys.exit(1)
+        except requests.exceptions.TooManyRedirects as e:
+            print('The number of redirects exceeded the maximum allowed: {}'.format(e))
+            sys.exit(1)
+   
+        return response
+
     @staticmethod
     def parse_error_message(sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
@@ -83,8 +115,7 @@ class Google:
     def do_login(self):
         self.session = requests.Session()
         self.session.headers['User-Agent'] = "AWS Sign-in/{} (Cevo aws-google-auth)".format(self.version)
-        sess = self.session.get(self.login_url)
-        self.check_for_failure(sess)
+        sess = self.get(self.login_url)
 
         # Collect information from the page source
         first_page = BeautifulSoup(sess.text, 'html.parser')
@@ -126,8 +157,8 @@ class Google:
             pass
 
         # POST to account login info page, to collect profile and session info
-        sess = self.session.post(account_login_url, data=payload)
-        self.check_for_failure(sess)
+        sess = self.post(account_login_url, data=payload)
+
         self.session.headers['Referer'] = sess.url
 
         # Collect ProfileInformation, SessionState, signIn, and Password Challenge URL
@@ -145,8 +176,8 @@ class Google:
         payload['Passwd'] = self.config.password
 
         # POST to Authenticate Password
-        sess = self.session.post(passwd_challenge_url, data=payload)
-        self.check_for_failure(sess)
+        sess = self.post(passwd_challenge_url, data=payload)
+
         response_page = BeautifulSoup(sess.text, 'html.parser')
         error = response_page.find(class_='error-msg')
         cap = response_page.find('input', {'name': 'logincaptcha'})
@@ -258,11 +289,7 @@ class Google:
             'id-assertion': auth_response,
             'TrustDevice': 'on',
         }
-
-        sess = self.session.post(challenge_url, data=payload)
-        self.check_for_failure(sess)
-
-        return sess
+        return self.post(challenge_url, data=payload)
 
     def handle_sms(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
@@ -285,10 +312,7 @@ class Google:
         }
 
         # Submit IPP (SMS code)
-        sess = self.session.post(challenge_url, data=payload)
-        self.check_for_failure(sess)
-
-        return sess
+        return self.post(challenge_url, data=payload)
 
     def handle_prompt(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
@@ -304,7 +328,8 @@ class Google:
         print("Open the Google App, and tap 'Yes' on the prompt to sign in ...")
 
         self.session.headers['Referer'] = sess.url
-        parsed_response = json.loads(self.session.post(await_url, json=await_body).text)
+        
+        parsed_response = json.loads(self.post(await_url, json=await_body).text)
 
         payload = {
             'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
@@ -321,11 +346,8 @@ class Google:
             'action': response_page.find('input', {'name': 'action'}).get('value'),
             'TrustDevice': 'on',
         }
-
-        sess = self.session.post(challenge_url, data=payload)
-        self.check_for_failure(sess)
-
-        return sess
+        
+        return self.post(challenge_url, data=payload)
 
     def handle_totp(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
@@ -354,10 +376,7 @@ class Google:
         }
 
         # Submit TOTP
-        sess = self.session.post(challenge_url, data=payload)
-        self.check_for_failure(sess)
-
-        return sess
+        return self.post(challenge_url, data=payload)
 
     def handle_iap(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
@@ -396,8 +415,7 @@ class Google:
         }
 
         # Submit phone number and desired method (SMS or voice call)
-        sess = self.session.post(challenge_url, data=payload)
-        sess.raise_for_status()
+        sess = self.post(challenge_url, data=payload)
 
         response_page = BeautifulSoup(sess.text, 'html.parser')
         challenge_url = sess.url.split("?")[0]
@@ -418,10 +436,7 @@ class Google:
         }
 
         # Submit SMS/VOICE token
-        sess = self.session.post(challenge_url, data=payload)
-        sess.raise_for_status()
-
-        return sess
+        return self.post(challenge_url, data=payload)
 
     def handle_selectchallenge(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
@@ -483,8 +498,5 @@ class Google:
                 'input', {'name': 'SendMethod'}).get('value')
 
         # POST to google with the chosen challenge
-        sess = self.session.post(
+        return self.post(
             self.base_url + challenge_form.get('action'), data=payload)
-        sess.raise_for_status()
-
-        return sess
