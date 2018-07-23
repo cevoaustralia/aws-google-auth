@@ -79,3 +79,7 @@ class Util:
             return object.encode('utf-8')
         else:
             return object
+
+    @staticmethod
+    def get_password(prompt):
+        return getpass.getpass("Google Password: ")
