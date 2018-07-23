@@ -3,7 +3,7 @@
 import sys
 import unittest
 from aws_google_auth import util
-
+from mock import call, patch, Mock, MagicMock
 
 class TestUtilMethods(unittest.TestCase):
 
@@ -46,3 +46,19 @@ class TestUtilMethods(unittest.TestCase):
         self.assertEqual(util.Util.unicode_to_string_if_needed(None), None)
         self.assertEqual(util.Util.unicode_to_string_if_needed(1234), 1234)
         self.assertEqual(util.Util.unicode_to_string_if_needed("nop"), "nop")
+
+    @patch('getpass.getpass', spec=True)
+    @patch('sys.stdin', spec=True)
+    def test_get_password_when_tty(self, mock_stdin, mock_getpass):
+        mock_stdin.isatty = MagicMock(return_value=True)
+
+        mock_getpass.return_value = "pass"
+
+        self.assertEqual(util.Util.get_password("Test: "), "pass")
+
+    @patch('sys.stdin', spec=True)
+    def test_get_password_when_not_tty(self, mock_stdin):
+        mock_stdin.isatty = MagicMock(return_value=False)
+        mock_stdin.readline = MagicMock(return_value="pass")
+
+        self.assertEqual(util.Util.get_password("Test: "), "pass")

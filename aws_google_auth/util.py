@@ -4,7 +4,8 @@ import os
 from collections import OrderedDict
 from tabulate import tabulate
 from six.moves import input
-
+import sys
+import getpass
 
 class Util:
 
@@ -82,4 +83,10 @@ class Util:
 
     @staticmethod
     def get_password(prompt):
-        return getpass.getpass("Google Password: ")
+        if sys.stdin.isatty():
+            password = getpass.getpass(prompt)
+        else:
+            print(prompt, end="")
+            password = sys.stdin.readline()
+            print("")
+        return password
