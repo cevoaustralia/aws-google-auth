@@ -75,11 +75,10 @@ class TestInit(unittest.TestCase):
                           ],
                          process_auth.mock_calls)
 
-    @patch('getpass.getpass', spec=True)
     @patch('aws_google_auth.util', spec=True)
     @patch('aws_google_auth.amazon', spec=True)
     @patch('aws_google_auth.google', spec=True)
-    def test_process_auth_standard(self, mock_google, mock_amazon, mock_util, mock_getpass):
+    def test_process_auth_standard(self, mock_google, mock_amazon, mock_util):
 
         mock_config = Mock()
         mock_config.profile = False
@@ -93,8 +92,6 @@ class TestInit(unittest.TestCase):
         mock_amazon_client = Mock()
         mock_google_client = Mock()
 
-        mock_getpass.return_value = "pass"
-
         mock_amazon_client.roles = {
             'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
             'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'
@@ -103,6 +100,7 @@ class TestInit(unittest.TestCase):
         mock_util_obj = MagicMock()
         mock_util_obj.pick_a_role = MagicMock(return_value=("da_role", "da_provider"))
         mock_util_obj.get_input = MagicMock(side_effect=["input", "input2", "input3"])
+        mock_util_obj.get_password = MagicMock(return_value="pass")
 
         mock_util.Util = mock_util_obj
 
@@ -129,15 +127,13 @@ class TestInit(unittest.TestCase):
         self.assertEqual([call.Util.get_input('Google username: '),
                           call.Util.get_input('Google IDP ID: '),
                           call.Util.get_input('Google SP ID: '),
+                          call.Util.get_password('Google Password: '),
                           call.Util.pick_a_role({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
                                                 'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'}, [])],
                          mock_util.mock_calls)
 
         self.assertEqual([call()],
                          mock_amazon_client.print_export_line.mock_calls)
-
-        self.assertEqual([call('Google Password: ')],
-                         mock_getpass.mock_calls)
 
         self.assertEqual([call.do_login(), call.parse_saml()],
                          mock_google_client.mock_calls)
@@ -154,11 +150,10 @@ class TestInit(unittest.TestCase):
                                 'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'}, [])
                           ], mock_util_obj.pick_a_role.mock_calls)
 
-    @patch('getpass.getpass', spec=True)
     @patch('aws_google_auth.util', spec=True)
     @patch('aws_google_auth.amazon', spec=True)
     @patch('aws_google_auth.google', spec=True)
-    def test_process_auth_specified_role(self, mock_google, mock_amazon, mock_util, mock_getpass):
+    def test_process_auth_specified_role(self, mock_google, mock_amazon, mock_util):
 
         mock_config = Mock()
         mock_config.saml_cache = False
@@ -174,8 +169,6 @@ class TestInit(unittest.TestCase):
         mock_amazon_client = Mock()
         mock_google_client = Mock()
 
-        mock_getpass.return_value = "pass"
-
         mock_amazon_client.roles = {
             'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
             'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'
@@ -184,6 +177,7 @@ class TestInit(unittest.TestCase):
         mock_util_obj = MagicMock()
         mock_util_obj.pick_a_role = MagicMock(return_value=("da_role", "da_provider"))
         mock_util_obj.get_input = MagicMock(side_effect=["input", "input2", "input3"])
+        mock_util_obj.get_password = MagicMock(return_value="pass")
 
         mock_util.Util = mock_util_obj
 
@@ -208,11 +202,9 @@ class TestInit(unittest.TestCase):
         # Assert calls occur
         self.assertEqual([call.Util.get_input('Google username: '),
                           call.Util.get_input('Google IDP ID: '),
-                          call.Util.get_input('Google SP ID: ')],
+                          call.Util.get_input('Google SP ID: '),
+                          call.Util.get_password('Google Password: ')],
                          mock_util.mock_calls)
-
-        self.assertEqual([call('Google Password: ')],
-                         mock_getpass.mock_calls)
 
         self.assertEqual([call.do_login(), call.parse_saml()],
                          mock_google_client.mock_calls)
@@ -227,11 +219,10 @@ class TestInit(unittest.TestCase):
         self.assertEqual([],
                          mock_util_obj.pick_a_role.mock_calls)
 
-    @patch('getpass.getpass', spec=True)
     @patch('aws_google_auth.util', spec=True)
     @patch('aws_google_auth.amazon', spec=True)
     @patch('aws_google_auth.google', spec=True)
-    def test_process_auth_dont_resolve_alias(self, mock_google, mock_amazon, mock_util, mock_getpass):
+    def test_process_auth_dont_resolve_alias(self, mock_google, mock_amazon, mock_util):
 
         mock_config = Mock()
         mock_config.saml_cache = False
@@ -245,8 +236,6 @@ class TestInit(unittest.TestCase):
         mock_amazon_client = Mock()
         mock_google_client = Mock()
 
-        mock_getpass.return_value = "pass"
-
         mock_amazon_client.roles = {
             'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
             'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'
@@ -255,6 +244,7 @@ class TestInit(unittest.TestCase):
         mock_util_obj = MagicMock()
         mock_util_obj.pick_a_role = MagicMock(return_value=("da_role", "da_provider"))
         mock_util_obj.get_input = MagicMock(side_effect=["input", "input2", "input3"])
+        mock_util_obj.get_password = MagicMock(return_value="pass")
 
         mock_util.Util = mock_util_obj
 
@@ -284,9 +274,6 @@ class TestInit(unittest.TestCase):
                                                 'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'})],
                          mock_util.mock_calls)
 
-        self.assertEqual([call('Google Password: ')],
-                         mock_getpass.mock_calls)
-
         self.assertEqual([call.do_login(), call.parse_saml()],
                          mock_google_client.mock_calls)
 
@@ -301,11 +288,10 @@ class TestInit(unittest.TestCase):
                                 'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'})
                           ], mock_util_obj.pick_a_role.mock_calls)
 
-    @patch('getpass.getpass', spec=True)
     @patch('aws_google_auth.util', spec=True)
     @patch('aws_google_auth.amazon', spec=True)
     @patch('aws_google_auth.google', spec=True)
-    def test_process_auth_with_profile(self, mock_google, mock_amazon, mock_util, mock_getpass):
+    def test_process_auth_with_profile(self, mock_google, mock_amazon, mock_util):
 
         mock_config = Mock()
         mock_config.saml_cache = False
@@ -320,8 +306,6 @@ class TestInit(unittest.TestCase):
         mock_amazon_client = Mock()
         mock_google_client = Mock()
 
-        mock_getpass.return_value = "pass"
-
         mock_amazon_client.roles = {
             'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
             'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'
@@ -330,6 +314,7 @@ class TestInit(unittest.TestCase):
         mock_util_obj = MagicMock()
         mock_util_obj.pick_a_role = MagicMock(return_value=("da_role", "da_provider"))
         mock_util_obj.get_input = MagicMock(side_effect=["input", "input2", "input3"])
+        mock_util_obj.get_password = MagicMock(return_value="pass")
 
         mock_util.Util = mock_util_obj
 
@@ -355,12 +340,10 @@ class TestInit(unittest.TestCase):
         self.assertEqual([call.Util.get_input('Google username: '),
                           call.Util.get_input('Google IDP ID: '),
                           call.Util.get_input('Google SP ID: '),
+                          call.Util.get_password('Google Password: '),
                           call.Util.pick_a_role({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
                                                 'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'}, [])],
                          mock_util.mock_calls)
-
-        self.assertEqual([call('Google Password: ')],
-                         mock_getpass.mock_calls)
 
         self.assertEqual([call.do_login(), call.parse_saml()],
                          mock_google_client.mock_calls)
@@ -378,11 +361,10 @@ class TestInit(unittest.TestCase):
                                 'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'}, [])
                           ], mock_util_obj.pick_a_role.mock_calls)
 
-    @patch('getpass.getpass', spec=True)
     @patch('aws_google_auth.util', spec=True)
     @patch('aws_google_auth.amazon', spec=True)
     @patch('aws_google_auth.google', spec=True)
-    def test_process_auth_with_saml_cache(self, mock_google, mock_amazon, mock_util, mock_getpass):
+    def test_process_auth_with_saml_cache(self, mock_google, mock_amazon, mock_util):
 
         mock_config = Mock()
         mock_config.saml_cache = True
@@ -396,8 +378,6 @@ class TestInit(unittest.TestCase):
         mock_amazon_client = Mock()
         mock_google_client = Mock()
 
-        mock_getpass.return_value = "pass"
-
         mock_amazon_client.roles = {
             'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
             'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'
@@ -406,6 +386,7 @@ class TestInit(unittest.TestCase):
         mock_util_obj = MagicMock()
         mock_util_obj.pick_a_role = MagicMock(return_value=("da_role", "da_provider"))
         mock_util_obj.get_input = MagicMock(side_effect=["input", "input2", "input3"])
+        mock_util_obj.get_password = MagicMock(return_value="pass")
 
         mock_util.Util = mock_util_obj
 
@@ -431,10 +412,6 @@ class TestInit(unittest.TestCase):
         self.assertEqual([call.Util.pick_a_role({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
                                                 'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'}, [])],
                          mock_util.mock_calls)
-
-        # Cache means no password request
-        self.assertEqual([],
-                         mock_getpass.mock_calls)
 
         # Cache means no google calls
         self.assertEqual([],
