@@ -8,7 +8,6 @@ from . import google
 from . import amazon
 
 import argparse
-import getpass
 import keyring
 import os
 import sys

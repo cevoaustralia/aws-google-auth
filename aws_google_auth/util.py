@@ -7,6 +7,7 @@ from six.moves import input
 import sys
 import getpass
 
+
 class Util:
 
     @staticmethod

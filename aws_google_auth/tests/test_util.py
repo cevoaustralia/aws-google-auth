@@ -3,7 +3,8 @@
 import sys
 import unittest
 from aws_google_auth import util
-from mock import call, patch, Mock, MagicMock
+from mock import patch, MagicMock
+
 
 class TestUtilMethods(unittest.TestCase):
 
