@@ -270,6 +270,7 @@ class TestInit(unittest.TestCase):
         self.assertEqual([call.Util.get_input('Google username: '),
                           call.Util.get_input('Google IDP ID: '),
                           call.Util.get_input('Google SP ID: '),
+                          call.Util.get_password('Google Password: '),
                           call.Util.pick_a_role({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
                                                 'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'})],
                          mock_util.mock_calls)
