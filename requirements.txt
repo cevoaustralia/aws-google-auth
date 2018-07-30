@@ -4,3 +4,4 @@ configparser
 lxml
 requests
 tabulate
+six
