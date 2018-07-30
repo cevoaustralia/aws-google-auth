@@ -418,6 +418,8 @@ class Google:
             data_key)
         await_body = {'txId': data_tx_id}
 
+        self.check_prompt_code(response_page)
+
         print(
             "Open the Google App, and tap 'Yes' on the prompt to sign in ...")
 
@@ -476,6 +478,16 @@ class Google:
         }
 
         return self.post(challenge_url, data=payload)
+
+    @staticmethod
+    def check_prompt_code(response):
+        """
+        Sometimes there is an additional numerical code on the response page that needs to be selected
+        on the prompt from a list of multiple choice. Print it if it's there.
+        """
+        num_code = response.find("div", {"jsname": "EKvSSd"})
+        if num_code:
+            print("numerical code for prompt: {}".format(num_code.string))
 
     def handle_totp(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
