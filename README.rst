@@ -152,6 +152,27 @@ be able to use this via Docker; the Docker container will not be able to
 access any devices connected to the host ports. You will likely see the
 following error during runtime: "RuntimeWarning: U2F Device Not Found".
 
+Feeding password from stdin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To enhance usability when using third party tools for managing passwords (aka password manager) you can feed data in
+``aws-google-auth`` from ``stdin``.
+
+When receiving data from ``stdin`` ``aws-google-auth`` disables the interactive prompt and uses ``stdin`` data.
+
+All interactive prompt could be feeded from ``stdin``, but before `#82 <https://github.com/cevoaustralia/aws-google-auth/issues/82>`_
+was not possible to feed the ``Google Password:`` prompt.
+
+Example usage:
+::
+    $ password-manager show password | aws-google-auth
+    Google Password: MFA token:
+    Assuming arn:aws:iam::123456789012:role/admin
+    Credentials Expiration: ...
+
+**Note:** this feature is intended for password manager integration, not for passing passwords from command line.
+Please use interactive prompt if you need to pass the password manually, as this provide enhanced security avoid
+password leakage to shell history.
 
 Storage of profile credentials
 ------------------------------
