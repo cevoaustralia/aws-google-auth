@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 from . import _version
 from . import configuration
@@ -13,6 +14,7 @@ import os
 import sys
 
 from tzlocal import get_localzone
+from six import print_ as print
 
 
 def parse_args(args):
@@ -62,7 +64,7 @@ def cli(cli_args):
         config = resolve_config(args)
         process_auth(args, config)
     except google.ExpectedGoogleException as ex:
-        print(ex.message)
+        print(ex)
         sys.exit(1)
     except KeyboardInterrupt:
         pass

@@ -3,16 +3,14 @@
 import os
 from collections import OrderedDict
 from tabulate import tabulate
+from six.moves import input
 
 
 class Util:
 
     @staticmethod
     def get_input(prompt):
-        try:
-            return raw_input(prompt)
-        except NameError:
-            return input(prompt)
+        return input(prompt)
 
     @staticmethod
     def pick_a_role(roles, aliases=None):
@@ -70,7 +68,7 @@ class Util:
     # returned.
     @staticmethod
     def coalesce(*args):
-        for number, value in enumerate(args):
+        for _, value in enumerate(args):
             if value is not None:
                 return value
         return None
