@@ -240,6 +240,7 @@ class TestInit(unittest.TestCase):
         mock_config.idp_id = None
         mock_config.sp_id = None
         mock_config.return_value = None
+        mock_config.keyring = False
 
         mock_amazon_client = Mock()
         mock_google_client = Mock()
