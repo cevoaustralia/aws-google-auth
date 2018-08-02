@@ -160,8 +160,7 @@ To enhance usability when using third party tools for managing passwords (aka pa
 
 When receiving data from ``stdin`` ``aws-google-auth`` disables the interactive prompt and uses ``stdin`` data.
 
-All interactive prompt could be feeded from ``stdin``, but before `#82 <https://github.com/cevoaustralia/aws-google-auth/issues/82>`_
-was not possible to feed the ``Google Password:`` prompt.
+Before `#82 <https://github.com/cevoaustralia/aws-google-auth/issues/82>`_, all interactive prompts could be fed from ``stdin`` already apart from the ``Google Password:`` prompt.
 
 Example usage:
 ::
