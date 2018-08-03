@@ -71,6 +71,13 @@ local system:
     # For installation with U2F support
     localhost$ sudo pip install aws-google-auth[u2f]
 
+
+*Note* If using ZSH you will need to quote the install, as below:
+
+.. code:: shell
+
+   localhost$ sudo pip install "aws-google-auth[u2f]"
+
 If you don't want to have the tool installed on your local system, or if
 you prefer to isolate changes, there is a Dockerfile provided, which you
 can build with:
