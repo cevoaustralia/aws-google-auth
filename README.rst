@@ -90,6 +90,24 @@ can build with:
     # Use the Docker Hub version
     localhost$ docker pull cevoaustralia/aws-google-auth
 
+Development
+-----------
+
+If you want to develop the AWS-Google-Auth tool itself, we thank you! In order
+to help you get rolling, you'll want to install locally with pip. Of course,
+you can use your own regular workflow, with tools like `virtualenv <https://virtualenv.pypa.io/en/stable/>`__.
+
+.. code:: shell
+
+    # Install (without U2F support)
+    pip install -e .
+
+    # Install (with U2F support)
+    pip install -e .[u2f]
+
+We welcome you to review our `code of conduct <CODE_OF_CONDUCT.md>`__ and
+`contributing <CONTRIBUTING.md>`__ documents.
+
 Usage
 -----
 
