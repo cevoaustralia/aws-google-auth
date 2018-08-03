@@ -85,7 +85,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     # install_requires=['peppercorn'],
     install_requires=['boto3', 'lxml', 'requests', 'beautifulsoup4',
-        'configparser', 'tzlocal', 'tabulate', 'keyring', 'six'],
+        'configparser', 'tzlocal', 'tabulate', 'keyring', 'six', 'Pillow'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
