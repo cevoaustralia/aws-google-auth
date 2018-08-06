@@ -11,7 +11,6 @@ import base64
 from bs4 import BeautifulSoup
 from PIL import Image
 from six.moves import urllib_parse, input
-from six.moves.urllib.request import urlopen
 from six import print_ as print
 
 # The U2F USB Library is optional, if it's there, include it.
@@ -314,8 +313,8 @@ class Google:
         captcha_url_audio = captcha_container.find('input', {'name': 'url_audio'}).get('value')
 
         # Open captcha image
-        with urlopen(captcha_url) as url:
-            with io.BytesIO(url.read()) as f:
+        with requests.get(captcha_url) as url:
+            with io.BytesIO(url.content) as f:
                 Image.open(f).show()
 
         try:
