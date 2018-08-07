@@ -8,7 +8,6 @@ from . import google
 from . import amazon
 
 import argparse
-import getpass
 import keyring
 import os
 import sys
@@ -175,9 +174,9 @@ def process_auth(args, config):
             if keyring_password:
                 config.password = keyring_password
             else:
-                config.password = getpass.getpass("Google Password: ")
+                config.password = util.Util.get_password("Google Password: ")
         else:
-            config.password = getpass.getpass("Google Password: ")
+            config.password = util.Util.get_password("Google Password: ")
 
         # Validate Options
         config.raise_if_invalid()
