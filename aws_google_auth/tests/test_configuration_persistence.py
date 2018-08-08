@@ -21,6 +21,7 @@ class TestConfigurationPersistence(unittest.TestCase):
 
         self.c.region = "us-east-1"
         self.c.ask_role = False
+        self.c.keyring = False
         self.c.duration = 1234
         self.c.idp_id = "sample_idp_id"
         self.c.role_arn = "arn:aws:iam::sample_arn"
@@ -48,6 +49,7 @@ class TestConfigurationPersistence(unittest.TestCase):
         self.assertEqual(self.config_parser[profile_string].get('google_config.google_username'), self.c.username)
         self.assertEqual(self.config_parser[profile_string].get('region'), self.c.region)
         self.assertEqual(self.config_parser[profile_string].getboolean('google_config.ask_role'), self.c.ask_role)
+        self.assertEqual(self.config_parser[profile_string].getboolean('google_config.keyring'), self.c.keyring)
         self.assertEqual(self.config_parser[profile_string].getboolean('google_config.u2f_disabled'), self.c.u2f_disabled)
         self.assertEqual(self.config_parser[profile_string].getint('google_config.duration'), self.c.duration)
 
@@ -80,3 +82,4 @@ class TestConfigurationPersistence(unittest.TestCase):
         self.assertEqual(test_configuration.ask_role, self.c.ask_role)
         self.assertEqual(test_configuration.u2f_disabled, self.c.u2f_disabled)
         self.assertEqual(test_configuration.duration, self.c.duration)
+        self.assertEqual(test_configuration.keyring, self.c.keyring)

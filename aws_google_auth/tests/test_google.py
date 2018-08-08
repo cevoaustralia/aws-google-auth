@@ -6,6 +6,7 @@ import unittest
 from mock import Mock, MagicMock
 
 # from aws_google_auth.google import ExpectedGoogleException
+from google import ExpectedGoogleException
 
 
 class GoogleTest(unittest.TestCase):
@@ -40,10 +41,10 @@ class GoogleSAMLParseTest(unittest.TestCase):
         g.session_state = Mock()
         g.session_state.text = ""
 
-        with self.assertRaises(RuntimeError) as ex:
+        with self.assertRaises(Exception) as ex:
             g.parse_saml()
 
-        self.assertEquals("Could not find SAML response, check your credentials", str(ex.exception.args[0]))
+        self.assertEquals("Something went wrong - Could not find SAML response, check your credentials or use --save-failure-html to debug.", str(ex.exception.args[0]))
 
     def test_valid_saml(self):
         config = configuration.Configuration()
@@ -91,6 +92,7 @@ class GooglePromptTest(unittest.TestCase):
 
         self.assertEqual(g.session.post.mock_calls,
                          [mock.call(u'https://content.googleapis.com/cryptauth/v1/authzen/awaittx?alt=json&key=dasdataapi',
+                                    data=None,
                                     json={'txId': u'test-tx-id'}),
                           mock.call('demourl',
                                     data={'gxf': u'gxf',
@@ -104,8 +106,8 @@ class GooglePromptTest(unittest.TestCase):
                                           'continue': u'continue',
                                           'action': u'action',
                                           'sarp': u'sarp',
-                                          'TrustDevice': 'on',
-                                          'checkConnection': 'youtube:1295:1'})])
+                                          'checkConnection': 'youtube:1295:1',
+                                          'TrustDevice': 'on'}, json=None)])
 
 
 # class GoogleSKTest(unittest.TestCase):
@@ -212,12 +214,12 @@ class GoogleSMSTest(unittest.TestCase):
                                           'challengeId': u'challengeId',
                                           'pstMsg': u'pstMsg',
                                           'checkedDomains': u'checkedDomains',
-                                          'Pin': 'responsetoken',
                                           'challengeType': u'challengeType',
+                                          'Pin': 'responsetoken',
                                           'TL': u'TL',
                                           'continue': u'continue',
                                           'sarp': u'sarp',
-                                          'TrustDevice': 'on'})])
+                                          'TrustDevice': 'on'}, json=None)])
 
 
 class GoogleTOTPTest(unittest.TestCase):
@@ -260,9 +262,9 @@ class GoogleTOTPTest(unittest.TestCase):
                                           'challengeId': 'blart',
                                           'pstMsg': 0,
                                           'checkedDomains': 'youtube',
-                                          'Pin': 'mfatokenresponse',
                                           'challengeType': 6,
+                                          'Pin': 'mfatokenresponse',
                                           'TL': u'TL',
                                           'continue': u'continue',
                                           'sarp': 1,
-                                          'TrustDevice': 'on'})])
+                                          'TrustDevice': 'on'}, json=None)])

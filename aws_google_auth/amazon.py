@@ -72,24 +72,26 @@ class Amazon:
 
     def resolve_aws_aliases(self, roles):
         def resolve_aws_alias(role, principal, aws_dict):
-            saml = self.sts_client.assume_role_with_saml(RoleArn=role,
-                                                         PrincipalArn=principal,
-                                                         SAMLAssertion=self.base64_encoded_saml)
-            iam = boto3.client('iam',
-                               aws_access_key_id=saml['Credentials']['AccessKeyId'],
-                               aws_secret_access_key=saml['Credentials']['SecretAccessKey'],
-                               aws_session_token=saml['Credentials']['SessionToken'],
-                               region_name=self.config.region)
+            session = boto3.session.Session(region_name=self.config.region)
+
+            sts = session.client('sts')
+            saml = sts.assume_role_with_saml(RoleArn=role,
+                                             PrincipalArn=principal,
+                                             SAMLAssertion=self.base64_encoded_saml)
+
+            iam = session.client('iam',
+                                 aws_access_key_id=saml['Credentials']['AccessKeyId'],
+                                 aws_secret_access_key=saml['Credentials']['SecretAccessKey'],
+                                 aws_session_token=saml['Credentials']['SessionToken'])
             try:
                 response = iam.list_account_aliases()
                 account_alias = response['AccountAliases'][0]
                 aws_dict[role.split(':')[4]] = account_alias
             except:
-                sts = boto3.client('sts',
-                                   aws_access_key_id=saml['Credentials']['AccessKeyId'],
-                                   aws_secret_access_key=saml['Credentials']['SecretAccessKey'],
-                                   aws_session_token=saml['Credentials']['SessionToken'],
-                                   region_name=self.config.region)
+                sts = session.client('sts',
+                                     aws_access_key_id=saml['Credentials']['AccessKeyId'],
+                                     aws_secret_access_key=saml['Credentials']['SecretAccessKey'],
+                                     aws_session_token=saml['Credentials']['SessionToken'])
 
                 account_id = sts.get_caller_identity().get('Account')
                 aws_dict[role.split(':')[4]] = '{}'.format(account_id)

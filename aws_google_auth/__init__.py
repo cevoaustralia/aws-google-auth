@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 from . import _version
 from . import configuration
@@ -7,11 +8,12 @@ from . import google
 from . import amazon
 
 import argparse
-import getpass
+import keyring
 import os
 import sys
 
 from tzlocal import get_localzone
+from six import print_ as print
 
 
 def parse_args(args):
@@ -29,10 +31,12 @@ def parse_args(args):
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
     parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
+    parser.add_argument('--save-failure-html', action='store_true', help='Write HTML failure responses to file for troubleshooting.')
 
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
     role_group.add_argument('-r', '--role-arn', help='The ARN of the role to assume')
+    parser.add_argument('-k', '--keyring', action='store_true', help='Use keyring for storing the password.')
 
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s {version}'.format(version=_version.__version__))
@@ -51,7 +55,7 @@ def exit_if_unsupported_python():
         sys.exit(1)
 
 
-def main(cli_args):
+def cli(cli_args):
     try:
         exit_if_unsupported_python()
 
@@ -60,7 +64,7 @@ def main(cli_args):
         config = resolve_config(args)
         process_auth(args, config)
     except google.ExpectedGoogleException as ex:
-        print(ex.message)
+        print(ex)
         sys.exit(1)
     except KeyboardInterrupt:
         pass
@@ -139,11 +143,14 @@ def resolve_config(args):
         os.getenv('GOOGLE_USERNAME'),
         config.username)
 
+    config.keyring = coalesce(
+        args.keyring,
+        config.keyring)
+
     return config
 
 
 def process_auth(args, config):
-
     # If there is a valid cache and the user opted to use it, use that instead
     # of prompting the user for input (it will also ignroe any set variables
     # such as username or sp_id and idp_id, as those are built into the SAML
@@ -162,14 +169,27 @@ def process_auth(args, config):
 
         # There is no way (intentional) to pass in the password via the command
         # line nor environment variables. This prevents password leakage.
-        config.password = getpass.getpass("Google Password: ")
+        keyring_password = None
+        if config.keyring:
+            keyring_password = keyring.get_password("aws-google-auth", config.username)
+            if keyring_password:
+                config.password = keyring_password
+            else:
+                config.password = util.Util.get_password("Google Password: ")
+        else:
+            config.password = util.Util.get_password("Google Password: ")
 
         # Validate Options
         config.raise_if_invalid()
 
-        google_client = google.Google(config)
+        google_client = google.Google(config, args.save_failure_html)
         google_client.do_login()
         saml_xml = google_client.parse_saml()
+
+        # If we logged in correctly and we are using keyring then store the password
+        if config.keyring and keyring_password is None:
+            keyring.set_password(
+                "aws-google-auth", config.username, config.password)
 
         # We now have a new SAML value that can get cached (If the user asked
         # for it to be)
@@ -201,6 +221,10 @@ def process_auth(args, config):
         amazon_client.print_export_line()
 
 
-if __name__ == '__main__':
+def main():
     cli_args = sys.argv[1:]
-    main(cli_args)
+    cli(cli_args)
+
+
+if __name__ == '__main__':
+    main()

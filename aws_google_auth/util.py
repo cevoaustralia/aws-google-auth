@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os
 from collections import OrderedDict
 from tabulate import tabulate
+from six.moves import input
+import sys
+import getpass
 
 
 class Util:
 
     @staticmethod
     def get_input(prompt):
-        try:
-            return raw_input(prompt)
-        except NameError:
-            return input(prompt)
+        return input(prompt)
 
     @staticmethod
     def pick_a_role(roles, aliases=None):
@@ -70,7 +71,7 @@ class Util:
     # returned.
     @staticmethod
     def coalesce(*args):
-        for number, value in enumerate(args):
+        for _, value in enumerate(args):
             if value is not None:
                 return value
         return None
@@ -81,3 +82,13 @@ class Util:
             return object.encode('utf-8')
         else:
             return object
+
+    @staticmethod
+    def get_password(prompt):
+        if sys.stdin.isatty():
+            password = getpass.getpass(prompt)
+        else:
+            print(prompt, end="")
+            password = sys.stdin.readline()
+            print("")
+        return password
