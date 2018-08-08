@@ -6,8 +6,10 @@ from . import _version
 import sys
 import requests
 import json
+import io
 import base64
 from bs4 import BeautifulSoup
+from PIL import Image
 from six.moves import urllib_parse, input
 from six import print_ as print
 
@@ -205,9 +207,27 @@ class Google:
 
         self.check_extra_step(response_page)
 
+        # Process Google CAPTCHA verification request if present
         if cap is not None:
-            raise ExpectedGoogleException(
-                'Captcha Required. Manually Login to remove this.')
+            self.session.headers['Referer'] = sess.url
+
+            sess = self.handle_captcha(sess, payload)
+
+            response_page = BeautifulSoup(sess.text, 'html.parser')
+            error = response_page.find(class_='error-msg')
+            cap = response_page.find('input', {'name': 'logincaptcha'})
+
+            # Were there any errors logging in? Could be invalid username or password
+            # There could also sometimes be a Captcha, which means Google thinks you,
+            # or someone using the same outbound IP address as you, is a bot.
+            if error is not None:
+                raise ExpectedGoogleException('Invalid username or password')
+
+            self.check_extra_step(response_page)
+
+            if cap is not None:
+                raise ExpectedGoogleException(
+                    'Invalid captcha')
 
         self.session.headers['Referer'] = sess.url
 
@@ -263,6 +283,57 @@ class Google:
                 'Could not find SAML response, check your credentials')
 
         return base64.b64decode(saml_element)
+
+    def handle_captcha(self, sess, payload):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+
+        # Collect ProfileInformation, SessionState, signIn, and Password Challenge URL
+        profile_information = response_page.find('input', {
+            'name': 'ProfileInformation'
+        }).get('value')
+        session_state = response_page.find('input', {
+            'name': 'SessionState'
+        }).get('value')
+        sign_in = response_page.find('input', {'name': 'signIn'}).get('value')
+        passwd_challenge_url = response_page.find('form', {
+            'id': 'gaia_loginform'
+        }).get('action')
+
+        # Update the payload
+        payload['SessionState'] = session_state
+        payload['ProfileInformation'] = profile_information
+        payload['signIn'] = sign_in
+        payload['Passwd'] = self.config.password
+
+        # Get all captcha challenge tokens and urls
+        captcha_container = response_page.find('div', {'class': 'captcha-container'})
+        captcha_logintoken = captcha_container.find('input', {'name': 'logintoken'}).get('value')
+        captcha_url = captcha_container.find('input', {'name': 'url'}).get('value')
+        captcha_logintoken_audio = captcha_container.find('input', {'name': 'logintoken_audio'}).get('value')
+        captcha_url_audio = captcha_container.find('input', {'name': 'url_audio'}).get('value')
+
+        # Try to open the image for the user automatically, but if that fails for
+        # any reason, just display the URL for the user to visit.
+        try:
+            with requests.get(captcha_url) as url:
+                with io.BytesIO(url.content) as f:
+                    Image.open(f).show()
+        except Exception:
+            print("Please visit the following URL to view your CAPTCHA: {}".format(captcha_url))
+
+        try:
+            captcha_input = raw_input("Captcha (case insensitive): ") or None
+        except NameError:
+            captcha_input = input("Captcha (case insensitive): ") or None
+
+        # Update the payload
+        payload['logincaptcha'] = captcha_input
+        payload['logintoken'] = captcha_logintoken
+        payload['url'] = captcha_url
+        payload['logintoken_audio'] = captcha_logintoken_audio
+        payload['url_audio'] = captcha_url_audio
+
+        return self.post(passwd_challenge_url, data=payload)
 
     def handle_sk(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
