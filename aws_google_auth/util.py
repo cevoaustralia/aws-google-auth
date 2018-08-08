@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os
 from collections import OrderedDict
 from tabulate import tabulate
 from six.moves import input
+import sys
+import getpass
 
 
 class Util:
@@ -79,3 +82,13 @@ class Util:
             return object.encode('utf-8')
         else:
             return object
+
+    @staticmethod
+    def get_password(prompt):
+        if sys.stdin.isatty():
+            password = getpass.getpass(prompt)
+        else:
+            print(prompt, end="")
+            password = sys.stdin.readline()
+            print("")
+        return password
