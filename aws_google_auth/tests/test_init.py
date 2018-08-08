@@ -53,6 +53,7 @@ class TestInit(unittest.TestCase):
                                          region=None,
                                          resolve_aliases=False,
                                          role_arn=None,
+                                         save_failure_html=False,
                                          saml_cache=True,
                                          sp_id=None,
                                          username=None))
@@ -68,6 +69,7 @@ class TestInit(unittest.TestCase):
                                          region=None,
                                          resolve_aliases=False,
                                          role_arn=None,
+                                         save_failure_html=False,
                                          saml_cache=True,
                                          sp_id=None,
                                          username=None),
