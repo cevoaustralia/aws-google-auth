@@ -260,10 +260,11 @@ class Google:
         except:
 
             if self.save_failure:
+                print("SAML lookup failed, storing failure page to 'saml.html' to assist with debugging.")
                 with open("saml.html", 'w') as out:
                     out.write(self.session_state.text.encode('utf-8'))
 
-            raise RuntimeError('Could not find SAML response, check your credentials')
+            raise ExpectedGoogleException('Something went wrong - Could not find SAML response, check your credentials or use --save-failure-html to debug.')
 
         return base64.b64decode(saml_element)
 
