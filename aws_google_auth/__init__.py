@@ -32,6 +32,7 @@ def parse_args(args):
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
     parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
+    parser.add_argument('--save-failure-html', action='store_true', help='Write HTML failure responses to file for troubleshooting.')
 
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
@@ -169,9 +170,9 @@ def process_auth(args, config):
 
         # There is no way (intentional) to pass in the password via the command
         # line nor environment variables. This prevents password leakage.
+        keyring_password = None
         if config.keyring:
-            keyring_password = keyring.get_password(
-                "aws-google-auth", config.username)
+            keyring_password = keyring.get_password("aws-google-auth", config.username)
             if keyring_password:
                 config.password = keyring_password
             else:
@@ -182,7 +183,7 @@ def process_auth(args, config):
         # Validate Options
         config.raise_if_invalid()
 
-        google_client = google.Google(config)
+        google_client = google.Google(config, args.save_failure_html)
         google_client.do_login()
         saml_xml = google_client.parse_saml()
 

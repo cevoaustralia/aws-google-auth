@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 from __future__ import print_function
+from requests import HTTPError
 from . import _version
 
 import sys
@@ -25,7 +26,7 @@ class ExpectedGoogleException(Exception):
 
 
 class Google:
-    def __init__(self, config):
+    def __init__(self, config, save_failure):
         """The Google object holds authentication state
         for a given session. You need to supply:
 
@@ -41,14 +42,14 @@ class Google:
         self.version = _version.__version__
         self.config = config
         self.base_url = 'https://accounts.google.com'
+        self.save_failure = save_failure
 
     @property
     def login_url(self):
         return self.base_url + "/o/saml2/initsso?idpid={}&spid={}&forceauthn=false".format(
             self.config.idp_id, self.config.sp_id)
 
-    @staticmethod
-    def check_for_failure(sess):
+    def check_for_failure(self, sess):
 
         if isinstance(sess.reason, bytes):
             # We attempt to decode utf-8 first because some servers
@@ -66,14 +67,22 @@ class Google:
             raise ExpectedGoogleException(u'{} accessing {}'.format(
                 reason, sess.url))
 
-        sess.raise_for_status()
+        try:
+            sess.raise_for_status()
+        except HTTPError as ex:
+
+            if self.save_failure:
+                print("Saving failure trace in 'failure.html'")
+                with open("failure.html", 'w') as out:
+                    out.write(sess.text)
+
+            raise ex
 
         return sess
 
     def post(self, url, data=None, json=None):
         try:
-            response = self.check_for_failure(
-                self.session.post(url, data=data, json=json))
+            response = self.check_for_failure(self.session.post(url, data=data, json=json))
         except requests.exceptions.ConnectionError as e:
             print(
                 'There was a connection error, check your network settings: {}'.
@@ -119,9 +128,7 @@ class Google:
 
     def do_login(self):
         self.session = requests.Session()
-        self.session.headers[
-            'User-Agent'] = "AWS Sign-in/{} (Cevo aws-google-auth)".format(
-                self.version)
+        self.session.headers['User-Agent'] = "AWS Sign-in/{} (Cevo aws-google-auth)".format(self.version)
         sess = self.get(self.login_url)
 
         # Collect information from the page source
@@ -130,9 +137,7 @@ class Google:
         self.cont = first_page.find('input', {'name': 'continue'}).get('value')
         page = first_page.find('input', {'name': 'Page'}).get('value')
         sign_in = first_page.find('input', {'name': 'signIn'}).get('value')
-        account_login_url = first_page.find('form', {
-            'id': 'gaia_loginform'
-        }).get('action')
+        account_login_url = first_page.find('form', {'id': 'gaia_loginform'}).get('action')
 
         payload = {
             'bgresponse': 'js_disabled',
@@ -206,8 +211,7 @@ class Google:
         self.check_extra_step(response_page)
 
         if cap is not None:
-            raise ExpectedGoogleException(
-                'Captcha Required. Manually Login to remove this.')
+            raise ExpectedGoogleException('Captcha Required. Manually Login to remove this.')
 
         self.session.headers['Referer'] = sess.url
 
@@ -241,26 +245,25 @@ class Google:
 
     @staticmethod
     def check_extra_step(response):
-        extra_step = response.find(
-            text='This extra step shows that it’s really you trying to sign in'
-        )
+        extra_step = response.find(text='This extra step shows that it’s really you trying to sign in')
         if extra_step:
             if response.find(id='contactAdminMessage'):
                 raise ValueError(response.find(id='contactAdminMessage').text)
 
     def parse_saml(self):
         if self.session_state is None:
-            raise RuntimeError(
-                'You must use do_login() before calling parse_saml()')
+            raise RuntimeError('You must use do_login() before calling parse_saml()')
 
         parsed = BeautifulSoup(self.session_state.text, 'html.parser')
         try:
-            saml_element = parsed.find('input', {
-                'name': 'SAMLResponse'
-            }).get('value')
+            saml_element = parsed.find('input', {'name': 'SAMLResponse'}).get('value')
         except:
-            raise RuntimeError(
-                'Could not find SAML response, check your credentials')
+
+            if self.save_failure:
+                with open("saml.html", 'w') as out:
+                    out.write(self.session_state.text.encode('utf-8'))
+
+            raise RuntimeError('Could not find SAML response, check your credentials')
 
         return base64.b64decode(saml_element)
 
@@ -420,13 +423,22 @@ class Google:
 
         self.check_prompt_code(response_page)
 
-        print(
-            "Open the Google App, and tap 'Yes' on the prompt to sign in ...")
+        print("Open the Google App, and tap 'Yes' on the prompt to sign in ...")
 
         self.session.headers['Referer'] = sess.url
 
-        parsed_response = json.loads(
-            self.post(await_url, json=await_body).text)
+        retry = True
+        response = None
+        while retry:
+            try:
+                response = self.post(await_url, json=await_body)
+                retry = False
+            except requests.exceptions.HTTPError as ex:
+
+                if not ex.response.status_code == 500:
+                    raise ex
+
+        parsed_response = json.loads(response.text)
 
         payload = {
             'challengeId':
@@ -679,8 +691,7 @@ class Google:
         selected_challenge = input("Enter MFA choice number ({}): ".format(
             challenge_ids[-1:][0])) or None
 
-        if selected_challenge is not None and int(
-                selected_challenge) in challenge_ids:
+        if selected_challenge is not None and int(selected_challenge) in challenge_ids:
             challenge_id = int(selected_challenge)
         else:
             # use the highest index as that will default to prompt, then sms, then totp, etc.
