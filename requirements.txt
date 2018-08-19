@@ -2,5 +2,7 @@ beautifulsoup4
 boto3
 configparser
 lxml
+Pillow
 requests
+six
 tabulate

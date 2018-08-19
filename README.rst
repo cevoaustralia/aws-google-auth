@@ -71,6 +71,13 @@ local system:
     # For installation with U2F support
     localhost$ sudo pip install aws-google-auth[u2f]
 
+
+*Note* If using ZSH you will need to quote the install, as below:
+
+.. code:: shell
+
+   localhost$ sudo pip install "aws-google-auth[u2f]"
+
 If you don't want to have the tool installed on your local system, or if
 you prefer to isolate changes, there is a Dockerfile provided, which you
 can build with:
@@ -82,6 +89,24 @@ can build with:
 
     # Use the Docker Hub version
     localhost$ docker pull cevoaustralia/aws-google-auth
+
+Development
+-----------
+
+If you want to develop the AWS-Google-Auth tool itself, we thank you! In order
+to help you get rolling, you'll want to install locally with pip. Of course,
+you can use your own regular workflow, with tools like `virtualenv <https://virtualenv.pypa.io/en/stable/>`__.
+
+.. code:: shell
+
+    # Install (without U2F support)
+    pip install -e .
+
+    # Install (with U2F support)
+    pip install -e .[u2f]
+
+We welcome you to review our `code of conduct <CODE_OF_CONDUCT.md>`__ and
+`contributing <CONTRIBUTING.md>`__ documents.
 
 Usage
 -----
@@ -152,6 +177,26 @@ be able to use this via Docker; the Docker container will not be able to
 access any devices connected to the host ports. You will likely see the
 following error during runtime: "RuntimeWarning: U2F Device Not Found".
 
+Feeding password from stdin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To enhance usability when using third party tools for managing passwords (aka password manager) you can feed data in
+``aws-google-auth`` from ``stdin``.
+
+When receiving data from ``stdin`` ``aws-google-auth`` disables the interactive prompt and uses ``stdin`` data.
+
+Before `#82 <https://github.com/cevoaustralia/aws-google-auth/issues/82>`_, all interactive prompts could be fed from ``stdin`` already apart from the ``Google Password:`` prompt.
+
+Example usage:
+::
+    $ password-manager show password | aws-google-auth
+    Google Password: MFA token:
+    Assuming arn:aws:iam::123456789012:role/admin
+    Credentials Expiration: ...
+
+**Note:** this feature is intended for password manager integration, not for passing passwords from command line.
+Please use interactive prompt if you need to pass the password manually, as this provide enhanced security avoid
+password leakage to shell history.
 
 Storage of profile credentials
 ------------------------------
