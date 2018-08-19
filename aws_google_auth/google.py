@@ -5,15 +5,19 @@ from requests import HTTPError
 from aws_google_auth import _version
 from aws_google_auth import util
 
-import sys
-import requests
-import json
-import io
 import base64
-from bs4 import BeautifulSoup
+import io
+import json
+import sys
+
+import requests
 from PIL import Image
-from six.moves import urllib_parse, input
+from bs4 import BeautifulSoup
+from requests import HTTPError
 from six import print_ as print
+from six.moves import urllib_parse, input
+
+from aws_google_auth import _version
 
 # The U2F USB Library is optional, if it's there, include it.
 try:

@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
 import unittest
+import mock
 
 from aws_google_auth import amazon
 from aws_google_auth import configuration
 from os import path
+import os
 
 
 class TestAmazon(unittest.TestCase):
@@ -69,3 +71,12 @@ class TestAmazon(unittest.TestCase):
     def test_valid_saml(self):
         saml_xml = self.read_local_file('saml-response-no-expire.xml')
         self.assertTrue(amazon.Amazon.is_valid_saml_assertion(saml_xml))
+
+    @mock.patch.dict(os.environ, {'AWS_PROFILE': 'xxx-xxxx', 'DEFAULT_AWS_PROFILE': 'blart'})
+    def test_sts_client_with_invalid_profile(self):
+        a = amazon.Amazon(self.valid_config, "dummy-encoded-saml")
+
+        self.assertIsNotNone(a.sts_client)
+
+        self.assertEqual('xxx-xxxx', os.environ['AWS_PROFILE'])
+        self.assertEqual('blart', os.environ['DEFAULT_AWS_PROFILE'])

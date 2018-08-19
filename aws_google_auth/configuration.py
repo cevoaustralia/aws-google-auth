@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+
 import botocore.session
 
 try:
@@ -8,8 +9,8 @@ try:
 except ImportError:
     import configparser
 
-from . import util
-from . import amazon
+from aws_google_auth import util
+from aws_google_auth import amazon
 
 
 class Configuration(object):

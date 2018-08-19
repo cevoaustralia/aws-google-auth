@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import requests
-import time
 import json
+import time
 
+import requests
 from u2flib_host import u2f, exc, appid
 from u2flib_host.constants import APDU_USE_NOT_SATISFIED
 
