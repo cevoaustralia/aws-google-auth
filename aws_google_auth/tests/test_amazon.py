@@ -3,7 +3,6 @@
 import unittest
 import mock
 
-from aws_google_auth.google import ExpectedGoogleException
 from aws_google_auth import amazon
 from aws_google_auth import configuration
 from os import path
@@ -76,7 +75,8 @@ class TestAmazon(unittest.TestCase):
     @mock.patch.dict(os.environ, {'AWS_PROFILE': 'xxx-xxxx', 'DEFAULT_AWS_PROFILE': 'blart'})
     def test_sts_client_with_invalid_profile(self):
         a = amazon.Amazon(self.valid_config, "dummy-encoded-saml")
-        with self.assertRaises(ExpectedGoogleException) as ex:
-            self.assertIsNotNone(a.sts_client)
 
-        self.assertEqual("Error : The config profile (xxx-xxxx) could not be found.", str(ex.exception))
+        self.assertIsNotNone(a.sts_client)
+
+        self.assertEqual('xxx-xxxx', os.environ['AWS_PROFILE'])
+        self.assertEqual('blart', os.environ['DEFAULT_AWS_PROFILE'])
