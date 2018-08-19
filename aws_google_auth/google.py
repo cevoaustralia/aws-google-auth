@@ -9,10 +9,15 @@ import requests
 import json
 import io
 import base64
+import logging
+
 from bs4 import BeautifulSoup
 from PIL import Image
 from six.moves import urllib_parse, input
 from six import print_ as print
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('aws-google-auth')
 
 # The U2F USB Library is optional, if it's there, include it.
 try:
@@ -231,8 +236,7 @@ class Google:
             self.check_extra_step(response_page)
 
             if cap is not None:
-                raise ExpectedGoogleException(
-                    'Invalid captcha')
+                raise ExpectedGoogleException('Invalid captcha')
 
         self.session.headers['Referer'] = sess.url
 
@@ -724,57 +728,40 @@ class Google:
         return self.post(challenge_url, data=payload)
 
     def handle_selectchallenge(self, sess):
+
+        with io.open("challenge.html", 'w', encoding="utf-8") as out:
+            out.write(sess.text)
+
         response_page = BeautifulSoup(sess.text, 'html.parser')
-        # Known mfa methods, 5 is disabled till its implemented
-        auth_methods = {
-            2: 'TOTP (Google Authenticator)',
-            3: 'SMS',
-            4: 'OOTP (Google Prompt)'
-            # 5: 'OOTP (Google App Offline Security Code)'
-        }
-
-        unavailable_challenge_ids = [
-            int(i.attrs.get('data-unavailable'))
-            for i in response_page.find_all(
-                lambda tag: tag.name == 'form' and 'data-unavailable' in tag.attrs
-            )
-        ]
-
-        # ootp via google app offline code isn't implemented. make sure its not valid.
-        unavailable_challenge_ids.append(5)
-
-        challenge_ids = [
-            int(i.get('value'))
-            for i in response_page.find_all('input', {'name': 'challengeId'})
-            if int(i.get('value')) not in unavailable_challenge_ids
-        ]
-
-        challenge_ids.sort()
-
-        auth_methods = {
-            k: auth_methods[k]
-            for k in challenge_ids
-            if k in auth_methods and k not in unavailable_challenge_ids
-        }
 
         print('Choose MFA method from available:')
-        print('\n'.join(
-            '{}: {}'.format(*i) for i in list(auth_methods.items())))
+        methods = response_page.find_all('form', attrs={'data-challengeentry': True})
 
-        selected_challenge = input("Enter MFA choice number ({}): ".format(
-            challenge_ids[-1:][0])) or None
+        UNSUPPORTED_CHALLENGE_TYPES = []
 
-        if selected_challenge is not None and int(selected_challenge) in challenge_ids:
-            challenge_id = int(selected_challenge)
-        else:
-            # use the highest index as that will default to prompt, then sms, then totp, etc.
-            challenge_id = challenge_ids[-1:][0]
+        for method in methods:
+            challenge_type = method.find('input', {'name': 'challengeType'}).get('value')
+            if challenge_type in UNSUPPORTED_CHALLENGE_TYPES:
+                methods.remove(method)
 
-        print("MFA Type Chosen: {}".format(auth_methods[challenge_id]))
+        for index, method in enumerate(methods):
+            text = method.find("span").text.encode('utf-8')
+            print("  {}: {}".format(index+1, text))
+
+        while True:
+            try:
+                selected_challenge = int(input("Enter MFA choice number: "))-1
+                if 0 <= selected_challenge < len(methods):
+                    raise ValueError
+                break
+            except ValueError as ex:
+                print(selected_challenge)
+                print(ex)
+                print("Not a valid (integer) option, try again")
 
         # We need the specific form of the challenge chosen
-        challenge_form = response_page.find(
-            'form', {'data-challengeentry': challenge_id})
+        challenge_form = methods[int(selected_challenge)-1]
+        challenge_id = challenge_form.attrs.get('data-challengeentry')
 
         payload = {
             'challengeId':
@@ -816,6 +803,7 @@ class Google:
                 'name': 'subAction'
             }).get('value'),
         }
+
         if challenge_form.find('input', {'name': 'SendMethod'}) is not None:
             payload['SendMethod'] = challenge_form.find(
                 'input', {
