@@ -8,7 +8,7 @@ import boto3
 from botocore.exceptions import ProfileNotFound
 from lxml import etree
 
-from google import ExpectedGoogleException
+from aws_google_auth.google import ExpectedGoogleException
 
 
 class Amazon:
