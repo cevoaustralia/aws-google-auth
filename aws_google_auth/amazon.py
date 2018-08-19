@@ -5,7 +5,10 @@ from datetime import datetime
 from threading import Thread
 
 import boto3
+from botocore.exceptions import ProfileNotFound
 from lxml import etree
+
+from google import ExpectedGoogleException
 
 
 class Amazon:
@@ -17,7 +20,10 @@ class Amazon:
 
     @property
     def sts_client(self):
-        return boto3.client('sts', region_name=self.config.region)
+        try:
+            return boto3.client('sts', region_name=self.config.region)
+        except ProfileNotFound as ex:
+            raise ExpectedGoogleException("Error : {}.".format(ex))
 
     @property
     def base64_encoded_saml(self):
