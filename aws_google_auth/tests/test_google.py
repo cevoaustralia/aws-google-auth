@@ -2,6 +2,7 @@
 import unittest
 from io import open
 from os import path
+
 from bs4 import BeautifulSoup
 
 from aws_google_auth import google

@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-from . import _version
-from . import configuration
-from . import util
-from . import google
-from . import amazon
-
 import argparse
-import keyring
 import os
 import sys
 
-from tzlocal import get_localzone
+import keyring
 from six import print_ as print
+from tzlocal import get_localzone
+
+from aws_google_auth import _version
+from aws_google_auth import amazon
+from aws_google_auth import configuration
+from aws_google_auth import google
+from aws_google_auth import util
 
 
 def parse_args(args):

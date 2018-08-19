@@ -1,6 +1,8 @@
-from .. import parse_args
+#!/usr/bin/env python
 
 import unittest
+
+from aws_google_auth import parse_args
 
 
 class TestPythonFailOnVersion(unittest.TestCase):

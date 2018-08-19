@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-import configparser
 import unittest
-from aws_google_auth import configuration
 from random import randint
+
+import configparser
+
+from aws_google_auth import configuration
 
 
 class TestConfigurationPersistence(unittest.TestCase):
