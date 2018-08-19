@@ -1,14 +1,9 @@
 # -*- coding: utf8 -*-
+
 import unittest
-from io import open
-from os import path
 
-from bs4 import BeautifulSoup
-
-from aws_google_auth import google
 from aws_google_auth import configuration
-
-import unittest
+from aws_google_auth import google
 from mock import Mock, MagicMock
 
 
@@ -184,16 +179,6 @@ class GoogleSMSTest(unittest.TestCase):
         # Mock out the session request
         g.session = MagicMock()
         g.session.post = MagicMock(return_value=response)
-
-        # 'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
-        # 'challengeType': response_page.find('input', {'name': 'challengeType'}).get('value'),
-        # 'continue': response_page.find('input', {'name': 'continue'}).get('value'),
-        # 'scc': response_page.find('input', {'name': 'scc'}).get('value'),
-        # 'sarp': response_page.find('input', {'name': 'sarp'}).get('value'),
-        # 'checkedDomains': response_page.find('input', {'name': 'checkedDomains'}).get('value'),
-        # 'pstMsg': response_page.find('input', {'name': 'pstMsg'}).get('value'),
-        # 'TL': response_page.find('input', {'name': 'TL'}).get('value'),
-        # 'gxf': response_page.find('input', {'name': 'gxf'}).get('value'),
 
         sess = Mock()
         sess.text = "<input name='challengeId' value='challengeId' />" \

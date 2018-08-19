@@ -53,6 +53,7 @@ class Google:
         self.session_state = None
         self.base_url = 'https://accounts.google.com'
         self.save_failure = save_failure
+        self.cont = None
 
     @property
     def login_url(self):
@@ -144,7 +145,7 @@ class Google:
         # Collect information from the page source
         first_page = BeautifulSoup(sess.text, 'html.parser')
         gxf = first_page.find('input', {'name': 'gxf'}).get('value')
-        cont = first_page.find('input', {'name': 'continue'}).get('value')
+        self.cont = first_page.find('input', {'name': 'continue'}).get('value')
         page = first_page.find('input', {'name': 'Page'}).get('value')
         sign_in = first_page.find('input', {'name': 'signIn'}).get('value')
         account_login_url = first_page.find('form', {'id': 'gaia_loginform'}).get('action')
