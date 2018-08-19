@@ -1,4 +1,4 @@
-from .. import exit_if_unsupported_python
+from aws_google_auth import exit_if_unsupported_python
 
 try:
     from StringIO import StringIO

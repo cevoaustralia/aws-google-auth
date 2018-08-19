@@ -1,9 +1,9 @@
-import aws_google_auth
-
 import unittest
+from argparse import Namespace
 
 from mock import call, patch, Mock, MagicMock
-from argparse import Namespace
+
+import aws_google_auth
 
 
 class TestInit(unittest.TestCase):

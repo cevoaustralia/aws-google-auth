@@ -1,22 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 from __future__ import print_function
-from requests import HTTPError
-from . import _version
 
-import sys
-import requests
-import json
-import io
 import base64
-from bs4 import BeautifulSoup
+import io
+import json
+import sys
+
+import requests
 from PIL import Image
-from six.moves import urllib_parse, input
+from bs4 import BeautifulSoup
+from requests import HTTPError
 from six import print_ as print
+from six.moves import urllib_parse, input
+
+from aws_google_auth import _version
 
 # The U2F USB Library is optional, if it's there, include it.
 try:
-    from . import u2f
+    from aws_google_auth import u2f
 except ImportError:
     print("Failed to import U2F libraries, U2F login unavailable. Other "
           "methods can still continue.")
