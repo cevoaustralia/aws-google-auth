@@ -5,6 +5,7 @@ from __future__ import print_function
 import base64
 import io
 import json
+import os
 import sys
 
 import requests
@@ -322,6 +323,10 @@ class Google:
         # Try to open the image for the user automatically, but if that fails for
         # any reason, just display the URL for the user to visit.
         try:
+            # If running inside Docker container, just print the CAPTCHA URL
+            if os.path.exists('/.dockerenv'):
+                raise Exception
+
             with requests.get(captcha_url) as url:
                 with io.BytesIO(url.content) as f:
                     Image.open(f).show()
