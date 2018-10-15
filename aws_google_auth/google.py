@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 from __future__ import print_function
-from requests import HTTPError
-from aws_google_auth import _version
 from aws_google_auth import util
 
 import base64
@@ -156,7 +154,7 @@ class Google:
             'bgresponse': 'js_disabled',
             'checkConnection': '',
             'checkedDomains': 'youtube',
-            'continue': cont,
+            'continue': self.cont,
             'Email': self.config.username,
             'gxf': gxf,
             'identifier-captcha-input': '',
