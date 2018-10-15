@@ -321,15 +321,23 @@ class Google:
         captcha_logintoken_audio = captcha_container.find('input', {'name': 'logintoken_audio'}).get('value')
         captcha_url_audio = captcha_container.find('input', {'name': 'url_audio'}).get('value')
 
+        open_image = True
+        
         # Check if there is a display utility installed as Image.open(f).show() do not raise any exception if not
         # if neither xv or display are available just display the URL for the user to visit.
         if os.name == 'posix':
             if find_executable('xv') is None and find_executable('display') is None:
-                print("Please visit the following URL to view your CAPTCHA: {}".format(captcha_url))
-            else:
-                with requests.get(captcha_url) as url:
-                    with io.BytesIO(url.content) as f:
-                        Image.open(f).show()
+                open_image = False
+                        
+        print("Please visit the following URL to view your CAPTCHA: {}".format(captcha_url))
+      
+        if open_image:
+          try:
+              with requests.get(captcha_url) as url:
+                  with io.BytesIO(url.content) as f:
+                      Image.open(f).show()
+          except Exception:
+              pass
 
         try:
             captcha_input = raw_input("Captcha (case insensitive): ") or None
