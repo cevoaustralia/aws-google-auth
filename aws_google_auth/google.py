@@ -319,14 +319,16 @@ class Google:
         captcha_logintoken_audio = captcha_container.find('input', {'name': 'logintoken_audio'}).get('value')
         captcha_url_audio = captcha_container.find('input', {'name': 'url_audio'}).get('value')
 
-        # Try to open the image for the user automatically, but if that fails for
-        # any reason, just display the URL for the user to visit.
+        print("Please visit the following URL to view your CAPTCHA: {}".format(captcha_url))
+
+        # Try to open the image for the user automatically, won't work when
+        # running from Docker.
         try:
             with requests.get(captcha_url) as url:
                 with io.BytesIO(url.content) as f:
                     Image.open(f).show()
         except Exception:
-            print("Please visit the following URL to view your CAPTCHA: {}".format(captcha_url))
+            pass
 
         try:
             captcha_input = raw_input("Captcha (case insensitive): ") or None
