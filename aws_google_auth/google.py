@@ -325,7 +325,7 @@ class Google:
 
         # Check if there is a display utility installed as Image.open(f).show() do not raise any exception if not
         # if neither xv or display are available just display the URL for the user to visit.
-        if os.name == 'posix':
+        if os.name == 'posix' and sys.platform != 'darwin':
             if find_executable('xv') is None and find_executable('display') is None:
                 open_image = False
 
