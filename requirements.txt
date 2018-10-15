@@ -6,3 +6,13 @@ Pillow
 requests
 six
 tabulate
+
+
+import requests
+from PIL import Image
+
+captcha_url = "https://cevo.com.au/img/logo.png"
+
+with requests.get(captcha_url) as url:
+    with io.BytesIO(url.content) as f:
+        Image.open(f).show()

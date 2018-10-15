@@ -66,8 +66,7 @@ class Google:
             reason = sess.reason
 
         if sess.status_code == 403:
-            raise ExpectedGoogleException(u'{} accessing {}'.format(
-                reason, sess.url))
+            raise ExpectedGoogleException(u'{} accessing {}'.format(reason, sess.url))
 
         try:
             sess.raise_for_status()
