@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
 import unittest
+import mock
 
 from aws_google_auth import configuration
 from aws_google_auth import google
