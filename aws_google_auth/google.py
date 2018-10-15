@@ -5,10 +5,12 @@ from __future__ import print_function
 import base64
 import io
 import json
+import os
 import sys
 
 import requests
 from PIL import Image
+from distutils.spawn import find_executable
 from bs4 import BeautifulSoup
 from requests import HTTPError
 from six import print_ as print
@@ -319,16 +321,23 @@ class Google:
         captcha_logintoken_audio = captcha_container.find('input', {'name': 'logintoken_audio'}).get('value')
         captcha_url_audio = captcha_container.find('input', {'name': 'url_audio'}).get('value')
 
+        open_image = True
+        
+        # Check if there is a display utility installed as Image.open(f).show() do not raise any exception if not
+        # if neither xv or display are available just display the URL for the user to visit.
+        if os.name == 'posix':
+            if find_executable('xv') is None and find_executable('display') is None:
+                open_image = False
+                        
         print("Please visit the following URL to view your CAPTCHA: {}".format(captcha_url))
-
-        # Try to open the image for the user automatically, won't work when
-        # running from Docker.
-        try:
-            with requests.get(captcha_url) as url:
-                with io.BytesIO(url.content) as f:
-                    Image.open(f).show()
-        except Exception:
-            pass
+      
+        if open_image:
+          try:
+              with requests.get(captcha_url) as url:
+                  with io.BytesIO(url.content) as f:
+                      Image.open(f).show()
+          except Exception:
+              pass
 
         try:
             captcha_input = raw_input("Captcha (case insensitive): ") or None
