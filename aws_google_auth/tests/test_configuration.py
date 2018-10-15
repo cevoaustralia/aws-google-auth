@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import unittest
+
 from aws_google_auth import configuration
 
 
@@ -382,4 +383,12 @@ class TestConfigurationMethods(unittest.TestCase):
         c.sp_id = "sample_sp_id"
         c.username = "sample_username"
         self.assertFalse(c.u2f_disabled)
+        c.raise_if_invalid()
+
+    def test_unicode_password(self):
+        c = configuration.Configuration()
+        c.password = u"hunter2"
+        c.idp_id = "sample_idp_id"
+        c.sp_id = "sample_sp_id"
+        c.username = "sample_username"
         c.raise_if_invalid()

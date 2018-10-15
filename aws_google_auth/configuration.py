@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
 import os
+
 import botocore.session
+
 try:
     from backports import configparser
 except ImportError:
     import configparser
 
-from . import util
-from . import amazon
+from aws_google_auth import util
+from aws_google_auth import amazon
 
 
 class Configuration(object):
@@ -114,7 +116,12 @@ class Configuration(object):
         assert (self.username.__class__ is str), "Expected username to be a string. Got {}.".format(self.username.__class__)
 
         # password
-        assert (self.password.__class__ is str), "Expected password to be a string. Got {}.".format(self.password.__class__)
+        try:
+            assert (type(self.password) in [str, unicode]), "Expected password to be a string. Got {}.".format(
+                type(self.password))
+        except NameError:
+            assert (type(self.password) is str), "Expected password to be a string. Got {}.".format(
+                type(self.password))
 
         # role_arn (Can be blank, we'll just prompt)
         if self.role_arn is not None:

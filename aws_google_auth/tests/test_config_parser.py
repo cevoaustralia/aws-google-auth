@@ -1,9 +1,10 @@
-import unittest
-import mock
 import os
+import unittest
+
+import mock
 from nose.tools import nottest
 
-from .. import resolve_config, parse_args
+from aws_google_auth import resolve_config, parse_args
 
 
 class TestProfileProcessing(unittest.TestCase):

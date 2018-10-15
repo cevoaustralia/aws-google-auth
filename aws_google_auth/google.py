@@ -1,22 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 from __future__ import print_function
-from requests import HTTPError
-from . import _version
 
-import sys
-import requests
-import json
-import io
 import base64
-from bs4 import BeautifulSoup
+import io
+import json
+import os
+import sys
+
+import requests
 from PIL import Image
-from six.moves import urllib_parse, input
+from distutils.spawn import find_executable
+from bs4 import BeautifulSoup
+from requests import HTTPError
 from six import print_ as print
+from six.moves import urllib_parse, input
+
+from aws_google_auth import _version
 
 # The U2F USB Library is optional, if it's there, include it.
 try:
-    from . import u2f
+    from aws_google_auth import u2f
 except ImportError:
     print("Failed to import U2F libraries, U2F login unavailable. Other "
           "methods can still continue.")
@@ -316,14 +320,23 @@ class Google:
         captcha_logintoken_audio = captcha_container.find('input', {'name': 'logintoken_audio'}).get('value')
         captcha_url_audio = captcha_container.find('input', {'name': 'url_audio'}).get('value')
 
-        # Try to open the image for the user automatically, but if that fails for
-        # any reason, just display the URL for the user to visit.
-        try:
-            with requests.get(captcha_url) as url:
-                with io.BytesIO(url.content) as f:
-                    Image.open(f).show()
-        except Exception:
-            print("Please visit the following URL to view your CAPTCHA: {}".format(captcha_url))
+        open_image = True
+        
+        # Check if there is a display utility installed as Image.open(f).show() do not raise any exception if not
+        # if neither xv or display are available just display the URL for the user to visit.
+        if os.name == 'posix':
+            if find_executable('xv') is None and find_executable('display') is None:
+                open_image = False
+                        
+        print("Please visit the following URL to view your CAPTCHA: {}".format(captcha_url))
+      
+        if open_image:
+          try:
+              with requests.get(captcha_url) as url:
+                  with io.BytesIO(url.content) as f:
+                      Image.open(f).show()
+          except Exception:
+              pass
 
         try:
             captcha_input = raw_input("Captcha (case insensitive): ") or None

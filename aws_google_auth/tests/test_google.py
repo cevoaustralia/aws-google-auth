@@ -2,6 +2,7 @@
 import unittest
 from io import open
 from os import path
+
 from bs4 import BeautifulSoup
 import mock
 

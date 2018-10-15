@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import os
-from collections import OrderedDict
-from tabulate import tabulate
-from six.moves import input
-import sys
+
 import getpass
+import os
+import sys
+from collections import OrderedDict
+
+from six.moves import input
+from tabulate import tabulate
 
 
 class Util:

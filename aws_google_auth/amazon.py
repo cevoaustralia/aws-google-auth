@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 
 import base64
+import os
+import boto3
+
 from datetime import datetime
 from threading import Thread
 
-import boto3
+from botocore.exceptions import ProfileNotFound
 from lxml import etree
+
+from aws_google_auth.google import ExpectedGoogleException
 
 
 class Amazon:
@@ -17,7 +22,16 @@ class Amazon:
 
     @property
     def sts_client(self):
-        return boto3.client('sts', region_name=self.config.region)
+        try:
+            profile = os.environ.get('AWS_PROFILE')
+            if profile is not None:
+                del os.environ['AWS_PROFILE']
+            client = boto3.client('sts', region_name=self.config.region)
+            if profile is not None:
+                os.environ['AWS_PROFILE'] = profile
+            return client
+        except ProfileNotFound as ex:
+            raise ExpectedGoogleException("Error : {}.".format(ex))
 
     @property
     def base64_encoded_saml(self):
