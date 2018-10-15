@@ -3,12 +3,11 @@ import unittest
 from io import open
 from os import path
 
-from bs4 import BeautifulSoup
 import mock
-
-from aws_google_auth import google
+from bs4 import BeautifulSoup
 from mock import Mock, MagicMock, call
 
+from aws_google_auth import google, configuration
 from google import ExpectedGoogleException
 
 
@@ -23,13 +22,9 @@ class GoogleTest(unittest.TestCase):
         g = google.Google(config)
         self.assertEquals("https://accounts.google.com/o/saml2/initsso?idpid=idp1234&spid=spid456&forceauthn=false", g.login_url)
 
-class TestGoogle(unittest.TestCase):
-    def read_local_file(self, filename):
-        here = path.abspath(path.dirname(__file__))
-        with open(path.join(here, filename), encoding='utf8') as fp:
-            return fp.read().encode('utf-8')
 
 class TestGoogle(unittest.TestCase):
+
     def read_local_file(self, filename):
         here = path.abspath(path.dirname(__file__))
         with open(path.join(here, filename), encoding='utf8') as fp:
@@ -40,6 +35,7 @@ class TestGoogle(unittest.TestCase):
         response = BeautifulSoup(response, 'html.parser')
         with self.assertRaises(ValueError):
             google.Google.check_extra_step(response)
+
 
 class GoogleCheckForFailureTest(unittest.TestCase):
 
