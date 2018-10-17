@@ -30,6 +30,7 @@ def parse_args(args):
     parser.add_argument('-p', '--profile', help='AWS profile (defaults to value of $AWS_PROFILE, then falls back to \'sts\')')
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
     parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
+    parser.add_argument('--print-creds', action='store_true', help='Print Credentials.')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
     parser.add_argument('--save-failure-html', action='store_true', help='Write HTML failure responses to file for troubleshooting.')
 
@@ -147,6 +148,10 @@ def resolve_config(args):
         args.keyring,
         config.keyring)
 
+    config.print_creds = coalesce(
+        args.print_creds,
+        config.print_creds)
+
     return config
 
 
@@ -215,10 +220,11 @@ def process_auth(args, config):
     print("Assuming " + config.role_arn)
     print("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())))
 
+    if config.print_creds:
+        amazon_client.print_export_line()
+
     if config.profile:
         config.write(amazon_client)
-    else:
-        amazon_client.print_export_line()
 
 
 def main():
