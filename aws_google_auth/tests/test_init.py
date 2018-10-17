@@ -109,7 +109,6 @@ class TestInit(unittest.TestCase):
         mock_util.Util = mock_util_obj
 
         mock_amazon_client.resolve_aws_aliases = MagicMock(return_value=[])
-        # mock_amazon_client.print_export_line = Mock()
 
         mock_amazon.Amazon = MagicMock(return_value=mock_amazon_client)
         mock_google.Google = MagicMock(return_value=mock_google_client)
