@@ -18,13 +18,6 @@ from six.moves import urllib_parse, input
 
 from aws_google_auth import _version
 
-# The U2F USB Library is optional, if it's there, include it.
-# try:
-#     from aws_google_auth import u2f
-# except ImportError:
-#     print("Failed to import U2F libraries, U2F login unavailable. Other "
-#           "methods can still continue.")
-
 
 class ExpectedGoogleException(Exception):
     def __init__(self, *args):
