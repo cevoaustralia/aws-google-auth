@@ -19,11 +19,11 @@ from six.moves import urllib_parse, input
 from aws_google_auth import _version
 
 # The U2F USB Library is optional, if it's there, include it.
-try:
-    from aws_google_auth import u2f
-except ImportError:
-    print("Failed to import U2F libraries, U2F login unavailable. Other "
-          "methods can still continue.")
+# try:
+#     from aws_google_auth import u2f
+# except ImportError:
+#     print("Failed to import U2F libraries, U2F login unavailable. Other "
+#           "methods can still continue.")
 
 
 class ExpectedGoogleException(Exception):
@@ -49,6 +49,12 @@ class Google:
         self.config = config
         self.base_url = 'https://accounts.google.com'
         self.save_failure = save_failure
+        if not config.u2f_disabled:
+            try:
+                self.u2f = getattr(__import__("aws_google_auth", fromlist=["u2f"]))
+            except ImportError:
+                print("Failed to import U2F libraries, U2F login unavailable. Other "
+                      "methods can still continue.")
 
     @property
     def login_url(self):
@@ -375,7 +381,7 @@ class Google:
         auth_response = None
         while True:
             try:
-                auth_response = json.dumps(u2f.u2f_auth(u2f_challenges, facet))
+                auth_response = json.dumps(self.u2f.u2f_auth(u2f_challenges, facet))
                 break
             except RuntimeWarning:
                 print("No U2F device found. {} attempts remaining.".format(
