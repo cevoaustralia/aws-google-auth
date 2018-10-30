@@ -44,7 +44,7 @@ class Google:
         self.save_failure = save_failure
         if not config.u2f_disabled:
             try:
-                self.u2f = getattr(__import__("aws_google_auth", fromlist=["u2f"]))
+                self.u2f = __import__("aws_google_auth", fromlist=["u2f"])
             except ImportError:
                 print("Failed to import U2F libraries, U2F login unavailable. Other "
                       "methods can still continue.")
