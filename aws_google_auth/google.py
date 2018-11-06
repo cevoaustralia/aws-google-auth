@@ -18,6 +18,13 @@ from six.moves import urllib_parse, input
 
 from aws_google_auth import _version
 
+# The U2F USB Library is optional, if it's there, include it.
+try:
+    from aws_google_auth import u2f
+except ImportError:
+    print("Failed to import U2F libraries, U2F login unavailable. Other "
+          "methods can still continue.")
+
 
 class ExpectedGoogleException(Exception):
     def __init__(self, *args):
@@ -42,15 +49,6 @@ class Google:
         self.config = config
         self.base_url = 'https://accounts.google.com'
         self.save_failure = save_failure
-        if not config.u2f_disabled:
-            try:
-                self.u2f = __import__("aws_google_auth", fromlist=["u2f"])
-            except ImportError as ex:
-                print("Failed to import U2F libraries, U2F login unavailable. Other "
-                      "methods can still continue.")
-                self.u2f = None
-        else:
-            self.u2f = None
 
     @property
     def login_url(self):
@@ -352,7 +350,6 @@ class Google:
         payload['url'] = captcha_url
         payload['logintoken_audio'] = captcha_logintoken_audio
         payload['url_audio'] = captcha_url_audio
-
         return self.post(passwd_challenge_url, data=payload)
 
     def handle_sk(self, sess):
@@ -377,7 +374,7 @@ class Google:
         auth_response = None
         while True:
             try:
-                auth_response = json.dumps(self.u2f.u2f_auth(u2f_challenges, facet))
+                auth_response = json.dumps(u2f.u2f_auth(u2f_challenges, facet))
                 break
             except RuntimeWarning:
                 print("No U2F device found. {} attempts remaining.".format(
