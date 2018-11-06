@@ -7,5 +7,8 @@ build/
 .idea/
 Pipfile
 Pipfile.lock
+<<<<<<< HEAD
 venv/*
 
+=======
+>>>>>>> parent of d0ab0e6... tests for the u2f

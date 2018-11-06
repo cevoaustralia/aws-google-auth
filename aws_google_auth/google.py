@@ -49,6 +49,15 @@ class Google:
         self.config = config
         self.base_url = 'https://accounts.google.com'
         self.save_failure = save_failure
+<<<<<<< HEAD
+=======
+        if not config.u2f_disabled:
+            try:
+                self.u2f = getattr(__import__("aws_google_auth", fromlist=["u2f"]))
+            except ImportError:
+                print("Failed to import U2F libraries, U2F login unavailable. Other "
+                      "methods can still continue.")
+>>>>>>> parent of d0ab0e6... tests for the u2f
 
     @property
     def login_url(self):
