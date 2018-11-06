@@ -6,4 +6,3 @@ Pillow
 requests
 six
 tabulate
-python-u2flib-host
