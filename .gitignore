@@ -7,4 +7,5 @@ build/
 .idea/
 Pipfile
 Pipfile.lock
-venv/
+venv/*
+

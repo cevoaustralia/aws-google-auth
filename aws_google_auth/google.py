@@ -45,9 +45,12 @@ class Google:
         if not config.u2f_disabled:
             try:
                 self.u2f = __import__("aws_google_auth", fromlist=["u2f"])
-            except ImportError:
+            except ImportError as ex:
                 print("Failed to import U2F libraries, U2F login unavailable. Other "
                       "methods can still continue.")
+                self.u2f = None
+        else:
+            self.u2f = None
 
     @property
     def login_url(self):

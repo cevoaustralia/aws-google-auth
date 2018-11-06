@@ -137,6 +137,7 @@ Usage
                             falls back to 'sts')
       -D, --disable-u2f     Disable U2F functionality.
       --no-cache            Do not cache the SAML Assertion.
+      --print-creds         Print the credentials to the terminal.
       -a, --ask-role        Set true to always pick the role
       -r ROLE_ARN, --role-arn ROLE_ARN
                             The ARN of the role to assume
