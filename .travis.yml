@@ -6,6 +6,9 @@ python:
   - "3.6"
 sudo: false
 dist: trusty
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install libusb-1.0-0-dev
 install:
   - pip install .
   - pip install keyrings.alt
