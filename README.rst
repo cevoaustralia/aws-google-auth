@@ -141,6 +141,7 @@ Usage
       -a, --ask-role        Set true to always pick the role
       -r ROLE_ARN, --role-arn ROLE_ARN
                             The ARN of the role to assume
+      -k, --keyring         Use keyring for storing the password.
       -V, --version         show program's version number and exit
 
 **Note** that if you want longer than the default 3600 seconds (1 hour)
