@@ -156,6 +156,11 @@ def resolve_config(args):
 
 
 def process_auth(args, config):
+    saml_xml = get_saml_xml(args, config)
+    get_role(config, saml_xml)
+
+
+def get_saml_xml(args, config):
     # If there is a valid cache and the user opted to use it, use that instead
     # of prompting the user for input (it will also ignroe any set variables
     # such as username or sp_id and idp_id, as those are built into the SAML
@@ -200,7 +205,10 @@ def process_auth(args, config):
         # for it to be)
         if args.saml_cache:
             config.saml_cache = saml_xml
+        return saml_xml
 
+
+def get_role(config, saml_xml):
     # The amazon_client now has the SAML assertion it needed (Either via the
     # cache or freshly generated). From here, we can get the roles and continue
     # the rest of the workflow regardless of cache.
