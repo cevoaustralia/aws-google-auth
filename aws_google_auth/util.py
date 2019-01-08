@@ -49,7 +49,8 @@ class Util:
         else:
             while True:
                 for i, role in enumerate(roles):
-                    print("[{:>3d}] {}".format(i + 1, role))
+                    pretty_role = role.split('arn:aws:iam::')[1].split(':role/')
+                    print("[{:>3d}] {}".format(i + 1, pretty_role[1]))
 
                 prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(roles))
                 choice = Util.get_input(prompt)

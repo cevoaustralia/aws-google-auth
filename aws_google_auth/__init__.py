@@ -38,6 +38,7 @@ def parse_args(args):
     parser.add_argument('--print-creds', action='store_true', help='Print Credentials.')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
     parser.add_argument('--save-failure-html', action='store_true', help='Write HTML failure responses to file for troubleshooting.')
+    parser.add_argument('--account-id', help='Limit the available roles by aws account id')
 
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
@@ -100,6 +101,11 @@ def resolve_config(args):
     # Now that we've established the profile, we can read the configuration and
     # fill in all the other variables.
     config.read(config.profile)
+
+    # Account ID
+    config.account_id = coalesce(
+        args.account_id,
+        config.account_id)
 
     # Ask Role (Option priority = ARGS, ENV_VAR, DEFAULT)
     config.ask_role = bool(coalesce(
@@ -237,7 +243,16 @@ def process_auth(args, config):
     # cache or freshly generated). From here, we can get the roles and continue
     # the rest of the workflow regardless of cache.
     amazon_client = amazon.Amazon(config, saml_xml)
-    roles = amazon_client.roles
+    role_dict = amazon_client.roles
+
+    # if account_id is set, restrict roles to that account
+    if config.account_id:
+        roles = {}
+        for role in role_dict:
+            if config.account_id in role:
+                roles[role] = role_dict[role]
+    else:
+        roles = role_dict
 
     # Determine the provider and the role arn (if the the user provided isn't an option)
     if config.role_arn in roles and not config.ask_role:

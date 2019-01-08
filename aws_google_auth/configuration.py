@@ -20,6 +20,7 @@ class Configuration(object):
         self.__boto_session = botocore.session.Session()
 
         # Set up some defaults. These can be overridden as fit.
+        self.account_id = ''
         self.ask_role = False
         self.keyring = False
         self.duration = self.max_duration
@@ -92,6 +93,9 @@ class Configuration(object):
     # user-performance improvement, and an invalid cache isn't an invalid
     # configuration.
     def raise_if_invalid(self):
+        # account_id
+        assert (self.account_id.__class__ is str), "Expected account_id to be a string. Got {}.".format(self.account_id.__class__)
+
         # ask_role
         assert (self.ask_role.__class__ is bool), "Expected ask_role to be a boolean. Got {}.".format(self.ask_role.__class__)
 

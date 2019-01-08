@@ -24,8 +24,12 @@ from aws_google_auth import _version
 try:
     from aws_google_auth import u2f
 except ImportError:
+<<<<<<< HEAD
     logging.info("Failed to import U2F libraries, U2F login unavailable. "
                  "Other methods can still continue.")
+=======
+    pass
+>>>>>>> add account_id support
 
 
 class ExpectedGoogleException(Exception):
@@ -330,6 +334,7 @@ class Google:
         try:
             saml_element = parsed.find('input', {'name': 'SAMLResponse'}).get('value')
         except:
+<<<<<<< HEAD
 
             if self.save_failure:
                 logging.error("SAML lookup failed, storing failure page to "
@@ -338,6 +343,9 @@ class Google:
                     out.write(str(self.session_state.text.encode('utf-8')))
 
             raise ExpectedGoogleException('Something went wrong - Could not find SAML response, check your credentials or use --save-failure-html to debug.')
+=======
+            raise ExpectedGoogleException('Something went wrong - Could not find SAML response, please check your credentials.')
+>>>>>>> add account_id support
 
         return base64.b64decode(saml_element)
 
