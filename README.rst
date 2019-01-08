@@ -115,8 +115,9 @@ Usage
 
     $ aws-google-auth -h
     usage: aws-google-auth [-h] [-u USERNAME] [-I IDP_ID] [-S SP_ID] [-R REGION]
-                           [-d DURATION] [-p PROFILE] [-D] [--no-cache]
-                           [-a | -r ROLE_ARN] [-V]
+                           [-d DURATION] [-p PROFILE] [-D] [-q] [--no-cache]
+                           [--print-creds] [--resolve-aliases]
+                           [--save-failure-html] [-a | -r ROLE_ARN] [-k] [-V]
 
     Acquire temporary AWS credentials via Google SSO
 
@@ -136,13 +137,18 @@ Usage
                             AWS profile (defaults to value of $AWS_PROFILE, then
                             falls back to 'sts')
       -D, --disable-u2f     Disable U2F functionality.
+      -q, --quiet           Quiet output
       --no-cache            Do not cache the SAML Assertion.
-      --print-creds         Print the credentials to the terminal.
+      --print-creds         Print Credentials.
+      --resolve-aliases     Resolve AWS account aliases.
+      --save-failure-html   Write HTML failure responses to file for
+                            troubleshooting.
       -a, --ask-role        Set true to always pick the role
       -r ROLE_ARN, --role-arn ROLE_ARN
                             The ARN of the role to assume
       -k, --keyring         Use keyring for storing the password.
       -V, --version         show program's version number and exit
+
 
 **Note** that if you want longer than the default 3600 seconds (1 hour)
 duration, you must also modify the IAM Role to permit this. See
