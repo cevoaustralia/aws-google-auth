@@ -57,7 +57,8 @@ class TestInit(unittest.TestCase):
                                          saml_cache=True,
                                          sp_id=None,
                                          print_creds=False,
-                                         username=None))
+                                         username=None,
+                                         quiet=False))
                           ],
                          resolve_config.mock_calls)
 
@@ -74,7 +75,8 @@ class TestInit(unittest.TestCase):
                                          saml_cache=True,
                                          sp_id=None,
                                          print_creds=False,
-                                         username=None),
+                                         username=None,
+                                         quiet=False),
                                mock_config)
                           ],
                          process_auth.mock_calls)

@@ -29,6 +29,7 @@ def parse_args(args):
     parser.add_argument('-d', '--duration', type=int, help='Credential duration ($DURATION)')
     parser.add_argument('-p', '--profile', help='AWS profile (defaults to value of $AWS_PROFILE, then falls back to \'sts\')')
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
+    parser.add_argument('-q', '--quiet', action='store_true', help='Quiet output')
     parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
     parser.add_argument('--print-creds', action='store_true', help='Print Credentials.')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
@@ -152,6 +153,11 @@ def resolve_config(args):
         args.print_creds,
         config.print_creds)
 
+    # Quiet
+    config.quiet = coalesce(
+        args.quiet,
+        config.quiet)
+
     return config
 
 
@@ -216,9 +222,9 @@ def process_auth(args, config):
             config.role_arn, config.provider = util.Util.pick_a_role(roles, aliases)
         else:
             config.role_arn, config.provider = util.Util.pick_a_role(roles)
-
-    print("Assuming " + config.role_arn)
-    print("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())))
+    if not config.quiet:
+        print("Assuming " + config.role_arn)
+        print("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())))
 
     if config.print_creds:
         amazon_client.print_export_line()
