@@ -91,6 +91,7 @@ class Util:
             password = getpass.getpass(prompt)
         else:
             print(prompt, end="")
+            sys.stdout.flush()
             password = sys.stdin.readline()
             print("")
         return password
