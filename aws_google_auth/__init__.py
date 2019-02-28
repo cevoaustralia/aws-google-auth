@@ -4,6 +4,7 @@ from __future__ import print_function
 import argparse
 import os
 import sys
+import logging
 
 import keyring
 from six import print_ as print
@@ -39,7 +40,8 @@ def parse_args(args):
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
     role_group.add_argument('-r', '--role-arn', help='The ARN of the role to assume')
     parser.add_argument('-k', '--keyring', action='store_true', help='Use keyring for storing the password.')
-
+    parser.add_argument('-l', '--log', dest='log_level', choices=['debug',
+                        'info', 'warn'], default='warn')
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s {version}'.format(version=_version.__version__))
 
@@ -48,12 +50,15 @@ def parse_args(args):
 
 def exit_if_unsupported_python():
     if sys.version_info.major == 2 and sys.version_info.minor < 7:
-        print("aws-google-auth requires Python 2.7 or higher. Please consider upgrading. Support "
-              "for Python 2.6 and lower was dropped because this tool's dependencies dropped support.")
-        print("")
-        print("For debugging, it appears you're running: '{}'.".format(str(sys.version_info)))
-        print("")
-        print("See https://github.com/cevoaustralia/aws-google-auth/issues/41 for more information.")
+        logging.critical("%s requires Python 2.7 or higher. Please consider "
+                         "upgrading. Support for Python 2.6 and lower was "
+                         "dropped because this tool's dependencies dropped "
+                         "support.", __name__)
+        logging.critical("For debugging, it appears you're running: %s",
+                         sys.version_info)
+        logging.critical("For more information, see: "
+                         "https://github.com/cevoaustralia/aws-google-auth/"
+                         "issues/41")
         sys.exit(1)
 
 
@@ -66,7 +71,7 @@ def cli(cli_args):
         config = resolve_config(args)
         process_auth(args, config)
     except google.ExpectedGoogleException as ex:
-        print(ex)
+        logging.exception(ex)
         sys.exit(1)
     except KeyboardInterrupt:
         pass
@@ -162,6 +167,10 @@ def resolve_config(args):
 
 
 def process_auth(args, config):
+    # Set up logging
+    logging.getLogger().setLevel(getattr(logging, args.log_level.upper(), None))
+
+
     # If there is a valid cache and the user opted to use it, use that instead
     # of prompting the user for input (it will also ignroe any set variables
     # such as username or sp_id and idp_id, as those are built into the SAML
@@ -169,14 +178,19 @@ def process_auth(args, config):
     # SAML cache is used.
     if args.saml_cache and config.saml_cache:
         saml_xml = config.saml_cache
+        logging.info('%s: SAML cache found', __name__)
     else:
         # No cache, continue without.
+        logging.info('%s: SAML cache not found', __name__)
         if config.username is None:
             config.username = util.Util.get_input("Google username: ")
+            logging.debug('%s: username is: %s', __name__, config.username)
         if config.idp_id is None:
             config.idp_id = util.Util.get_input("Google IDP ID: ")
+            logging.debug('%s: idp is: %s', __name__, config.idp_id)
         if config.sp_id is None:
             config.sp_id = util.Util.get_input("Google SP ID: ")
+            logging.debug('%s: sp is: %s', __name__, config.sp_id)
 
         # There is no way (intentional) to pass in the password via the command
         # line nor environment variables. This prevents password leakage.
@@ -196,6 +210,7 @@ def process_auth(args, config):
         google_client = google.Google(config, args.save_failure_html)
         google_client.do_login()
         saml_xml = google_client.parse_saml()
+        logging.debug('%s: saml assertion is: %s', __name__, saml_xml)
 
         # If we logged in correctly and we are using keyring then store the password
         if config.keyring and keyring_password is None:
