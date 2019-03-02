@@ -170,7 +170,6 @@ def process_auth(args, config):
     # Set up logging
     logging.getLogger().setLevel(getattr(logging, args.log_level.upper(), None))
 
-
     # If there is a valid cache and the user opted to use it, use that instead
     # of prompting the user for input (it will also ignroe any set variables
     # such as username or sp_id and idp_id, as those are built into the SAML

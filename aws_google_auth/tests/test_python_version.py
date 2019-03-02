@@ -1,10 +1,5 @@
 from aws_google_auth import exit_if_unsupported_python
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
 import unittest
 import sys
 import mock
