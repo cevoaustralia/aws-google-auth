@@ -23,8 +23,8 @@ from aws_google_auth import _version
 try:
     from aws_google_auth import u2f
 except ImportError:
-    logging.error("Failed to import U2F libraries, U2F login unavailable. "
-                  "Other methods can still continue.")
+    logging.info("Failed to import U2F libraries, U2F login unavailable. "
+                 "Other methods can still continue.")
 
 
 class ExpectedGoogleException(Exception):
