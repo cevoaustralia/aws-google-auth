@@ -236,5 +236,8 @@ class Configuration(object):
             self.username = coalesce(read_username, self.username)
 
         # SAML Cache
-        with open(self.saml_cache_file, 'r') as f:
-            self.__saml_cache = f.read().encode("utf-8")
+        try:
+            with open(self.saml_cache_file, 'r') as f:
+                self.__saml_cache = f.read().encode("utf-8")
+        except IOError:
+            pass
