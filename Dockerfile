@@ -12,5 +12,13 @@ RUN pip3 install -r /build/requirements.txt
 COPY aws_google_auth /build/aws_google_auth
 RUN pip3 install -e /build/[u2f]
 
+COPY entrypoint.sh /bin
+RUN chmod +x /bin/entrypoint.sh
+
+RUN mkdir /work
+
+WORKDIR /work
+
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
-ENTRYPOINT ["aws-google-auth"]
+
+ENTRYPOINT ["/bin/entrypoint.sh"]
