@@ -41,7 +41,7 @@ def parse_args(args):
     role_group.add_argument('-r', '--role-arn', help='The ARN of the role to assume')
     parser.add_argument('-k', '--keyring', action='store_true', help='Use keyring for storing the password.')
     parser.add_argument('-l', '--log', dest='log_level', choices=['debug',
-                        'info', 'warn'], default='warn')
+                        'info', 'warn'], default='warn', help='Select log level (default: %(default)s)')
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s {version}'.format(version=_version.__version__))
 
