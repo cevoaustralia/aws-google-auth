@@ -71,10 +71,12 @@ def cli(cli_args):
         config = resolve_config(args)
         process_auth(args, config)
     except google.ExpectedGoogleException as ex:
-        logging.exception(ex)
+        print(ex)
         sys.exit(1)
     except KeyboardInterrupt:
         pass
+    except Exception as ex:
+        logging.exception(ex)
 
 
 def resolve_config(args):
