@@ -5,6 +5,7 @@ from __future__ import print_function
 import base64
 import io
 import json
+import logging
 import os
 import sys
 
@@ -22,8 +23,8 @@ from aws_google_auth import _version
 try:
     from aws_google_auth import u2f
 except ImportError:
-    print("Failed to import U2F libraries, U2F login unavailable. Other "
-          "methods can still continue.")
+    logging.info("Failed to import U2F libraries, U2F login unavailable. "
+                 "Other methods can still continue.")
 
 
 class ExpectedGoogleException(Exception):
@@ -78,7 +79,7 @@ class Google:
         except HTTPError as ex:
 
             if self.save_failure:
-                print("Saving failure trace in 'failure.html'")
+                logging.exception("Saving failure trace in 'failure.html'", ex)
                 with open("failure.html", 'w') as out:
                     out.write(sess.text)
 
@@ -90,16 +91,15 @@ class Google:
         try:
             response = self.check_for_failure(self.session.post(url, data=data, json=json))
         except requests.exceptions.ConnectionError as e:
-            print(
-                'There was a connection error, check your network settings: {}'.
-                format(e))
+            logging.exception(
+                'There was a connection error, check your network settings.', e)
             sys.exit(1)
         except requests.exceptions.Timeout as e:
-            print('The connection timed out, please try again: {}'.format(e))
+            logging.exception('The connection timed out, please try again.', e)
             sys.exit(1)
         except requests.exceptions.TooManyRedirects as e:
-            print('The number of redirects exceeded the maximum allowed: {}'.
-                  format(e))
+            logging.exception('The number of redirects exceeded the maximum '
+                              'allowed.', e)
             sys.exit(1)
 
         return response
@@ -108,16 +108,15 @@ class Google:
         try:
             response = self.check_for_failure(self.session.get(url))
         except requests.exceptions.ConnectionError as e:
-            print(
-                'There was a connection error, check your network settings: {}'.
-                format(e))
+            logging.exception(
+                'There was a connection error, check your network settings.', e)
             sys.exit(1)
         except requests.exceptions.Timeout as e:
-            print('The connection timed out, please try again: {}'.format(e))
+            logging.exception('The connection timed out, please try again.', e)
             sys.exit(1)
         except requests.exceptions.TooManyRedirects as e:
-            print('The number of redirects exceeded the maximum allowed: {}'.
-                  format(e))
+            logging.exception('The number of redirects exceeded the maximum '
+                              'allowed.', e)
             sys.exit(1)
 
         return response
@@ -250,7 +249,7 @@ class Google:
                 sess = self.handle_totp(sess)
                 error_msg = self.parse_error_message(sess)
                 if error_msg is not None:
-                    print(error_msg)
+                    logging.error(error_msg)
         elif "challenge/ipp/" in sess.url:
             sess = self.handle_sms(sess)
         elif "challenge/az/" in sess.url:
@@ -285,7 +284,8 @@ class Google:
         except:
 
             if self.save_failure:
-                print("SAML lookup failed, storing failure page to 'saml.html' to assist with debugging.")
+                logging.error("SAML lookup failed, storing failure page to "
+                              "'saml.html' to assist with debugging.")
                 with open("saml.html", 'w') as out:
                     out.write(self.session_state.text.encode('utf-8'))
 
@@ -378,8 +378,8 @@ class Google:
                 auth_response = json.dumps(u2f.u2f_auth(u2f_challenges, facet))
                 break
             except RuntimeWarning:
-                print("No U2F device found. {} attempts remaining.".format(
-                    attempts_remaining))
+                logging.error("No U2F device found. %d attempts remaining",
+                              attempts_remaining)
                 if attempts_remaining <= 0:
                     break
                 else:
@@ -632,7 +632,7 @@ class Google:
                 if choice not in [1, 2]:
                     raise ValueError
             except ValueError:
-                print("Not a valid (integer) option, try again")
+                logging.error("Not a valid (integer) option, try again")
                 continue
             else:
                 if choice == 1:

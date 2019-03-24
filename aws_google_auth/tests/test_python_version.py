@@ -1,10 +1,5 @@
 from aws_google_auth import exit_if_unsupported_python
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
 import unittest
 import sys
 import mock
@@ -12,17 +7,16 @@ import mock
 
 class TestPythonFailOnVersion(unittest.TestCase):
 
-    @mock.patch('sys.stdout', new_callable=StringIO)
-    def test_python26(self, mock_stdout):
+    def test_python26(self):
 
         with mock.patch.object(sys, 'version_info') as v_info:
             v_info.major = 2
             v_info.minor = 6
 
-            with self.assertRaises(SystemExit):
+            with self.assertRaises(SystemExit) as cm:
                 exit_if_unsupported_python()
 
-            self.assertIn("aws-google-auth requires Python 2.7 or higher.", mock_stdout.getvalue())
+            self.assertEqual(cm.exception.code, 1)
 
     def test_python27(self):
         with mock.patch.object(sys, 'version_info') as v_info:

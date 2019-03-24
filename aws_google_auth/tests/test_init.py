@@ -56,6 +56,7 @@ class TestInit(unittest.TestCase):
                                          save_failure_html=False,
                                          saml_cache=True,
                                          sp_id=None,
+                                         log_level='warn',
                                          print_creds=False,
                                          username=None,
                                          quiet=False))
@@ -74,6 +75,7 @@ class TestInit(unittest.TestCase):
                                          save_failure_html=False,
                                          saml_cache=True,
                                          sp_id=None,
+                                         log_level='warn',
                                          print_creds=False,
                                          username=None,
                                          quiet=False),
