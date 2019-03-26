@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 from __future__ import print_function
+from aws_google_auth import util
 
 import base64
 import io
@@ -33,7 +34,7 @@ class ExpectedGoogleException(Exception):
 
 
 class Google:
-    def __init__(self, config, save_failure):
+    def __init__(self, config, save_failure=False):
         """The Google object holds authentication state
         for a given session. You need to supply:
 
@@ -48,8 +49,12 @@ class Google:
 
         self.version = _version.__version__
         self.config = config
+        self.util = util.Util()
+        self.session = requests.Session()
+        self.session_state = None
         self.base_url = 'https://accounts.google.com'
         self.save_failure = save_failure
+        self.cont = None
 
     @property
     def login_url(self):
@@ -132,7 +137,7 @@ class Google:
             return error.text
 
     def do_login(self):
-        self.session = requests.Session()
+        # self.session = requests.Session()
         self.session.headers['User-Agent'] = "AWS Sign-in/{} (Cevo aws-google-auth)".format(self.version)
         sess = self.get(self.login_url)
 
@@ -377,15 +382,16 @@ class Google:
             try:
                 auth_response = json.dumps(u2f.u2f_auth(u2f_challenges, facet))
                 break
+            except NameError:
+                print("No U2F library found. Please install 'python-u2flib-host'")
+                break
             except RuntimeWarning:
                 logging.error("No U2F device found. %d attempts remaining",
                               attempts_remaining)
                 if attempts_remaining <= 0:
                     break
                 else:
-                    input(
-                        "Insert your U2F device and press enter to try again..."
-                    )
+                    self.util.get_input("Insert your U2F device and press enter to try again...")
                     attempts_remaining -= 1
 
         # If we exceed the number of attempts, raise an error and let the program exit.
@@ -443,7 +449,7 @@ class Google:
         response_page = BeautifulSoup(sess.text, 'html.parser')
         challenge_url = sess.url.split("?")[0]
 
-        sms_token = input("Enter SMS token: G-") or None
+        sms_token = self.util.get_input("Enter SMS token: G-") or None
 
         payload = {
             'challengeId':
@@ -589,12 +595,15 @@ class Google:
 
     def handle_totp(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
+
         tl = response_page.find('input', {'name': 'TL'}).get('value')
         gxf = response_page.find('input', {'name': 'gxf'}).get('value')
+        cont = response_page.find('input', {'name': 'continue'}).get('value')
+
         challenge_url = sess.url.split("?")[0]
         challenge_id = challenge_url.split("totp/")[1]
 
-        mfa_token = input("MFA token: ") or None
+        mfa_token = self.util.get_input("MFA token: ") or None
 
         if not mfa_token:
             raise ValueError(
@@ -604,7 +613,7 @@ class Google:
         payload = {
             'challengeId': challenge_id,
             'challengeType': 6,
-            'continue': self.cont,
+            'continue': cont,
             'scc': 1,
             'sarp': 1,
             'checkedDomains': 'youtube',
