@@ -5,7 +5,7 @@ from os import path
 
 from bs4 import BeautifulSoup
 
-from mock import call, patch, Mock, MagicMock
+from mock import Mock
 from aws_google_auth import google
 
 
