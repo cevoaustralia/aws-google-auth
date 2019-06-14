@@ -415,7 +415,6 @@ class Google:
         while True:
             try:
                 auth_response_dict = u2f.u2f_auth(u2f_challenges, facet)
-                #auth_response_dict['sessionId'] = ''
                 auth_response = json.dumps(auth_response_dict)
                 break
             except RuntimeWarning:
