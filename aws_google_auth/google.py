@@ -147,7 +147,7 @@ class Google:
                     return Google.find_key_handle(item, challengeTxt)
                 elif typeValue == int or typeValue == bool:  # ints bools etc we don't care
                     continue
-                else:  #  we went a string or unicode here (python 3.x lost unicode global)
+                else:  # we went a string or unicode here (python 3.x lost unicode global)
                     try:  # keyHandle string will be base64 encoded -
                         # if its not an exception is thrown and we continue as its not the string we're after
                         base64UrlEncoded = base64.urlsafe_b64encode(base64.b64decode(item))
@@ -155,6 +155,7 @@ class Google:
                             return base64UrlEncoded
                     except:
                         pass
+
     @staticmethod
     def find_app_id(inputString):
         try:
