@@ -136,30 +136,30 @@ class Google:
     @staticmethod
     def find_key_handle(input, challengeTxt):
         typeOfInput = type(input)
-        if typeOfInput == dict: # parse down a dict
+        if typeOfInput == dict:  # parse down a dict
             for item in input:
                 return Google.find_key_handle(input[item], challengeTxt)
-        elif typeOfInput == list: # looks like we've hit an array - iterate it
-            array = list(filter(None, input)) # remove any None type objects from the array
+        elif typeOfInput == list:  # looks like we've hit an array - iterate it
+            array = list(filter(None, input))  # remove any None type objects from the array
             for item in array:
                 typeValue = type(item)
-                if typeValue == list: # another array - recursive call
+                if typeValue == list:  # another array - recursive call
                     return Google.find_key_handle(item, challengeTxt)
-                elif typeValue == unicode: # found a string value - maybe what we're looking for
-                    try: # keyHandle string will be base64 encoded -
+                elif typeValue == unicode:  # found a string value - maybe what we're looking for
+                    try:  # keyHandle string will be base64 encoded -
                         # if its not an exception is thrown and we continue as its not the string we're after
                         base64UrlEncoded = base64.urlsafe_b64encode(base64.b64decode(item))
-                        if base64UrlEncoded != challengeTxt: # make sure its not the challengeTxt - if it not return it
+                        if base64UrlEncoded != challengeTxt:  # make sure its not the challengeTxt - if it not return it
                             return base64UrlEncoded
                     except:
                         pass
-                else: # ints bools etc we don't care
+                else:  # ints bools etc we don't care
                     continue
 
     @staticmethod
     def find_app_id(inputString):
         try:
-            searchResult = re.search('"appid":"[a-z://.-_]+"',inputString).group()
+            searchResult = re.search('"appid":"[a-z://.-_]+"', inputString).group()
             searchObject = json.loads('{' + searchResult + '}')
             return str(searchObject['appid'])
         except:
@@ -398,10 +398,10 @@ class Google:
         facet_url = urllib_parse.urlparse(challenge_url)
         facet = facet_url.scheme + "://" + facet_url.netloc
 
-        keyHandleJSField = response_page.find('div',{'jsname': 'C0oDBd'}).get('data-challenge-ui')
+        keyHandleJSField = response_page.find('div', {'jsname': 'C0oDBd'}).get('data-challenge-ui')
         startJSONPosition = keyHandleJSField.find('{')
         endJSONPosition = keyHandleJSField.rfind('}')
-        keyHandleJsonPayload = json.loads(keyHandleJSField[startJSONPosition:endJSONPosition+1])
+        keyHandleJsonPayload = json.loads(keyHandleJSField[startJSONPosition:endJSONPosition + 1])
 
         keyHandle = self.find_key_handle(keyHandleJsonPayload, base64.urlsafe_b64encode(base64.b64decode(challenges_txt)))
         appId = self.find_app_id(str(keyHandleJsonPayload))
