@@ -406,8 +406,11 @@ class Google:
         keyHandle = self.find_key_handle(keyHandleJsonPayload, base64.urlsafe_b64encode(base64.b64decode(challenges_txt)))
         appId = self.find_app_id(str(keyHandleJsonPayload))
 
+        # txt sent for signing needs to be base64 url encode
+        # we also have to remove any base64 padding because including including it will prevent google accepting the auth response
+        challenges_txt_encode_pad_removed = base64.urlsafe_b64encode(base64.b64decode(challenges_txt)).strip('=')
         u2f_challenges = []
-        u2f_challenges.append({'version': 'U2F_V2', 'challenge': base64.urlsafe_b64encode(base64.b64decode(challenges_txt)), 'appId': appId, 'keyHandle': keyHandle})
+        u2f_challenges.append({'version': 'U2F_V2', 'challenge': challenges_txt_encode_pad_removed, 'appId': appId, 'keyHandle': keyHandle})
 
         # Prompt the user up to attempts_remaining times to insert their U2F device.
         attempts_remaining = 5
