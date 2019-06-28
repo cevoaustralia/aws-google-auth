@@ -138,7 +138,10 @@ class Google:
         typeOfInput = type(input)
         if typeOfInput == dict:  # parse down a dict
             for item in input:
-                return Google.find_key_handle(input[item], challengeTxt)
+                rvalue = Google.find_key_handle(input[item], challengeTxt)
+                if rvalue is not None:
+                    return rvalue
+
         elif typeOfInput == list:  # looks like we've hit an array - iterate it
             array = list(filter(None, input))  # remove any None type objects from the array
             for item in array:
@@ -408,9 +411,10 @@ class Google:
 
         # txt sent for signing needs to be base64 url encode
         # we also have to remove any base64 padding because including including it will prevent google accepting the auth response
-        challenges_txt_encode_pad_removed = base64.urlsafe_b64encode(base64.b64decode(challenges_txt)).strip('=')
+        challenges_txt_encode_pad_removed = base64.urlsafe_b64encode(base64.b64decode(challenges_txt)).strip('='.encode())
+
         u2f_challenges = []
-        u2f_challenges.append({'version': 'U2F_V2', 'challenge': challenges_txt_encode_pad_removed, 'appId': appId, 'keyHandle': keyHandle})
+        u2f_challenges.append({'version': 'U2F_V2', 'challenge': challenges_txt_encode_pad_removed.decode(), 'appId': appId, 'keyHandle': keyHandle.decode()})
 
         # Prompt the user up to attempts_remaining times to insert their U2F device.
         attempts_remaining = 5
