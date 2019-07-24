@@ -196,11 +196,12 @@ When receiving data from ``stdin`` ``aws-google-auth`` disables the interactive 
 Before `#82 <https://github.com/cevoaustralia/aws-google-auth/issues/82>`_, all interactive prompts could be fed from ``stdin`` already apart from the ``Google Password:`` prompt.
 
 Example usage:
-::
-    $ password-manager show password | aws-google-auth
-    Google Password: MFA token:
-    Assuming arn:aws:iam::123456789012:role/admin
-    Credentials Expiration: ...
+```
+$ password-manager show password | aws-google-auth
+Google Password: MFA token:
+Assuming arn:aws:iam::123456789012:role/admin
+Credentials Expiration: ...
+```
 
 **Note:** this feature is intended for password manager integration, not for passing passwords from command line.
 Please use interactive prompt if you need to pass the password manually, as this provide enhanced security avoid
