@@ -2,6 +2,7 @@
 
 import base64
 import os
+import json
 import boto3
 
 from datetime import datetime
@@ -71,6 +72,17 @@ class Amazon:
             self.secret_access_key,
             self.session_token,
             self.expiration.strftime('%Y-%m-%dT%H:%M:%S%z'))
+
+        print(formatted)
+
+    def print_credential_process(self):
+        formatted = json.dumps({
+            "Version": 1,
+            "AccessKeyId": self.access_key_id,
+            "SecretAccessKey": self.secret_access_key,
+            "SessionToken": self.session_token,
+            "Expiration": self.expiration.strftime('%Y-%m-%dT%H:%M:%S%z')
+        })
 
         print(formatted)
 

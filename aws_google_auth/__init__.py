@@ -32,9 +32,12 @@ def parse_args(args):
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
     parser.add_argument('-q', '--quiet', action='store_true', help='Quiet output')
     parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
-    parser.add_argument('--print-creds', action='store_true', help='Print Credentials.')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
     parser.add_argument('--save-failure-html', action='store_true', help='Write HTML failure responses to file for troubleshooting.')
+
+    print_group = parser.add_mutually_exclusive_group()
+    print_group.add_argument('--print-creds', action='store_true', help='Print Credentials.')
+    print_group.add_argument('--process-creds', action='store_true', help='Print Credentials in JSON format for AWS CLI credential_process directive.')
 
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
@@ -160,6 +163,11 @@ def resolve_config(args):
         args.print_creds,
         config.print_creds)
 
+    config.process_creds = coalesce(
+        args.process_creds,
+        config.process_creds
+    )
+
     # Quiet
     config.quiet = coalesce(
         args.quiet,
@@ -244,6 +252,9 @@ def process_auth(args, config):
 
     if config.print_creds:
         amazon_client.print_export_line()
+
+    if config.process_creds:
+        amazon_client.print_credential_process()
 
     if config.profile:
         config.write(amazon_client)
