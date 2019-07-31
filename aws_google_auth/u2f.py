@@ -7,6 +7,9 @@ import requests
 from u2flib_host import u2f, exc, appid
 from u2flib_host.constants import APDU_USE_NOT_SATISFIED
 
+from aws_google_auth import util
+
+
 """
 The facet/appID used by Google auth does not seem to be valid
 Need to apply some patches to u2flib_host to not validate the
@@ -65,7 +68,7 @@ def u2f_auth(challenges, facet):
                             remove = False
                             if not prompted:
                                 print('Touch the flashing U2F device to '
-                                      'authenticate...')
+                                      'authenticate...', file=util.Util.get_output())
                                 prompted = True
                         else:
                             pass

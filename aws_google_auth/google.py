@@ -19,6 +19,7 @@ from six import print_ as print
 from six.moves import urllib_parse, input
 
 from aws_google_auth import _version
+from aws_google_auth import util
 
 # The U2F USB Library is optional, if it's there, include it.
 try:
@@ -367,7 +368,7 @@ class Google:
             if find_executable('xv') is None and find_executable('display') is None:
                 open_image = False
 
-        print("Please visit the following URL to view your CAPTCHA: {}".format(captcha_url))
+        print("Please visit the following URL to view your CAPTCHA: {}".format(captcha_url), file=util.Util.get_output())
 
         if open_image:
             try:
@@ -377,10 +378,7 @@ class Google:
             except Exception:
                 pass
 
-        try:
-            captcha_input = raw_input("Captcha (case insensitive): ") or None
-        except NameError:
-            captcha_input = input("Captcha (case insensitive): ") or None
+        captcha_input = util.Util.get_input("Captcha (case insensitive): ")
 
         # Update the payload
         payload['logincaptcha'] = captcha_input
@@ -430,9 +428,7 @@ class Google:
                 if attempts_remaining <= 0:
                     break
                 else:
-                    input(
-                        "Insert your U2F device and press enter to try again..."
-                    )
+                    util.Util.get_input("Insert your U2F device and press enter to try again...")
                     attempts_remaining -= 1
 
         # If we exceed the number of attempts, raise an error and let the program exit.
@@ -486,7 +482,7 @@ class Google:
         response_page = BeautifulSoup(sess.text, 'html.parser')
         challenge_url = sess.url.split("?")[0]
 
-        sms_token = input("Enter SMS token: G-") or None
+        sms_token = util.Util.get_input("Enter SMS token: G-")
 
         payload = {
             'challengeId':
@@ -552,7 +548,7 @@ class Google:
 
         self.check_prompt_code(response_page)
 
-        print("Open the Google App, and tap 'Yes' on the prompt to sign in ...")
+        print("Open the Google App, and tap 'Yes' on the prompt to sign in ...", file=util.Util.get_output())
 
         self.session.headers['Referer'] = sess.url
 
@@ -628,7 +624,7 @@ class Google:
         """
         num_code = response.find("div", {"jsname": "EKvSSd"})
         if num_code:
-            print("numerical code for prompt: {}".format(num_code.string))
+            print("numerical code for prompt: {}".format(num_code.string), file=util.Util.get_output())
 
     def handle_totp(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
@@ -637,7 +633,7 @@ class Google:
         challenge_url = sess.url.split("?")[0]
         challenge_id = challenge_url.split("totp/")[1]
 
-        mfa_token = input("MFA token: ") or None
+        mfa_token = util.Util.get_input("MFA token: ")
 
         if not mfa_token:
             raise ValueError(
@@ -664,12 +660,12 @@ class Google:
     def handle_iap(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
         challenge_url = sess.url.split("?")[0]
-        phone_number = input('Enter your phone number:') or None
+        phone_number = util.Util.get_input('Enter your phone number:')
 
         while True:
             try:
                 choice = int(
-                    input(
+                    util.Util.get_input(
                         'Type 1 to receive a code by SMS or 2 for a voice call:'
                     ))
                 if choice not in [1, 2]:
@@ -733,7 +729,7 @@ class Google:
         response_page = BeautifulSoup(sess.text, 'html.parser')
         challenge_url = sess.url.split("?")[0]
 
-        token = input("Enter " + send_method + " token: G-") or None
+        token = util.Util.get_input("Enter " + send_method + " token: G-")
 
         payload = {
             'challengeId':
@@ -813,12 +809,11 @@ class Google:
             if k in auth_methods and k not in unavailable_challenge_ids
         }
 
-        print('Choose MFA method from available:')
+        print('Choose MFA method from available:', file=util.Util.get_output())
         print('\n'.join(
-            '{}: {}'.format(*i) for i in list(auth_methods.items())))
+            '{}: {}'.format(*i) for i in list(auth_methods.items())), file=util.Util.get_output())
 
-        selected_challenge = input("Enter MFA choice number ({}): ".format(
-            challenge_ids[-1:][0])) or None
+        selected_challenge = util.Util.get_input("Enter MFA choice number ({}): ".format(challenge_ids[-1:][0]))
 
         if selected_challenge is not None and int(selected_challenge) in challenge_ids:
             challenge_id = int(selected_challenge)
@@ -826,7 +821,7 @@ class Google:
             # use the highest index as that will default to prompt, then sms, then totp, etc.
             challenge_id = challenge_ids[-1:][0]
 
-        print("MFA Type Chosen: {}".format(auth_methods[challenge_id]))
+        print("MFA Type Chosen: {}".format(auth_methods[challenge_id]), file=util.Util.get_output())
 
         # We need the specific form of the challenge chosen
         challenge_form = response_page.find(

@@ -74,7 +74,7 @@ def cli(cli_args):
         config = resolve_config(args)
         process_auth(args, config)
     except google.ExpectedGoogleException as ex:
-        print(ex)
+        print(ex, file=util.Util.get_output())
         sys.exit(1)
     except KeyboardInterrupt:
         pass
@@ -178,6 +178,7 @@ def resolve_config(args):
 
 def process_auth(args, config):
     # Set up logging
+    logging.basicConfig(stream=util.Util.get_output())
     logging.getLogger().setLevel(getattr(logging, args.log_level.upper(), None))
 
     # If there is a valid cache and the user opted to use it, use that instead
@@ -247,8 +248,8 @@ def process_auth(args, config):
         else:
             config.role_arn, config.provider = util.Util.pick_a_role(roles)
     if not config.quiet:
-        print("Assuming " + config.role_arn)
-        print("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())))
+        print("Assuming " + config.role_arn, file=util.Util.get_output())
+        print("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())), file=util.Util.get_output())
 
     if config.print_creds:
         amazon_client.print_export_line()
