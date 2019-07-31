@@ -16,7 +16,7 @@ from distutils.spawn import find_executable
 from bs4 import BeautifulSoup
 from requests import HTTPError
 from six import print_ as print
-from six.moves import urllib_parse, input
+from six.moves import urllib_parse
 
 from aws_google_auth import _version
 from aws_google_auth import util

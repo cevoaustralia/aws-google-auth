@@ -98,15 +98,13 @@ class Util:
             print("")
         return password
 
-
     out_tty = None
-
     @staticmethod
     def get_output():
         if Util.out_tty is None:
             Util.out_tty = io.TextIOWrapper(
                 io.FileIO(
-                    os.open("/dev/tty", os.O_RDWR|os.O_NOCTTY),
+                    os.open("/dev/tty", os.O_RDWR | os.O_NOCTTY),
                     "r+"),
                 line_buffering=True)
         return Util.out_tty
