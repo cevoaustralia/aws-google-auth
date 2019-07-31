@@ -58,6 +58,7 @@ class TestInit(unittest.TestCase):
                                          sp_id=None,
                                          log_level='warn',
                                          print_creds=False,
+                                         process_creds=False,
                                          username=None,
                                          quiet=False))
                           ],
@@ -77,6 +78,7 @@ class TestInit(unittest.TestCase):
                                          sp_id=None,
                                          log_level='warn',
                                          print_creds=False,
+                                         process_creds=False,
                                          username=None,
                                          quiet=False),
                                mock_config)
@@ -131,7 +133,8 @@ class TestInit(unittest.TestCase):
         self.assertEqual(mock_config.role_arn, "da_role")
 
         # Assert calls occur
-        self.assertEqual([call.Util.get_input('Google username: '),
+        self.assertEqual([call.Util.get_output(),
+                          call.Util.get_input('Google username: '),
                           call.Util.get_input('Google IDP ID: '),
                           call.Util.get_input('Google SP ID: '),
                           call.Util.get_password('Google Password: '),
@@ -203,7 +206,8 @@ class TestInit(unittest.TestCase):
         self.assertEqual(mock_config.role_arn, "da_role")
 
         # Assert calls occur
-        self.assertEqual([call.Util.get_input('Google username: '),
+        self.assertEqual([call.Util.get_output(),
+                          call.Util.get_input('Google username: '),
                           call.Util.get_input('Google IDP ID: '),
                           call.Util.get_input('Google SP ID: '),
                           call.Util.get_password('Google Password: '),
@@ -282,7 +286,8 @@ class TestInit(unittest.TestCase):
         self.assertEqual(mock_config.role_arn, "arn:aws:iam::123456789012:role/admin")
 
         # Assert calls occur
-        self.assertEqual([call.Util.get_input('Google username: '),
+        self.assertEqual([call.Util.get_output(),
+                          call.Util.get_input('Google username: '),
                           call.Util.get_input('Google IDP ID: '),
                           call.Util.get_input('Google SP ID: '),
                           call.Util.get_password('Google Password: ')],
@@ -349,7 +354,8 @@ class TestInit(unittest.TestCase):
         self.assertEqual(mock_config.role_arn, "da_role")
 
         # Assert calls occur
-        self.assertEqual([call.Util.get_input('Google username: '),
+        self.assertEqual([call.Util.get_output(),
+                          call.Util.get_input('Google username: '),
                           call.Util.get_input('Google IDP ID: '),
                           call.Util.get_input('Google SP ID: '),
                           call.Util.get_password('Google Password: '),
@@ -420,7 +426,8 @@ class TestInit(unittest.TestCase):
         self.assertEqual(mock_config.role_arn, "da_role")
 
         # Assert calls occur
-        self.assertEqual([call.Util.get_input('Google username: '),
+        self.assertEqual([call.Util.get_output(),
+                          call.Util.get_input('Google username: '),
                           call.Util.get_input('Google IDP ID: '),
                           call.Util.get_input('Google SP ID: '),
                           call.Util.get_password('Google Password: '),
@@ -492,7 +499,8 @@ class TestInit(unittest.TestCase):
         self.assertEqual(mock_config.role_arn, "da_role")
 
         # Assert calls occur
-        self.assertEqual([call.Util.pick_a_role({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
+        self.assertEqual([call.Util.get_output(),
+                          call.Util.pick_a_role({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
                                                 'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'}, [])],
                          mock_util.mock_calls)
 
