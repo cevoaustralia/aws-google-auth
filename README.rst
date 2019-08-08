@@ -132,7 +132,8 @@ Usage
       -R REGION, --region REGION
                             AWS region endpoint ($AWS_DEFAULT_REGION)
       -d DURATION, --duration DURATION
-                            Credential duration ($DURATION)
+                            Credential duration (defaults to value of $DURATION, then
+                            falls back to 43200)
       -p PROFILE, --profile PROFILE
                             AWS profile (defaults to value of $AWS_PROFILE, then
                             falls back to 'sts')
@@ -150,7 +151,7 @@ Usage
       -V, --version         show program's version number and exit
 
 
-**Note** that if you want longer than the default 3600 seconds (1 hour)
+**Note** If you want a longer session than the AWS default 3600 seconds (1 hour)
 duration, you must also modify the IAM Role to permit this. See
 `the AWS documentation <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_manage_modify.html>`__
 for more information.

@@ -27,7 +27,7 @@ def parse_args(args):
     parser.add_argument('-I', '--idp-id', help='Google SSO IDP identifier ($GOOGLE_IDP_ID)')
     parser.add_argument('-S', '--sp-id', help='Google SSO SP identifier ($GOOGLE_SP_ID)')
     parser.add_argument('-R', '--region', help='AWS region endpoint ($AWS_DEFAULT_REGION)')
-    parser.add_argument('-d', '--duration', type=int, help='Credential duration ($DURATION)')
+    parser.add_argument('-d', '--duration', type=int, help='Credential duration in seconds (defaults to value of $DURATION, then falls back to 43200)')
     parser.add_argument('-p', '--profile', help='AWS profile (defaults to value of $AWS_PROFILE, then falls back to \'sts\')')
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
     parser.add_argument('-q', '--quiet', action='store_true', help='Quiet output')
