@@ -3,6 +3,9 @@ import unittest
 from io import open
 from os import path
 
+import json
+import base64
+
 from bs4 import BeautifulSoup
 
 from mock import Mock
@@ -20,6 +23,30 @@ class TestGoogle(unittest.TestCase):
         response = BeautifulSoup(response, 'html.parser')
         with self.assertRaises(ValueError):
             google.Google.check_extra_step(response)
+
+    def test_find_keyhandles(self):
+        challenges_txt = "RFVNTVlDSEFMTEVOR0U="
+
+        keyHandleJSText = """{"1010":[2,true,0,false]
+,"5010":[null,null,null,"https://accounts.google.com/signin/challenge/sk/5",null,["google.com","RFVNTVlDSEFMTEVOR0U\\u003d",[[2,"S0VZSEFORExFMQ\\u003d\\u003d",[1]
+]
+,[2,"S0VZSEFORExFMg\\u003d\\u003d",[1,2]
+]
+]
+,"{\\"appid\\":\\"https://www.gstatic.com/securitykey/origins.json\\"}"]
+]
+}
+"""
+        keyHandleJsonPayload = json.loads(keyHandleJSText)
+
+        keyHandles = google.Google.find_key_handles(keyHandleJsonPayload, base64.urlsafe_b64encode(base64.b64decode(challenges_txt)))
+        self.assertEqual(
+            [
+                b"S0VZSEFORExFMQ==",
+                b"S0VZSEFORExFMg==",
+            ],
+            keyHandles,
+        )
 
     def test_parse_saml_without_login(self):
 

@@ -134,20 +134,19 @@ class Google:
             return error.text
 
     @staticmethod
-    def find_key_handle(input, challengeTxt):
+    def find_key_handles(input, challengeTxt):
+        keyHandles = []
         typeOfInput = type(input)
         if typeOfInput == dict:  # parse down a dict
             for item in input:
-                rvalue = Google.find_key_handle(input[item], challengeTxt)
-                if rvalue is not None:
-                    return rvalue
+                keyHandles.extend(Google.find_key_handles(input[item], challengeTxt))
 
         elif typeOfInput == list:  # looks like we've hit an array - iterate it
             array = list(filter(None, input))  # remove any None type objects from the array
             for item in array:
                 typeValue = type(item)
                 if typeValue == list:  # another array - recursive call
-                    return Google.find_key_handle(item, challengeTxt)
+                    keyHandles.extend(Google.find_key_handles(item, challengeTxt))
                 elif typeValue == int or typeValue == bool:  # ints bools etc we don't care
                     continue
                 else:  # we went a string or unicode here (python 3.x lost unicode global)
@@ -155,9 +154,10 @@ class Google:
                         # if its not an exception is thrown and we continue as its not the string we're after
                         base64UrlEncoded = base64.urlsafe_b64encode(base64.b64decode(item))
                         if base64UrlEncoded != challengeTxt:  # make sure its not the challengeTxt - if it not return it
-                            return base64UrlEncoded
+                            keyHandles.append(base64UrlEncoded)
                     except:
                         pass
+        return keyHandles
 
     @staticmethod
     def find_app_id(inputString):
@@ -406,15 +406,14 @@ class Google:
         endJSONPosition = keyHandleJSField.rfind('}')
         keyHandleJsonPayload = json.loads(keyHandleJSField[startJSONPosition:endJSONPosition + 1])
 
-        keyHandle = self.find_key_handle(keyHandleJsonPayload, base64.urlsafe_b64encode(base64.b64decode(challenges_txt)))
+        keyHandles = self.find_key_handles(keyHandleJsonPayload, base64.urlsafe_b64encode(base64.b64decode(challenges_txt)))
         appId = self.find_app_id(str(keyHandleJsonPayload))
 
         # txt sent for signing needs to be base64 url encode
         # we also have to remove any base64 padding because including including it will prevent google accepting the auth response
         challenges_txt_encode_pad_removed = base64.urlsafe_b64encode(base64.b64decode(challenges_txt)).strip('='.encode())
 
-        u2f_challenges = []
-        u2f_challenges.append({'version': 'U2F_V2', 'challenge': challenges_txt_encode_pad_removed.decode(), 'appId': appId, 'keyHandle': keyHandle.decode()})
+        u2f_challenges = [{'version': 'U2F_V2', 'challenge': challenges_txt_encode_pad_removed.decode(), 'appId': appId, 'keyHandle': keyHandle.decode()} for keyHandle in keyHandles]
 
         # Prompt the user up to attempts_remaining times to insert their U2F device.
         attempts_remaining = 5
