@@ -1,11 +1,17 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 import json
 import time
 
 import requests
+from six import print_ as print
+
 from u2flib_host import u2f, exc, appid
 from u2flib_host.constants import APDU_USE_NOT_SATISFIED
+
+from aws_google_auth import util
+
 
 """
 The facet/appID used by Google auth does not seem to be valid
@@ -69,8 +75,8 @@ def u2f_auth(challenges, facet):
                         if e.code == APDU_USE_NOT_SATISFIED:
                             remove = False
                             if not prompted:
-                                print('Touch the flashing U2F device to '
-                                      'authenticate...')
+                                print('Touch the flashing U2F device to authenticate...',
+                                      file=util.Util.get_output())
                                 prompted = True
                         else:
                             pass

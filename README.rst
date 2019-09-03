@@ -115,39 +115,44 @@ Usage
 
     $ aws-google-auth -h
     usage: aws-google-auth [-h] [-u USERNAME] [-I IDP_ID] [-S SP_ID] [-R REGION]
-                           [-d DURATION] [-p PROFILE] [-D] [-q] [--no-cache]
-                           [--print-creds] [--resolve-aliases]
-                           [--save-failure-html] [-a | -r ROLE_ARN] [-k] [-V]
+                        [-d DURATION] [-p PROFILE] [-D] [-q] [--no-cache]
+                        [--resolve-aliases] [--save-failure-html]
+                        [--print-creds | --process-creds] [-a | -r ROLE_ARN]
+                        [-k] [-l {debug,info,warn}] [-V]
 
     Acquire temporary AWS credentials via Google SSO
 
     optional arguments:
-      -h, --help            show this help message and exit
-      -u USERNAME, --username USERNAME
+    -h, --help            show this help message and exit
+    -u USERNAME, --username USERNAME
                             Google Apps username ($GOOGLE_USERNAME)
-      -I IDP_ID, --idp-id IDP_ID
+    -I IDP_ID, --idp-id IDP_ID
                             Google SSO IDP identifier ($GOOGLE_IDP_ID)
-      -S SP_ID, --sp-id SP_ID
+    -S SP_ID, --sp-id SP_ID
                             Google SSO SP identifier ($GOOGLE_SP_ID)
-      -R REGION, --region REGION
+    -R REGION, --region REGION
                             AWS region endpoint ($AWS_DEFAULT_REGION)
-      -d DURATION, --duration DURATION
+    -d DURATION, --duration DURATION
                             Credential duration ($DURATION)
-      -p PROFILE, --profile PROFILE
+    -p PROFILE, --profile PROFILE
                             AWS profile (defaults to value of $AWS_PROFILE, then
                             falls back to 'sts')
-      -D, --disable-u2f     Disable U2F functionality.
-      -q, --quiet           Quiet output
-      --no-cache            Do not cache the SAML Assertion.
-      --print-creds         Print Credentials.
-      --resolve-aliases     Resolve AWS account aliases.
-      --save-failure-html   Write HTML failure responses to file for
+    -D, --disable-u2f     Disable U2F functionality.
+    -q, --quiet           Quiet output
+    --no-cache            Do not cache the SAML Assertion.
+    --resolve-aliases     Resolve AWS account aliases.
+    --save-failure-html   Write HTML failure responses to file for
                             troubleshooting.
-      -a, --ask-role        Set true to always pick the role
-      -r ROLE_ARN, --role-arn ROLE_ARN
+    --print-creds         Print Credentials.
+    --process-creds       Print Credentials in JSON format for AWS CLI
+                            credential_process directive.
+    -a, --ask-role        Set true to always pick the role
+    -r ROLE_ARN, --role-arn ROLE_ARN
                             The ARN of the role to assume
-      -k, --keyring         Use keyring for storing the password.
-      -V, --version         show program's version number and exit
+    -k, --keyring         Use keyring for storing the password.
+    -l {debug,info,warn}, --log {debug,info,warn}
+                            Select log level (default: warn)
+    -V, --version         show program's version number and exit
 
 
 **Note** that if you want longer than the default 3600 seconds (1 hour)
@@ -162,6 +167,29 @@ Native Python
 2. You will be prompted to supply each parameter
 
 *Note* You can skip prompts by either passing parameters to the command, or setting the specified Environment variables.
+
+AWS CLI Credential Process
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*aws-google-auth* can be added as a ``credential_process`` to the AWS CLI
+configuration files, so that it is invoked as needed.
+
+The first time setup requires supplying information that
+will populate an AWS CLI profile.
+
+1. Execute ``aws-google-auth --profile [google]``,
+   replacing ``[google]`` with the profile name you want.
+2. You will be prompted to supply each parameter
+3. Add the following to the profile in ``~/.aws/config``,
+   ``credential_process = aws-google-auth --profile [google]  --process-creds``
+
+For future sessions, the AWS CLI will call *aws-google-auth* directly,
+by either:
+
+- Setting the ``AWS_PROFILE`` environment variable, or
+- Using the ``--profile`` option on the ``aws`` command.
+  (i.e. ``aws --profile [google] sts get-caller-identity``).
+
 
 Via Docker
 ~~~~~~~~~~~~~

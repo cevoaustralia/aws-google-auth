@@ -34,6 +34,7 @@ class Configuration(object):
         self.resolve_aliases = False
         self.username = None
         self.print_creds = False
+        self.process_creds = False
         self.quiet = False
 
     # For the "~/.aws/config" file, we use the format "[profile testing]"

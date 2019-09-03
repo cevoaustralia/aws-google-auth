@@ -32,9 +32,12 @@ def parse_args(args):
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
     parser.add_argument('-q', '--quiet', action='store_true', help='Quiet output')
     parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
-    parser.add_argument('--print-creds', action='store_true', help='Print Credentials.')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
     parser.add_argument('--save-failure-html', action='store_true', help='Write HTML failure responses to file for troubleshooting.')
+
+    print_group = parser.add_mutually_exclusive_group()
+    print_group.add_argument('--print-creds', action='store_true', help='Print Credentials.')
+    print_group.add_argument('--process-creds', action='store_true', help='Print Credentials in JSON format for AWS CLI credential_process directive.')
 
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
@@ -71,7 +74,7 @@ def cli(cli_args):
         config = resolve_config(args)
         process_auth(args, config)
     except google.ExpectedGoogleException as ex:
-        print(ex)
+        print(ex, file=util.Util.get_output())
         sys.exit(1)
     except KeyboardInterrupt:
         pass
@@ -160,6 +163,11 @@ def resolve_config(args):
         args.print_creds,
         config.print_creds)
 
+    config.process_creds = coalesce(
+        args.process_creds,
+        config.process_creds
+    )
+
     # Quiet
     config.quiet = coalesce(
         args.quiet,
@@ -170,6 +178,7 @@ def resolve_config(args):
 
 def process_auth(args, config):
     # Set up logging
+    logging.basicConfig(stream=util.Util.get_output())
     logging.getLogger().setLevel(getattr(logging, args.log_level.upper(), None))
 
     # If there is a valid cache and the user opted to use it, use that instead
@@ -239,11 +248,14 @@ def process_auth(args, config):
         else:
             config.role_arn, config.provider = util.Util.pick_a_role(roles)
     if not config.quiet:
-        print("Assuming " + config.role_arn)
-        print("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())))
+        print("Assuming " + config.role_arn, file=util.Util.get_output())
+        print("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())), file=util.Util.get_output())
 
     if config.print_creds:
         amazon_client.print_export_line()
+
+    if config.process_creds:
+        amazon_client.print_credential_process()
 
     if config.profile:
         config.write(amazon_client)

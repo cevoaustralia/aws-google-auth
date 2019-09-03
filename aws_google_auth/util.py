@@ -5,6 +5,7 @@ from __future__ import print_function
 import getpass
 import os
 import sys
+import io
 from collections import OrderedDict
 
 from six.moves import input
@@ -15,7 +16,8 @@ class Util:
 
     @staticmethod
     def get_input(prompt):
-        return input(prompt)
+        print(prompt, file=Util.get_output(), end='', flush=True)
+        return input() or None
 
     @staticmethod
     def pick_a_role(roles, aliases=None):
@@ -38,18 +40,18 @@ class Util:
                 enriched_roles_tab.append([i + 1, role_property[0], role_property[1]])
 
             while True:
-                print(tabulate(enriched_roles_tab, headers=['No', 'AWS account', 'Role'], ))
+                print(tabulate(enriched_roles_tab, headers=['No', 'AWS account', 'Role'], ), file=Util.get_output())
                 prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(enriched_roles))
                 choice = Util.get_input(prompt)
 
                 try:
                     return list(ordered_roles.items())[int(choice) - 1]
                 except (IndexError, ValueError):
-                    print("Invalid choice, try again.")
+                    print("Invalid choice, try again.", file=Util.get_output())
         else:
             while True:
                 for i, role in enumerate(roles):
-                    print("[{:>3d}] {}".format(i + 1, role))
+                    print("[{:>3d}] {}".format(i + 1, role), file=Util.get_output())
 
                 prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(roles))
                 choice = Util.get_input(prompt)
@@ -57,7 +59,7 @@ class Util:
                 try:
                     return list(roles.items())[int(choice) - 1]
                 except (IndexError, ValueError):
-                    print("Invalid choice, try again.")
+                    print("Invalid choice, try again.", file=Util.get_output())
 
     @staticmethod
     def touch(file_name, mode=0o600):
@@ -95,3 +97,14 @@ class Util:
             password = sys.stdin.readline()
             print("")
         return password
+
+    out_tty = None
+    @staticmethod
+    def get_output():
+        if Util.out_tty is None:
+            Util.out_tty = io.TextIOWrapper(
+                io.FileIO(
+                    os.open("/dev/tty", os.O_RDWR | os.O_NOCTTY),
+                    "r+"),
+                line_buffering=True)
+        return Util.out_tty
