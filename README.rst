@@ -145,7 +145,7 @@ Usage
                             troubleshooting.
       -a, --ask-role        Set true to always pick the role
       -r ROLE_ARN, --role-arn ROLE_ARN
-                            The ARN of the role to assume
+                            The ARN of the role to assume ($AWS_ROLE_ARN)
       -k, --keyring         Use keyring for storing the password.
       -V, --version         show program's version number and exit
 
