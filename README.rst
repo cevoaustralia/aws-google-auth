@@ -138,6 +138,8 @@ Usage
                             falls back to 'sts')
       -D, --disable-u2f     Disable U2F functionality.
       -q, --quiet           Quiet output
+      --bg-response BG_RESPONSE
+                            Override default bgresponse challenge token ($GOOGLE_BG_RESPONSE).
       --no-cache            Do not cache the SAML Assertion.
       --print-creds         Print Credentials.
       --resolve-aliases     Resolve AWS account aliases.

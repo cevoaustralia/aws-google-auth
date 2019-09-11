@@ -59,7 +59,8 @@ class TestInit(unittest.TestCase):
                                          log_level='warn',
                                          print_creds=False,
                                          username=None,
-                                         quiet=False))
+                                         quiet=False,
+                                         bg_response=None))
                           ],
                          resolve_config.mock_calls)
 
@@ -78,7 +79,8 @@ class TestInit(unittest.TestCase):
                                          log_level='warn',
                                          print_creds=False,
                                          username=None,
-                                         quiet=False),
+                                         quiet=False,
+                                         bg_response=None),
                                mock_config)
                           ],
                          process_auth.mock_calls)

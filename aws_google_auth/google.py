@@ -206,6 +206,9 @@ class Google:
             '_utf8': '?',
         }
 
+        if self.config.bg_response:
+            payload['bgresponse'] = self.config.bg_response
+
         # GALX is sometimes not there
         try:
             galx = first_page.find('input', {'name': 'GALX'}).get('value')
@@ -250,6 +253,11 @@ class Google:
         # or someone using the same outbound IP address as you, is a bot.
         if error is not None:
             raise ExpectedGoogleException('Invalid username or password')
+
+        if "signin/rejected" in sess.url:
+            raise ExpectedGoogleException(u'''Default value of parameter `bgresponse` has not accepted.
+                Please visit login URL {}, open the web inspector and execute document.bg.invoke() in the console.
+                Then, set --bg-response to the function output.'''.format(self.login_url))
 
         self.check_extra_step(response_page)
 

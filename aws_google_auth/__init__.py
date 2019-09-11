@@ -31,6 +31,7 @@ def parse_args(args):
     parser.add_argument('-p', '--profile', help='AWS profile (defaults to value of $AWS_PROFILE, then falls back to \'sts\')')
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
     parser.add_argument('-q', '--quiet', action='store_true', help='Quiet output')
+    parser.add_argument('--bg-response', help='Override default bgresponse challenge token.')
     parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
     parser.add_argument('--print-creds', action='store_true', help='Print Credentials.')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
@@ -164,6 +165,11 @@ def resolve_config(args):
     config.quiet = coalesce(
         args.quiet,
         config.quiet)
+
+    config.bg_response = coalesce(
+        args.bg_response,
+        os.getenv('GOOGLE_BG_RESPONSE'),
+        config.bg_response)
 
     return config
 
