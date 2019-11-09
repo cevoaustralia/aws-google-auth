@@ -30,12 +30,13 @@ class TestPythonFailOnVersion(unittest.TestCase):
         self.assertEqual(parser.role_arn, None)
         self.assertEqual(parser.username, None)
         self.assertEqual(parser.quiet, False)
+        self.assertEqual(parser.bg_response, None)
 
         self.assertFalse(parser.save_failure_html)
 
         # Assert the size of the parameter so that new parameters trigger a review of this function
         # and the appropriate defaults are added here to track backwards compatibility in the future.
-        self.assertEqual(len(vars(parser)), 16)
+        self.assertEqual(len(vars(parser)), 17)
 
     def test_username(self):
 
