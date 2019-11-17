@@ -255,9 +255,11 @@ class Google:
             raise ExpectedGoogleException('Invalid username or password')
 
         if "signin/rejected" in sess.url:
-            raise ExpectedGoogleException(u'''Default value of parameter `bgresponse` has not accepted.
-                Please visit login URL {}, open the web inspector and execute document.bg.invoke() in the console.
-                Then, set --bg-response to the function output.'''.format(self.login_url))
+            raise ExpectedGoogleException(u'''Default value of parameter `bgresponse` has not been accepted.
+                First, make sure you are logged out from AWS (or use an incognito browser session). Then, visit
+                the login URL at {}.
+                Open the web inspector and execute document.bg.invoke() in the console. Then, set --bg-response or
+                $GOOGLE_BG_RESPONSE to the function output.'''.format(self.login_url))
 
         self.check_extra_step(response_page)
 
