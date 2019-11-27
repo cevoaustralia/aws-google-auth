@@ -246,7 +246,7 @@ class Configuration(object):
             self.bg_response = coalesce(read_bg_response, self.bg_response)
 
             # Account
-            read_account= unicode_to_string(config_parser[profile_string].get('account', None))
+            read_account = unicode_to_string(config_parser[profile_string].get('account', None))
             self.account = coalesce(read_account, self.account)
 
         # SAML Cache

@@ -33,7 +33,6 @@ class TestPythonFailOnVersion(unittest.TestCase):
         self.assertEqual(parser.bg_response, None)
         self.assertEqual(parser.account, None)
 
-
         self.assertFalse(parser.save_failure_html)
 
         # Assert the size of the parameter so that new parameters trigger a review of this function
@@ -57,7 +56,6 @@ class TestPythonFailOnVersion(unittest.TestCase):
         self.assertEqual(parser.username, 'username@gmail.com')
         self.assertEqual(parser.account, None)
 
-
     def test_nocache(self):
 
         parser = parse_args(['--no-cache'])
@@ -75,7 +73,6 @@ class TestPythonFailOnVersion(unittest.TestCase):
         self.assertEqual(parser.username, None)
         self.assertEqual(parser.account, None)
 
-
     def test_resolvealiases(self):
 
         parser = parse_args(['--resolve-aliases'])
@@ -92,7 +89,6 @@ class TestPythonFailOnVersion(unittest.TestCase):
         self.assertEqual(parser.role_arn, None)
         self.assertEqual(parser.username, None)
         self.assertEqual(parser.account, None)
-
 
     def test_ask_and_supply_role(self):
 
