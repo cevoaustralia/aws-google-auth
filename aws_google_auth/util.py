@@ -18,10 +18,15 @@ class Util:
         return input(prompt)
 
     @staticmethod
-    def pick_a_role(roles, aliases=None):
+    def pick_a_role(roles, aliases=None, account=None):
+        if account:
+            filtered_roles = {role: principal for role, principal in roles.items() if(account in role)}
+        else:
+            filtered_roles = roles
+
         if aliases:
             enriched_roles = {}
-            for role, principal in roles.items():
+            for role, principal in filtered_roles.items():
                 enriched_roles[role] = [
                     aliases[role.split(':')[4]],
                     role.split('role/')[1],
@@ -48,14 +53,14 @@ class Util:
                     print("Invalid choice, try again.")
         else:
             while True:
-                for i, role in enumerate(roles):
+                for i, role in enumerate(filtered_roles):
                     print("[{:>3d}] {}".format(i + 1, role))
 
-                prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(roles))
+                prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(filtered_roles))
                 choice = Util.get_input(prompt)
 
                 try:
-                    return list(roles.items())[int(choice) - 1]
+                    return list(filtered_roles.items())[int(choice) - 1]
                 except (IndexError, ValueError):
                     print("Invalid choice, try again.")
 

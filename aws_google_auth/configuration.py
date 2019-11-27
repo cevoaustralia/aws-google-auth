@@ -36,6 +36,7 @@ class Configuration(object):
         self.print_creds = False
         self.quiet = False
         self.bg_response = None
+        self.account = ""
 
     # For the "~/.aws/config" file, we use the format "[profile testing]"
     # for the 'testing' profile. The credential file will just be "[testing]"
@@ -136,6 +137,9 @@ class Configuration(object):
 
         # quiet
         assert (self.quiet.__class__ is bool), "Expected quiet to be a boolean. Got {}.".format(self.quiet.__class__)
+
+        # account
+        assert (self.account.__class__ is str), "Expected account to be string. Got {}".format(self.account.__class__)
 
     # Write the configuration (and credentials) out to disk. This allows for
     # regular AWS tooling (aws cli and boto) to use the credentials in the
@@ -240,6 +244,10 @@ class Configuration(object):
             # bg_response
             read_bg_response = unicode_to_string(config_parser[profile_string].get('google_config.bg_response', None))
             self.bg_response = coalesce(read_bg_response, self.bg_response)
+
+            # Account
+            read_account= unicode_to_string(config_parser[profile_string].get('account', None))
+            self.account = coalesce(read_account, self.account)
 
         # SAML Cache
         try:
