@@ -140,6 +140,8 @@ Usage
       -q, --quiet           Quiet output
       --bg-response BG_RESPONSE
                             Override default bgresponse challenge token ($GOOGLE_BG_RESPONSE).
+      --saml-assertion SAML_ASSERTION
+                            Base64 encoded SAML assertion to use.
       --no-cache            Do not cache the SAML Assertion.
       --print-creds         Print Credentials.
       --resolve-aliases     Resolve AWS account aliases.
