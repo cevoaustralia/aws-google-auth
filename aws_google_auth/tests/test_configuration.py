@@ -325,6 +325,7 @@ class TestConfigurationMethods(unittest.TestCase):
         self.assertEqual(c.region, None)
         with self.assertRaises(AssertionError) as e:
             c.raise_if_invalid()
+        self.assertIn("Expected region to be a string.", str(e.exception))
 
     def test_role_arn_invalid_values(self):
         # role_arn must be a string
