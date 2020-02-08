@@ -134,7 +134,7 @@ class Google:
 
     def do_login(self):
         self.session = requests.Session()
-        self.session.headers['User-Agent'] = "AWS Sign-in/{} (Cevo aws-google-auth)".format(self.version)
+        self.session.headers['User-Agent'] = "AWS Sign-in/{} (aws-google-auth)".format(self.version)
         sess = self.get(self.login_url)
 
         # Collect information from the page source
