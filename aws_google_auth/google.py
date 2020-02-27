@@ -224,21 +224,23 @@ class Google:
         # Collect ProfileInformation, SessionState, signIn, and Password Challenge URL
         challenge_page = BeautifulSoup(sess.text, 'html.parser')
 
-        profile_information = challenge_page.find('input', {
-            'name': 'ProfileInformation'
-        }).get('value')
-        session_state = challenge_page.find('input', {
-            'name': 'SessionState'
-        }).get('value')
-        sign_in = challenge_page.find('input', {'name': 'signIn'}).get('value')
-        passwd_challenge_url = challenge_page.find('form', {
-            'id': 'gaia_loginform'
-        }).get('action')
+        # Handle the "old-style" page
+        if challenge_page.find('form', {'id': 'gaia_loginform'}):
+            form = challenge_page.find('form', {'id': 'gaia_loginform'})
+            passwd_challenge_url = form.get('action')
+        else:
+            # sometimes they serve up a different page
+            logging.info("Handling new-style login page")
+            form = challenge_page.find('form', {'id': 'challenge'})
+            passwd_challenge_url = 'https://accounts.google.com' + form.get('action')
+
+        for tag in form.find_all('input'):
+            if tag.get('name') is None:
+                continue
+
+            payload[tag.get('name')] = tag.get('value')
 
         # Update the payload
-        payload['SessionState'] = session_state
-        payload['ProfileInformation'] = profile_information
-        payload['signIn'] = sign_in
         payload['Passwd'] = self.config.password
 
         # POST to Authenticate Password
@@ -255,11 +257,9 @@ class Google:
             raise ExpectedGoogleException('Invalid username or password')
 
         if "signin/rejected" in sess.url:
-            raise ExpectedGoogleException(u'''Default value of parameter `bgresponse` has not been accepted.
-                First, make sure you are logged out from AWS (or use an incognito browser session). Then, visit
-                the login URL at {}.
-                Open the web inspector and execute document.bg.invoke() in the console. Then, set --bg-response or
-                $GOOGLE_BG_RESPONSE to the function output.'''.format(self.login_url))
+            raise ExpectedGoogleException(u'''Default value of parameter `bgresponse` has not accepted.
+                Please visit login URL {}, open the web inspector and execute document.bg.invoke() in the console.
+                Then, set --bg-response to the function output.'''.format(self.login_url))
 
         self.check_extra_step(response_page)
 
