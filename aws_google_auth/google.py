@@ -221,9 +221,6 @@ class Google:
 
         self.session.headers['Referer'] = sess.url
 
-        with open("/tmp/sess-text.html", "w") as fp:
-            fp.write(sess.text)
-
         # Collect ProfileInformation, SessionState, signIn, and Password Challenge URL
         challenge_page = BeautifulSoup(sess.text, 'html.parser')
 
