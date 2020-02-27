@@ -224,7 +224,6 @@ class Google:
         # Collect ProfileInformation, SessionState, signIn, and Password Challenge URL
         challenge_page = BeautifulSoup(sess.text, 'html.parser')
 
-
         # Handle the "old-style" page
         if challenge_page.find('form', {'id': 'gaia_loginform'}):
             form = challenge_page.find('form', {'id':'gaia_loginform'})
@@ -235,11 +234,11 @@ class Google:
             form = challenge_page.find('form', {'id':'challenge'})
             passwd_challenge_url = 'https://accounts.google.com' + form.get('action')
 
-        for input in form.find_all('input'):
-            if input.get('name') is None:
+        for tag in form.find_all('input'):
+            if tag.get('name') is None:
                 continue
 
-            payload[input.get('name')] = input.get('value')
+            payload[tag.get('name')] = tag.get('value')
 
 
         # Update the payload
