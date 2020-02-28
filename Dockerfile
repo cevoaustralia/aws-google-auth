@@ -13,4 +13,4 @@ COPY aws_google_auth /build/aws_google_auth
 RUN pip3 install -e /build/[u2f]
 
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
-ENTRYPOINT ["aws-google-auth"]
+#ENTRYPOINT ["aws-google-auth"]
