@@ -5,7 +5,9 @@ from __future__ import print_function
 import base64
 import io
 import json
+import logging
 import os
+import re
 import sys
 
 import requests
@@ -22,8 +24,8 @@ from aws_google_auth import _version
 try:
     from aws_google_auth import u2f
 except ImportError:
-    print("Failed to import U2F libraries, U2F login unavailable. Other "
-          "methods can still continue.")
+    logging.info("Failed to import U2F libraries, U2F login unavailable. "
+                 "Other methods can still continue.")
 
 
 class ExpectedGoogleException(Exception):
@@ -49,6 +51,7 @@ class Google:
         self.config = config
         self.base_url = 'https://accounts.google.com'
         self.save_failure = save_failure
+        self.session_state = None
 
     @property
     def login_url(self):
@@ -78,7 +81,7 @@ class Google:
         except HTTPError as ex:
 
             if self.save_failure:
-                print("Saving failure trace in 'failure.html'")
+                logging.exception("Saving failure trace in 'failure.html'", ex)
                 with open("failure.html", 'w') as out:
                     out.write(sess.text)
 
@@ -90,16 +93,15 @@ class Google:
         try:
             response = self.check_for_failure(self.session.post(url, data=data, json=json))
         except requests.exceptions.ConnectionError as e:
-            print(
-                'There was a connection error, check your network settings: {}'.
-                format(e))
+            logging.exception(
+                'There was a connection error, check your network settings.', e)
             sys.exit(1)
         except requests.exceptions.Timeout as e:
-            print('The connection timed out, please try again: {}'.format(e))
+            logging.exception('The connection timed out, please try again.', e)
             sys.exit(1)
         except requests.exceptions.TooManyRedirects as e:
-            print('The number of redirects exceeded the maximum allowed: {}'.
-                  format(e))
+            logging.exception('The number of redirects exceeded the maximum '
+                              'allowed.', e)
             sys.exit(1)
 
         return response
@@ -108,16 +110,15 @@ class Google:
         try:
             response = self.check_for_failure(self.session.get(url))
         except requests.exceptions.ConnectionError as e:
-            print(
-                'There was a connection error, check your network settings: {}'.
-                format(e))
+            logging.exception(
+                'There was a connection error, check your network settings.', e)
             sys.exit(1)
         except requests.exceptions.Timeout as e:
-            print('The connection timed out, please try again: {}'.format(e))
+            logging.exception('The connection timed out, please try again.', e)
             sys.exit(1)
         except requests.exceptions.TooManyRedirects as e:
-            print('The number of redirects exceeded the maximum allowed: {}'.
-                  format(e))
+            logging.exception('The number of redirects exceeded the maximum '
+                              'allowed.', e)
             sys.exit(1)
 
         return response
@@ -131,6 +132,42 @@ class Google:
             return None
         else:
             return error.text
+
+    @staticmethod
+    def find_key_handles(input, challengeTxt):
+        keyHandles = []
+        typeOfInput = type(input)
+        if typeOfInput == dict:  # parse down a dict
+            for item in input:
+                keyHandles.extend(Google.find_key_handles(input[item], challengeTxt))
+
+        elif typeOfInput == list:  # looks like we've hit an array - iterate it
+            array = list(filter(None, input))  # remove any None type objects from the array
+            for item in array:
+                typeValue = type(item)
+                if typeValue == list:  # another array - recursive call
+                    keyHandles.extend(Google.find_key_handles(item, challengeTxt))
+                elif typeValue == int or typeValue == bool:  # ints bools etc we don't care
+                    continue
+                else:  # we went a string or unicode here (python 3.x lost unicode global)
+                    try:  # keyHandle string will be base64 encoded -
+                        # if its not an exception is thrown and we continue as its not the string we're after
+                        base64UrlEncoded = base64.urlsafe_b64encode(base64.b64decode(item))
+                        if base64UrlEncoded != challengeTxt:  # make sure its not the challengeTxt - if it not return it
+                            keyHandles.append(base64UrlEncoded)
+                    except:
+                        pass
+        return keyHandles
+
+    @staticmethod
+    def find_app_id(inputString):
+        try:
+            searchResult = re.search('"appid":"[a-z://.-_]+"', inputString).group()
+            searchObject = json.loads('{' + searchResult + '}')
+            return str(searchObject['appid'])
+        except:
+            logging.exception('Was unable to find appid value in googles SAML page')
+            sys.exit(1)
 
     def do_login(self):
         self.session = requests.Session()
@@ -169,6 +206,9 @@ class Google:
             '_utf8': '?',
         }
 
+        if self.config.bg_response:
+            payload['bgresponse'] = self.config.bg_response
+
         # GALX is sometimes not there
         try:
             galx = first_page.find('input', {'name': 'GALX'}).get('value')
@@ -184,21 +224,23 @@ class Google:
         # Collect ProfileInformation, SessionState, signIn, and Password Challenge URL
         challenge_page = BeautifulSoup(sess.text, 'html.parser')
 
-        profile_information = challenge_page.find('input', {
-            'name': 'ProfileInformation'
-        }).get('value')
-        session_state = challenge_page.find('input', {
-            'name': 'SessionState'
-        }).get('value')
-        sign_in = challenge_page.find('input', {'name': 'signIn'}).get('value')
-        passwd_challenge_url = challenge_page.find('form', {
-            'id': 'gaia_loginform'
-        }).get('action')
+        # Handle the "old-style" page
+        if challenge_page.find('form', {'id': 'gaia_loginform'}):
+            form = challenge_page.find('form', {'id': 'gaia_loginform'})
+            passwd_challenge_url = form.get('action')
+        else:
+            # sometimes they serve up a different page
+            logging.info("Handling new-style login page")
+            form = challenge_page.find('form', {'id': 'challenge'})
+            passwd_challenge_url = 'https://accounts.google.com' + form.get('action')
+
+        for tag in form.find_all('input'):
+            if tag.get('name') is None:
+                continue
+
+            payload[tag.get('name')] = tag.get('value')
 
         # Update the payload
-        payload['SessionState'] = session_state
-        payload['ProfileInformation'] = profile_information
-        payload['signIn'] = sign_in
         payload['Passwd'] = self.config.password
 
         # POST to Authenticate Password
@@ -213,6 +255,11 @@ class Google:
         # or someone using the same outbound IP address as you, is a bot.
         if error is not None:
             raise ExpectedGoogleException('Invalid username or password')
+
+        if "signin/rejected" in sess.url:
+            raise ExpectedGoogleException(u'''Default value of parameter `bgresponse` has not accepted.
+                Please visit login URL {}, open the web inspector and execute document.bg.invoke() in the console.
+                Then, set --bg-response to the function output.'''.format(self.login_url))
 
         self.check_extra_step(response_page)
 
@@ -250,7 +297,7 @@ class Google:
                 sess = self.handle_totp(sess)
                 error_msg = self.parse_error_message(sess)
                 if error_msg is not None:
-                    print(error_msg)
+                    logging.error(error_msg)
         elif "challenge/ipp/" in sess.url:
             sess = self.handle_sms(sess)
         elif "challenge/az/" in sess.url:
@@ -285,9 +332,10 @@ class Google:
         except:
 
             if self.save_failure:
-                print("SAML lookup failed, storing failure page to 'saml.html' to assist with debugging.")
+                logging.error("SAML lookup failed, storing failure page to "
+                              "'saml.html' to assist with debugging.")
                 with open("saml.html", 'w') as out:
-                    out.write(self.session_state.text.encode('utf-8'))
+                    out.write(str(self.session_state.text.encode('utf-8')))
 
             raise ExpectedGoogleException('Something went wrong - Could not find SAML response, check your credentials or use --save-failure-html to debug.')
 
@@ -356,30 +404,38 @@ class Google:
     def handle_sk(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
         challenge_url = sess.url.split("?")[0]
-
         challenges_txt = response_page.find('input', {
             'name': "id-challenge"
         }).get('value')
-        challenges = json.loads(challenges_txt)
 
         facet_url = urllib_parse.urlparse(challenge_url)
         facet = facet_url.scheme + "://" + facet_url.netloc
-        app_id = challenges["appId"]
-        u2f_challenges = []
-        for c in challenges["challenges"]:
-            c["appId"] = app_id
-            u2f_challenges.append(c)
+
+        keyHandleJSField = response_page.find('div', {'jsname': 'C0oDBd'}).get('data-challenge-ui')
+        startJSONPosition = keyHandleJSField.find('{')
+        endJSONPosition = keyHandleJSField.rfind('}')
+        keyHandleJsonPayload = json.loads(keyHandleJSField[startJSONPosition:endJSONPosition + 1])
+
+        keyHandles = self.find_key_handles(keyHandleJsonPayload, base64.urlsafe_b64encode(base64.b64decode(challenges_txt)))
+        appId = self.find_app_id(str(keyHandleJsonPayload))
+
+        # txt sent for signing needs to be base64 url encode
+        # we also have to remove any base64 padding because including including it will prevent google accepting the auth response
+        challenges_txt_encode_pad_removed = base64.urlsafe_b64encode(base64.b64decode(challenges_txt)).strip('='.encode())
+
+        u2f_challenges = [{'version': 'U2F_V2', 'challenge': challenges_txt_encode_pad_removed.decode(), 'appId': appId, 'keyHandle': keyHandle.decode()} for keyHandle in keyHandles]
 
         # Prompt the user up to attempts_remaining times to insert their U2F device.
         attempts_remaining = 5
         auth_response = None
         while True:
             try:
-                auth_response = json.dumps(u2f.u2f_auth(u2f_challenges, facet))
+                auth_response_dict = u2f.u2f_auth(u2f_challenges, facet)
+                auth_response = json.dumps(auth_response_dict)
                 break
             except RuntimeWarning:
-                print("No U2F device found. {} attempts remaining.".format(
-                    attempts_remaining))
+                logging.error("No U2F device found. %d attempts remaining",
+                              attempts_remaining)
                 if attempts_remaining <= 0:
                     break
                 else:
@@ -402,8 +458,7 @@ class Google:
             response_page.find('input', {
                 'name': 'challengeType'
             }).get('value'),
-            'continue':
-            response_page.find('input', {
+            'continue': response_page.find('input', {
                 'name': 'continue'
             }).get('value'),
             'scc':
@@ -418,10 +473,7 @@ class Google:
             response_page.find('input', {
                 'name': 'checkedDomains'
             }).get('value'),
-            'pstMsg':
-            response_page.find('input', {
-                'name': 'pstMsg'
-            }).get('value'),
+            'pstMsg': '1',
             'TL':
             response_page.find('input', {
                 'name': 'TL'
@@ -632,7 +684,7 @@ class Google:
                 if choice not in [1, 2]:
                     raise ValueError
             except ValueError:
-                print("Not a valid (integer) option, try again")
+                logging.error("Not a valid (integer) option, try again")
                 continue
             else:
                 if choice == 1:

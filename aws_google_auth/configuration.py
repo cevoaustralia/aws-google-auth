@@ -35,6 +35,7 @@ class Configuration(object):
         self.username = None
         self.print_creds = False
         self.quiet = False
+        self.bg_response = None
 
     # For the "~/.aws/config" file, we use the format "[profile testing]"
     # for the 'testing' profile. The credential file will just be "[testing]"
@@ -61,10 +62,10 @@ class Configuration(object):
 
     @property
     def saml_cache_file(self):
-        return self.credentials_file.replace('credentials', 'saml_cache.xml')
+        return self.credentials_file.replace('credentials', 'saml_cache_%s.xml' % self.idp_id)
 
     def ensure_config_files_exist(self):
-        for file in [self.config_file, self.credentials_file, self.saml_cache_file]:
+        for file in [self.config_file, self.credentials_file]:
             directory = os.path.dirname(file)
             if not os.path.exists(directory):
                 os.mkdir(directory, 0o700)
@@ -159,6 +160,7 @@ class Configuration(object):
         config_parser.set(profile, 'google_config.google_sp_id', self.sp_id)
         config_parser.set(profile, 'google_config.u2f_disabled', self.u2f_disabled)
         config_parser.set(profile, 'google_config.google_username', self.username)
+        config_parser.set(profile, 'google_config.bg_response', self.bg_response)
         with open(self.config_file, 'w+') as f:
             config_parser.write(f)
 
@@ -223,10 +225,6 @@ class Configuration(object):
             read_role_arn = unicode_to_string(config_parser[profile_string].get('google_config.role_arn', None))
             self.role_arn = coalesce(read_role_arn, self.role_arn)
 
-            # SAML Cache
-            read_saml_cache = unicode_to_string(config_parser[profile_string].get('google_config.google_saml_cache', None))
-            self.__saml_cache = coalesce(read_saml_cache, self.__saml_cache)
-
             # SP ID
             read_sp_id = unicode_to_string(config_parser[profile_string].get('google_config.google_sp_id', None))
             self.sp_id = coalesce(read_sp_id, self.sp_id)
@@ -239,6 +237,13 @@ class Configuration(object):
             read_username = unicode_to_string(config_parser[profile_string].get('google_config.google_username', None))
             self.username = coalesce(read_username, self.username)
 
-            # SAML Cache
+            # bg_response
+            read_bg_response = unicode_to_string(config_parser[profile_string].get('google_config.bg_response', None))
+            self.bg_response = coalesce(read_bg_response, self.bg_response)
+
+        # SAML Cache
+        try:
             with open(self.saml_cache_file, 'r') as f:
                 self.__saml_cache = f.read().encode("utf-8")
+        except IOError:
+            pass

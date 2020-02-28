@@ -2,8 +2,10 @@
 from __future__ import print_function
 
 import argparse
+import base64
 import os
 import sys
+import logging
 
 import keyring
 from six import print_ as print
@@ -30,6 +32,8 @@ def parse_args(args):
     parser.add_argument('-p', '--profile', help='AWS profile (defaults to value of $AWS_PROFILE, then falls back to \'sts\')')
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
     parser.add_argument('-q', '--quiet', action='store_true', help='Quiet output')
+    parser.add_argument('--bg-response', help='Override default bgresponse challenge token.')
+    parser.add_argument('--saml-assertion', dest="saml_assertion", help='Base64 encoded SAML assertion to use.')
     parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
     parser.add_argument('--print-creds', action='store_true', help='Print Credentials.')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
@@ -39,7 +43,8 @@ def parse_args(args):
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
     role_group.add_argument('-r', '--role-arn', help='The ARN of the role to assume')
     parser.add_argument('-k', '--keyring', action='store_true', help='Use keyring for storing the password.')
-
+    parser.add_argument('-l', '--log', dest='log_level', choices=['debug',
+                        'info', 'warn'], default='warn', help='Select log level (default: %(default)s)')
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s {version}'.format(version=_version.__version__))
 
@@ -48,12 +53,15 @@ def parse_args(args):
 
 def exit_if_unsupported_python():
     if sys.version_info.major == 2 and sys.version_info.minor < 7:
-        print("aws-google-auth requires Python 2.7 or higher. Please consider upgrading. Support "
-              "for Python 2.6 and lower was dropped because this tool's dependencies dropped support.")
-        print("")
-        print("For debugging, it appears you're running: '{}'.".format(str(sys.version_info)))
-        print("")
-        print("See https://github.com/cevoaustralia/aws-google-auth/issues/41 for more information.")
+        logging.critical("%s requires Python 2.7 or higher. Please consider "
+                         "upgrading. Support for Python 2.6 and lower was "
+                         "dropped because this tool's dependencies dropped "
+                         "support.", __name__)
+        logging.critical("For debugging, it appears you're running: %s",
+                         sys.version_info)
+        logging.critical("For more information, see: "
+                         "https://github.com/cevoaustralia/aws-google-auth/"
+                         "issues/41")
         sys.exit(1)
 
 
@@ -70,6 +78,8 @@ def cli(cli_args):
         sys.exit(1)
     except KeyboardInterrupt:
         pass
+    except Exception as ex:
+        logging.exception(ex)
 
 
 def resolve_config(args):
@@ -158,25 +168,40 @@ def resolve_config(args):
         args.quiet,
         config.quiet)
 
+    config.bg_response = coalesce(
+        args.bg_response,
+        os.getenv('GOOGLE_BG_RESPONSE'),
+        config.bg_response)
+
     return config
 
 
 def process_auth(args, config):
+    # Set up logging
+    logging.getLogger().setLevel(getattr(logging, args.log_level.upper(), None))
+
     # If there is a valid cache and the user opted to use it, use that instead
     # of prompting the user for input (it will also ignroe any set variables
     # such as username or sp_id and idp_id, as those are built into the SAML
     # response). The user does not need to be prompted for a password if the
     # SAML cache is used.
-    if args.saml_cache and config.saml_cache:
+    if args.saml_assertion:
+        saml_xml = base64.b64decode(args.saml_assertion)
+    elif args.saml_cache and config.saml_cache:
         saml_xml = config.saml_cache
+        logging.info('%s: SAML cache found', __name__)
     else:
         # No cache, continue without.
+        logging.info('%s: SAML cache not found', __name__)
         if config.username is None:
             config.username = util.Util.get_input("Google username: ")
+            logging.debug('%s: username is: %s', __name__, config.username)
         if config.idp_id is None:
             config.idp_id = util.Util.get_input("Google IDP ID: ")
+            logging.debug('%s: idp is: %s', __name__, config.idp_id)
         if config.sp_id is None:
             config.sp_id = util.Util.get_input("Google SP ID: ")
+            logging.debug('%s: sp is: %s', __name__, config.sp_id)
 
         # There is no way (intentional) to pass in the password via the command
         # line nor environment variables. This prevents password leakage.
@@ -196,16 +221,17 @@ def process_auth(args, config):
         google_client = google.Google(config, args.save_failure_html)
         google_client.do_login()
         saml_xml = google_client.parse_saml()
+        logging.debug('%s: saml assertion is: %s', __name__, saml_xml)
 
         # If we logged in correctly and we are using keyring then store the password
         if config.keyring and keyring_password is None:
             keyring.set_password(
                 "aws-google-auth", config.username, config.password)
 
-        # We now have a new SAML value that can get cached (If the user asked
-        # for it to be)
-        if args.saml_cache:
-            config.saml_cache = saml_xml
+    # We now have a new SAML value that can get cached (If the user asked
+    # for it to be)
+    if args.saml_cache:
+        config.saml_cache = saml_xml
 
     # The amazon_client now has the SAML assertion it needed (Either via the
     # cache or freshly generated). From here, we can get the roles and continue

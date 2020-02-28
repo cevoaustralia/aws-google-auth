@@ -16,6 +16,7 @@ class TestPythonFailOnVersion(unittest.TestCase):
         parser = parse_args([])
 
         self.assertTrue(parser.saml_cache)
+        self.assertEqual(parser.saml_assertion, None)
         self.assertFalse(parser.ask_role)
         self.assertFalse(parser.print_creds)
         self.assertFalse(parser.keyring)
@@ -30,12 +31,13 @@ class TestPythonFailOnVersion(unittest.TestCase):
         self.assertEqual(parser.role_arn, None)
         self.assertEqual(parser.username, None)
         self.assertEqual(parser.quiet, False)
+        self.assertEqual(parser.bg_response, None)
 
         self.assertFalse(parser.save_failure_html)
 
         # Assert the size of the parameter so that new parameters trigger a review of this function
         # and the appropriate defaults are added here to track backwards compatibility in the future.
-        self.assertEqual(len(vars(parser)), 15)
+        self.assertEqual(len(vars(parser)), 18)
 
     def test_username(self):
 

@@ -55,10 +55,13 @@ class TestInit(unittest.TestCase):
                                          role_arn=None,
                                          save_failure_html=False,
                                          saml_cache=True,
+                                         saml_assertion=None,
                                          sp_id=None,
+                                         log_level='warn',
                                          print_creds=False,
                                          username=None,
-                                         quiet=False))
+                                         quiet=False,
+                                         bg_response=None))
                           ],
                          resolve_config.mock_calls)
 
@@ -73,10 +76,13 @@ class TestInit(unittest.TestCase):
                                          role_arn=None,
                                          save_failure_html=False,
                                          saml_cache=True,
+                                         saml_assertion=None,
                                          sp_id=None,
+                                         log_level='warn',
                                          print_creds=False,
                                          username=None,
-                                         quiet=False),
+                                         quiet=False,
+                                         bg_response=None),
                                mock_config)
                           ],
                          process_auth.mock_calls)

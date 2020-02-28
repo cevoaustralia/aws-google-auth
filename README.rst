@@ -138,6 +138,10 @@ Usage
                             falls back to 'sts')
       -D, --disable-u2f     Disable U2F functionality.
       -q, --quiet           Quiet output
+      --bg-response BG_RESPONSE
+                            Override default bgresponse challenge token ($GOOGLE_BG_RESPONSE).
+      --saml-assertion SAML_ASSERTION
+                            Base64 encoded SAML assertion to use.
       --no-cache            Do not cache the SAML Assertion.
       --print-creds         Print Credentials.
       --resolve-aliases     Resolve AWS account aliases.
@@ -145,7 +149,7 @@ Usage
                             troubleshooting.
       -a, --ask-role        Set true to always pick the role
       -r ROLE_ARN, --role-arn ROLE_ARN
-                            The ARN of the role to assume
+                            The ARN of the role to assume ($AWS_ROLE_ARN)
       -k, --keyring         Use keyring for storing the password.
       -V, --version         show program's version number and exit
 
@@ -196,11 +200,12 @@ When receiving data from ``stdin`` ``aws-google-auth`` disables the interactive 
 Before `#82 <https://github.com/cevoaustralia/aws-google-auth/issues/82>`_, all interactive prompts could be fed from ``stdin`` already apart from the ``Google Password:`` prompt.
 
 Example usage:
-::
-    $ password-manager show password | aws-google-auth
-    Google Password: MFA token:
-    Assuming arn:aws:iam::123456789012:role/admin
-    Credentials Expiration: ...
+```
+$ password-manager show password | aws-google-auth
+Google Password: MFA token:
+Assuming arn:aws:iam::123456789012:role/admin
+Credentials Expiration: ...
+```
 
 **Note:** this feature is intended for password manager integration, not for passing passwords from command line.
 Please use interactive prompt if you need to pass the password manually, as this provide enhanced security avoid
