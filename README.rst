@@ -115,9 +115,12 @@ Usage
 
     $ aws-google-auth -h
     usage: aws-google-auth [-h] [-u USERNAME] [-I IDP_ID] [-S SP_ID] [-R REGION]
-                           [-d DURATION] [-p PROFILE] [-D] [-q] [--no-cache]
+                           [-d DURATION] [-p PROFILE] [-D] [-q]
+                           [--bg-response BG_RESPONSE]
+                           [--saml-assertion SAML_ASSERTION] [--no-cache]
                            [--print-creds] [--resolve-aliases]
-                           [--save-failure-html] [-a | -r ROLE_ARN] [-k] [-V]
+                           [--save-failure-html] [-a | -r ROLE_ARN] [-k]
+                           [-l {debug,info,warn}] [-V]
 
     Acquire temporary AWS credentials via Google SSO
 
@@ -151,6 +154,8 @@ Usage
       -r ROLE_ARN, --role-arn ROLE_ARN
                             The ARN of the role to assume ($AWS_ROLE_ARN)
       -k, --keyring         Use keyring for storing the password.
+      -l {debug,info,warn}, --log {debug,info,warn}
+                            Select log level (default: warn)
       -V, --version         show program's version number and exit
 
 
