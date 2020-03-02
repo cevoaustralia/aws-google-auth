@@ -1,6 +1,7 @@
 beautifulsoup4
 boto3
 configparser
+filelock
 keyring
 lxml
 Pillow
