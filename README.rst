@@ -175,24 +175,29 @@ Native Python
 Via Docker
 ~~~~~~~~~~~~~
 
-1. Set environment variables for ``GOOGLE_USERNAME``, ``GOOGLE_IDP_ID``,
-   and ``GOOGLE_SP_ID`` (see above under "Important Data" for how to
-   find the last two; the first one is usually your email address)
+1. Set environment variables for anything listed in Usage with ``($VARIABLE)`` after command line option:
+
+   ``GOOGLE_USERNAME``, ``GOOGLE_IDP_ID``, and ``GOOGLE_SP_ID``
+   (see above under "Important Data" for how to find the last two; the first one is usually your email address)
+
+   ``AWS_PROFILE``: Optional profile name you want the credentials set for (default is 'sts')
+
+   ``ROLE_ARN``: Optional ARN of the role to assume
+
 2. For Docker:
-   ``docker run -it -e GOOGLE_USERNAME -e GOOGLE_IDP_ID -e GOOGLE_SP_ID cevoaustralia/aws-google-auth``
+   ``docker run -it -e GOOGLE_USERNAME -e GOOGLE_IDP_ID -e GOOGLE_SP_ID -e AWS_PROFILE -e ROLE_ARN -v ~/.aws:/root/.aws cevoaustralia/aws-google-auth``
 
 You'll be prompted for your password. If you've set up an MFA token for
 your Google account, you'll also be prompted for the current token
 value.
 
-If you have more than one role available to you, you'll be prompted to
-choose the role from a list; otherwise, if your credentials are correct,
-you'll just see the AWS keys printed on stdout.
-
 If you have a U2F security key added to your Google account, you won't
 be able to use this via Docker; the Docker container will not be able to
 access any devices connected to the host ports. You will likely see the
 following error during runtime: "RuntimeWarning: U2F Device Not Found".
+
+If you have more than one role available to you (and you haven't set up ROLE_ARN),
+you'll be prompted to choose the role from a list.
 
 Feeding password from stdin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
