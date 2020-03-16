@@ -38,6 +38,7 @@ def parse_args(args):
     parser.add_argument('--bg-response', help='Override default bgresponse challenge token.')
     parser.add_argument('--saml-assertion', dest="saml_assertion", help='Base64 encoded SAML assertion to use.')
     parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
+    parser.add_argument('--no-cookies-cache', dest="google_cookies", action='store_false', help='Do not cache the Google cookies.')
     parser.add_argument('--print-creds', action='store_true', help='Print Credentials.')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
     parser.add_argument('--save-failure-html', action='store_true', help='Write HTML failure responses to file for troubleshooting.')
@@ -200,6 +201,7 @@ def process_auth(args, config):
         config.region = util.Util.get_input("AWS Region: ")
         logging.debug('%s: region is: %s', __name__, config.region)
 
+    google_cookies = None
     # If there is a valid cache and the user opted to use it, use that instead
     # of prompting the user for input (it will also ignroe any set variables
     # such as username or sp_id and idp_id, as those are built into the SAML
@@ -210,6 +212,13 @@ def process_auth(args, config):
     elif args.saml_cache and config.saml_cache:
         saml_xml = config.saml_cache
         logging.info('%s: SAML cache found', __name__)
+    elif args.google_cookies and config.google_cookies:
+        # Google cookies found
+        google_client = google.Google(config, args.save_failure_html)
+        google_client.load_cookies(config.google_cookies)
+        google_client.do_login()
+        saml_xml = google_client.parse_saml()
+        logging.debug('%s: saml assertion is: %s', __name__, saml_xml)
     else:
         # No cache, continue without.
         logging.info('%s: SAML cache not found', __name__)
@@ -242,6 +251,8 @@ def process_auth(args, config):
         google_client.do_login()
         saml_xml = google_client.parse_saml()
         logging.debug('%s: saml assertion is: %s', __name__, saml_xml)
+        google_cookies = google_client.dump_cookies()
+        logging.debug('%s: google cookies are: %s', __name__, google_cookies)
 
         # If we logged in correctly and we are using keyring then store the password
         if config.keyring and keyring_password is None:
@@ -252,6 +263,10 @@ def process_auth(args, config):
     # for it to be)
     if args.saml_cache:
         config.saml_cache = saml_xml
+
+    # Cache Google cookies and store them if requested
+    if args.google_cookies and google_cookies:
+        config.google_cookies = google_cookies
 
     # The amazon_client now has the SAML assertion it needed (Either via the
     # cache or freshly generated). From here, we can get the roles and continue

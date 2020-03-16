@@ -51,6 +51,7 @@ class Google:
         self.config = config
         self.base_url = 'https://accounts.google.com'
         self.save_failure = save_failure
+        self.session = requests.Session()
         self.session_state = None
 
     @property
@@ -173,6 +174,12 @@ class Google:
         self.session = requests.Session()
         self.session.headers['User-Agent'] = "AWS Sign-in/{} (aws-google-auth)".format(self.version)
         sess = self.get(self.login_url)
+
+        # If we have no been redirected, chances are good we are still logged
+        # in using the retained session cookies
+        if not sess.history:
+            self.session_state = sess
+            return True
 
         # Collect information from the page source
         first_page = BeautifulSoup(sess.text, 'html.parser')
@@ -340,6 +347,23 @@ class Google:
             raise ExpectedGoogleException('Something went wrong - Could not find SAML response, check your credentials or use --save-failure-html to debug.')
 
         return base64.b64decode(saml_element)
+
+    def dump_cookies(self):
+        cookies = []
+        for c in self.session.cookies:
+            if c.domain in ['.google.com', 'accounts.google.com'] and c.name in ['SID', 'LSID', '__Secure-3PSID']:
+                cookies.append({
+                    "name": c.name,
+                    "value": c.value,
+                    "domain": c.domain,
+                    "path": c.path,
+                    "expires": c.expires
+                })
+        return cookies
+
+    def load_cookies(self, cookies):
+        for c in cookies:
+            self.session.cookies.set(**c)
 
     def handle_captcha(self, sess, payload):
         response_page = BeautifulSoup(sess.text, 'html.parser')
