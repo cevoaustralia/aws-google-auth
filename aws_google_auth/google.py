@@ -81,7 +81,7 @@ class Google:
         except HTTPError as ex:
 
             if self.save_failure:
-                logging.exception("Saving failure trace in 'failure.html'", ex)
+                logging.exception("Saving failure trace in 'failure.html'")
                 with open("failure.html", 'w') as out:
                     out.write(sess.text)
 
@@ -92,16 +92,16 @@ class Google:
     def post(self, url, data=None, json=None):
         try:
             response = self.check_for_failure(self.session.post(url, data=data, json=json))
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError:
             logging.exception(
-                'There was a connection error, check your network settings.', e)
+                'There was a connection error, check your network settings.')
             sys.exit(1)
-        except requests.exceptions.Timeout as e:
-            logging.exception('The connection timed out, please try again.', e)
+        except requests.exceptions.Timeout:
+            logging.exception('The connection timed out, please try again.')
             sys.exit(1)
-        except requests.exceptions.TooManyRedirects as e:
+        except requests.exceptions.TooManyRedirects:
             logging.exception('The number of redirects exceeded the maximum '
-                              'allowed.', e)
+                              'allowed.')
             sys.exit(1)
 
         return response
@@ -109,16 +109,16 @@ class Google:
     def get(self, url):
         try:
             response = self.check_for_failure(self.session.get(url))
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError:
             logging.exception(
-                'There was a connection error, check your network settings.', e)
+                'There was a connection error, check your network settings.')
             sys.exit(1)
-        except requests.exceptions.Timeout as e:
-            logging.exception('The connection timed out, please try again.', e)
+        except requests.exceptions.Timeout:
+            logging.exception('The connection timed out, please try again.')
             sys.exit(1)
-        except requests.exceptions.TooManyRedirects as e:
+        except requests.exceptions.TooManyRedirects:
             logging.exception('The number of redirects exceeded the maximum '
-                              'allowed.', e)
+                              'allowed.')
             sys.exit(1)
 
         return response
