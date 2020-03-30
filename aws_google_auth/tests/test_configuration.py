@@ -35,7 +35,7 @@ class TestConfigurationMethods(unittest.TestCase):
         c.duration = -1
         with self.assertRaises(AssertionError) as e:
             c.raise_if_invalid()
-        self.assertIn("Expected duration to be greater than 0.", str(e.exception))
+        self.assertIn("Expected duration to be greater than or equal to 900.", str(e.exception))
 
         # Duration can not be greater than MAX_DURATION
         valid = configuration.Configuration()
@@ -43,7 +43,7 @@ class TestConfigurationMethods(unittest.TestCase):
         c.password = "hunter2"
         valid.sp_id = "sample_sp_id"
         valid.username = "sample_username"
-        valid.duration = 100
+        valid.duration = 900
         c = configuration.Configuration()
         c.idp_id = "sample_idp_id"
         c.sp_id = "sample_sp_id"
@@ -60,8 +60,8 @@ class TestConfigurationMethods(unittest.TestCase):
         c.sp_id = "sample_sp_id"
         c.password = "hunter2"
         c.username = "sample_username"
-        c.duration = 100
-        self.assertEqual(c.duration, 100)
+        c.duration = 900
+        self.assertEqual(c.duration, 900)
         c.raise_if_invalid()
         c.duration = c.max_duration
         self.assertEqual(c.duration, c.max_duration)
