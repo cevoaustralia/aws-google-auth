@@ -98,8 +98,7 @@ class Amazon:
             try:
                 res = self.sts_client.assume_role_with_saml(**sts_call_vars)
             except ClientError as err:
-                if (err.response.get('Error', []).get('Code') == 'ValidationError'
-                        and err.response.get('Error', []).get('Message')):
+                if (err.response.get('Error', []).get('Code') == 'ValidationError' and err.response.get('Error', []).get('Message')):
                     m = re.search(
                         'Member must have value less than or equal to ([0-9]{3,5})',
                         err.response['Error']['Message']
