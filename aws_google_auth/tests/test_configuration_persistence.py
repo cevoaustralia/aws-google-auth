@@ -33,6 +33,7 @@ class TestConfigurationPersistence(unittest.TestCase):
         self.c.bg_response = "foo"
         self.c.raise_if_invalid()
         self.c.write(None)
+        self.c.account = "123456789012"
 
         self.config_parser = configparser.RawConfigParser()
         self.config_parser.read(self.c.config_file)

@@ -29,6 +29,7 @@ class TestConfigurationPersistence(unittest.TestCase):
         self.c.sp_id = "sample_sp_id"
         self.c.u2f_disabled = False
         self.c.username = "sample_username"
+        self.c.account = "123456789012"
         self.c.raise_if_invalid()
         self.c.write(None)
 
