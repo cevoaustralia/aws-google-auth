@@ -27,7 +27,7 @@ class Configuration(object):
         self.idp_id = None
         self.password = None
         self.profile = "sts"
-        self.region = "ap-southeast-2"
+        self.region = None
         self.role_arn = None
         self.__saml_cache = None
         self.sp_id = None
