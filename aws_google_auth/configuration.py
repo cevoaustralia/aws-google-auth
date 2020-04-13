@@ -3,6 +3,7 @@
 import os
 
 import botocore.session
+import filelock
 
 try:
     from backports import configparser
@@ -145,42 +146,59 @@ class Configuration(object):
 
         assert (self.profile is not None), "Can not store config/credentials if the AWS_PROFILE is None."
 
-        # Write to the configuration file
-        profile = Configuration.config_profile(self.profile)
-        config_parser = configparser.RawConfigParser()
-        config_parser.read(self.config_file)
-        if not config_parser.has_section(profile):
-            config_parser.add_section(profile)
-        config_parser.set(profile, 'region', self.region)
-        config_parser.set(profile, 'google_config.ask_role', self.ask_role)
-        config_parser.set(profile, 'google_config.keyring', self.keyring)
-        config_parser.set(profile, 'google_config.duration', self.duration)
-        config_parser.set(profile, 'google_config.google_idp_id', self.idp_id)
-        config_parser.set(profile, 'google_config.role_arn', self.role_arn)
-        config_parser.set(profile, 'google_config.google_sp_id', self.sp_id)
-        config_parser.set(profile, 'google_config.u2f_disabled', self.u2f_disabled)
-        config_parser.set(profile, 'google_config.google_username', self.username)
-        config_parser.set(profile, 'google_config.bg_response', self.bg_response)
-        with open(self.config_file, 'w+') as f:
-            config_parser.write(f)
+        config_file_lock = filelock.FileLock(self.config_file + '.lock')
+        config_file_lock.acquire()
+        try:
+            # Write to the configuration file
+            profile = Configuration.config_profile(self.profile)
+            config_parser = configparser.RawConfigParser()
+            config_parser.read(self.config_file)
+            if not config_parser.has_section(profile):
+                config_parser.add_section(profile)
+            config_parser.set(profile, 'region', self.region)
+            config_parser.set(profile, 'google_config.ask_role', self.ask_role)
+            config_parser.set(profile, 'google_config.keyring', self.keyring)
+            config_parser.set(profile, 'google_config.duration', self.duration)
+            config_parser.set(profile, 'google_config.google_idp_id', self.idp_id)
+            config_parser.set(profile, 'google_config.role_arn', self.role_arn)
+            config_parser.set(profile, 'google_config.google_sp_id', self.sp_id)
+            config_parser.set(profile, 'google_config.u2f_disabled', self.u2f_disabled)
+            config_parser.set(profile, 'google_config.google_username', self.username)
+            config_parser.set(profile, 'google_config.bg_response', self.bg_response)
 
-        # Write to the credentials file (only if we have credentials)
-        if amazon_object is not None:
-            credentials_parser = configparser.RawConfigParser()
-            credentials_parser.read(self.credentials_file)
-            if not credentials_parser.has_section(self.profile):
-                credentials_parser.add_section(self.profile)
-            credentials_parser.set(self.profile, 'aws_access_key_id', amazon_object.access_key_id)
-            credentials_parser.set(self.profile, 'aws_secret_access_key', amazon_object.secret_access_key)
-            credentials_parser.set(self.profile, 'aws_security_token', amazon_object.session_token)
-            credentials_parser.set(self.profile, 'aws_session_expiration', amazon_object.expiration.strftime('%Y-%m-%dT%H:%M:%S%z'))
-            credentials_parser.set(self.profile, 'aws_session_token', amazon_object.session_token)
-            with open(self.credentials_file, 'w+') as f:
-                credentials_parser.write(f)
+            with open(self.config_file, 'w+') as f:
+                config_parser.write(f)
+        finally:
+            config_file_lock.release()
 
-        if self.__saml_cache is not None:
-            with open(self.saml_cache_file, 'w') as f:
-                f.write(self.__saml_cache.decode("utf-8"))
+            # Write to the credentials file (only if we have credentials)
+            if amazon_object is not None:
+                credentials_file_lock = filelock.FileLock(self.credentials_file + '.lock')
+                credentials_file_lock.acquire()
+                try:
+                    credentials_parser = configparser.RawConfigParser()
+                    credentials_parser.read(self.credentials_file)
+                    if not credentials_parser.has_section(self.profile):
+                        credentials_parser.add_section(self.profile)
+                    credentials_parser.set(self.profile, 'aws_access_key_id', amazon_object.access_key_id)
+                    credentials_parser.set(self.profile, 'aws_secret_access_key', amazon_object.secret_access_key)
+                    credentials_parser.set(self.profile, 'aws_security_token', amazon_object.session_token)
+                    credentials_parser.set(self.profile, 'aws_session_expiration', amazon_object.expiration.strftime('%Y-%m-%dT%H:%M:%S%z'))
+                    credentials_parser.set(self.profile, 'aws_session_token', amazon_object.session_token)
+
+                    with open(self.credentials_file, 'w+') as f:
+                        credentials_parser.write(f)
+                finally:
+                    credentials_file_lock.release()
+
+            if self.__saml_cache is not None:
+                saml_cache_file_lock = filelock.FileLock(self.saml_cache_file + '.lock')
+                saml_cache_file_lock.acquire()
+                try:
+                    with open(self.saml_cache_file, 'w') as f:
+                        f.write(self.__saml_cache.decode("utf-8"))
+                finally:
+                    saml_cache_file_lock.release()
 
     # Read from the configuration file and override ALL values currently stored
     # in the configuration object. As this is potentially destructive, it's
