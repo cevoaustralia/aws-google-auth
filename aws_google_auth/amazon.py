@@ -103,7 +103,7 @@ class Amazon:
                         'Member must have value less than or equal to ([0-9]{3,5})',
                         err.response['Error']['Message']
                     )
-                    if m.group(1):
+                    if m is not None and m.group(1):
                         new_duration = int(m.group(1))
                         return self.assume_role(role, principal,
                                                 saml_assertion,
