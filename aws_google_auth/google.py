@@ -34,7 +34,7 @@ class ExpectedGoogleException(Exception):
 
 
 class Google:
-    def __init__(self, config, save_failure):
+    def __init__(self, config, save_failure, save_files=False):
         """The Google object holds authentication state
         for a given session. You need to supply:
 
@@ -52,6 +52,7 @@ class Google:
         self.base_url = 'https://accounts.google.com'
         self.save_failure = save_failure
         self.session_state = None
+        self.save_files = save_files
 
     @property
     def login_url(self):
@@ -92,6 +93,12 @@ class Google:
     def post(self, url, data=None, json=None):
         try:
             response = self.check_for_failure(self.session.post(url, data=data, json=json))
+
+            if self.save_files:
+                filename = url.replace("/", "-")+".html"
+                with open(filename, 'w') as out:
+                    out.write(response.text.encode('utf-8'))
+
         except requests.exceptions.ConnectionError as e:
             logging.exception(
                 'There was a connection error, check your network settings.', e)
@@ -109,6 +116,11 @@ class Google:
     def get(self, url):
         try:
             response = self.check_for_failure(self.session.get(url))
+            if self.save_files:
+                filename = url.replace("/", "-")+".html"
+                with open(filename, 'w') as out:
+                    out.write(response.text.encode('utf-8'))
+
         except requests.exceptions.ConnectionError as e:
             logging.exception(
                 'There was a connection error, check your network settings.', e)
