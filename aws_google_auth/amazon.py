@@ -79,7 +79,7 @@ class Amazon:
         doc = etree.fromstring(self.saml_xml)
         roles = {}
         for x in doc.xpath('//*[@Name = "https://aws.amazon.com/SAML/Attributes/Role"]//text()'):
-            if "arn:aws:iam:" in x:
+            if "arn:aws:iam:" in x or "arn:aws-us-gov:iam:" in x:
                 res = x.split(',')
                 roles[res[0]] = res[1]
         return roles
