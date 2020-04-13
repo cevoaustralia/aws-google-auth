@@ -115,9 +115,12 @@ Usage
 
     $ aws-google-auth -h
     usage: aws-google-auth [-h] [-u USERNAME] [-I IDP_ID] [-S SP_ID] [-R REGION]
-                           [-d DURATION] [-p PROFILE] [-D] [-q] [--no-cache]
+                           [-d DURATION] [-p PROFILE] [-D] [-q]
+                           [--bg-response BG_RESPONSE]
+                           [--saml-assertion SAML_ASSERTION] [--no-cache]
                            [--print-creds] [--resolve-aliases]
-                           [--save-failure-html] [-a | -r ROLE_ARN] [-k] [-V]
+                           [--save-failure-html] [-a | -r ROLE_ARN] [-k]
+                           [-l {debug,info,warn}] [-V]
 
     Acquire temporary AWS credentials via Google SSO
 
@@ -140,6 +143,8 @@ Usage
       -q, --quiet           Quiet output
       --bg-response BG_RESPONSE
                             Override default bgresponse challenge token ($GOOGLE_BG_RESPONSE).
+      --saml-assertion SAML_ASSERTION
+                            Base64 encoded SAML assertion to use.
       --no-cache            Do not cache the SAML Assertion.
       --print-creds         Print Credentials.
       --resolve-aliases     Resolve AWS account aliases.
@@ -149,6 +154,8 @@ Usage
       -r ROLE_ARN, --role-arn ROLE_ARN
                             The ARN of the role to assume ($AWS_ROLE_ARN)
       -k, --keyring         Use keyring for storing the password.
+      -l {debug,info,warn}, --log {debug,info,warn}
+                            Select log level (default: warn)
       -V, --version         show program's version number and exit
 
 
@@ -168,24 +175,29 @@ Native Python
 Via Docker
 ~~~~~~~~~~~~~
 
-1. Set environment variables for ``GOOGLE_USERNAME``, ``GOOGLE_IDP_ID``,
-   and ``GOOGLE_SP_ID`` (see above under "Important Data" for how to
-   find the last two; the first one is usually your email address)
+1. Set environment variables for anything listed in Usage with ``($VARIABLE)`` after command line option:
+
+   ``GOOGLE_USERNAME``, ``GOOGLE_IDP_ID``, and ``GOOGLE_SP_ID``
+   (see above under "Important Data" for how to find the last two; the first one is usually your email address)
+
+   ``AWS_PROFILE``: Optional profile name you want the credentials set for (default is 'sts')
+
+   ``ROLE_ARN``: Optional ARN of the role to assume
+
 2. For Docker:
-   ``docker run -it -e GOOGLE_USERNAME -e GOOGLE_IDP_ID -e GOOGLE_SP_ID cevoaustralia/aws-google-auth``
+   ``docker run -it -e GOOGLE_USERNAME -e GOOGLE_IDP_ID -e GOOGLE_SP_ID -e AWS_PROFILE -e ROLE_ARN -v ~/.aws:/root/.aws cevoaustralia/aws-google-auth``
 
 You'll be prompted for your password. If you've set up an MFA token for
 your Google account, you'll also be prompted for the current token
 value.
 
-If you have more than one role available to you, you'll be prompted to
-choose the role from a list; otherwise, if your credentials are correct,
-you'll just see the AWS keys printed on stdout.
-
 If you have a U2F security key added to your Google account, you won't
 be able to use this via Docker; the Docker container will not be able to
 access any devices connected to the host ports. You will likely see the
 following error during runtime: "RuntimeWarning: U2F Device Not Found".
+
+If you have more than one role available to you (and you haven't set up ROLE_ARN),
+you'll be prompted to choose the role from a list.
 
 Feeding password from stdin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

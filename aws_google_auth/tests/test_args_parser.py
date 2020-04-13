@@ -16,6 +16,7 @@ class TestPythonFailOnVersion(unittest.TestCase):
         parser = parse_args([])
 
         self.assertTrue(parser.saml_cache)
+        self.assertEqual(parser.saml_assertion, None)
         self.assertFalse(parser.ask_role)
         self.assertFalse(parser.print_creds)
         self.assertFalse(parser.keyring)

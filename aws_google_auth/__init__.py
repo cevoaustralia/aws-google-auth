@@ -2,6 +2,7 @@
 from __future__ import print_function
 
 import argparse
+import base64
 import os
 import sys
 import logging
@@ -33,6 +34,7 @@ def parse_args(args):
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
     parser.add_argument('-q', '--quiet', action='store_true', help='Quiet output')
     parser.add_argument('--bg-response', help='Override default bgresponse challenge token.')
+    parser.add_argument('--saml-assertion', dest="saml_assertion", help='Base64 encoded SAML assertion to use.')
     parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
     parser.add_argument('--print-creds', action='store_true', help='Print Credentials.')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
@@ -185,12 +187,18 @@ def process_auth(args, config):
     # Set up logging
     logging.getLogger().setLevel(getattr(logging, args.log_level.upper(), None))
 
+    if config.region is None:
+        config.region = util.Util.get_input("AWS Region: ")
+        logging.debug('%s: region is: %s', __name__, config.region)
+
     # If there is a valid cache and the user opted to use it, use that instead
     # of prompting the user for input (it will also ignroe any set variables
     # such as username or sp_id and idp_id, as those are built into the SAML
     # response). The user does not need to be prompted for a password if the
     # SAML cache is used.
-    if args.saml_cache and config.saml_cache:
+    if args.saml_assertion:
+        saml_xml = base64.b64decode(args.saml_assertion)
+    elif args.saml_cache and config.saml_cache:
         saml_xml = config.saml_cache
         logging.info('%s: SAML cache found', __name__)
     else:
@@ -231,10 +239,10 @@ def process_auth(args, config):
             keyring.set_password(
                 "aws-google-auth", config.username, config.password)
 
-        # We now have a new SAML value that can get cached (If the user asked
-        # for it to be)
-        if args.saml_cache:
-            config.saml_cache = saml_xml
+    # We now have a new SAML value that can get cached (If the user asked
+    # for it to be)
+    if args.saml_cache:
+        config.saml_cache = saml_xml
 
     # The amazon_client now has the SAML assertion it needed (Either via the
     # cache or freshly generated). From here, we can get the roles and continue
