@@ -130,7 +130,7 @@ class Configuration(object):
         # role_arn (Can be blank, we'll just prompt)
         if self.role_arn is not None:
             assert (self.role_arn.__class__ is str), "Expected role_arn to be None or a string. Got {}.".format(self.role_arn.__class__)
-            assert ("arn:aws:iam::" in self.role_arn), "Expected role_arn to contain 'arn:aws:iam::'. Got '{}'.".format(self.role_arn)
+            assert ("arn:aws:iam::" in self.role_arn or "arn:aws-us-gov:iam::" in self.role_arn), "Expected role_arn to contain 'arn:aws:iam::'. Got '{}'.".format(self.role_arn)
 
         # u2f_disabled
         assert (self.u2f_disabled.__class__ is bool), "Expected u2f_disabled to be a boolean. Got {}.".format(self.u2f_disabled.__class__)
