@@ -38,7 +38,7 @@ def parse_args(args):
     parser.add_argument('--bg-response', help='Override default bgresponse challenge token.')
     parser.add_argument('--saml-assertion', dest="saml_assertion", help='Base64 encoded SAML assertion to use.')
     parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
-    parser.add_argument('--no-cookies-cache', dest="google_cookies", action='store_false', help='Do not cache the Google cookies.')
+    parser.add_argument('--cache-cookies', dest="google_cookies", action='store_true', help='Cache the Google session cookies.')
     parser.add_argument('--print-creds', action='store_true', help='Print Credentials.')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
     parser.add_argument('--save-failure-html', action='store_true', help='Write HTML failure responses to file for troubleshooting.')
@@ -217,6 +217,11 @@ def process_auth(args, config):
         google_client = google.Google(config, args.save_failure_html)
         google_client.load_cookies(config.google_cookies)
         google_client.do_login()
+        # If login fails cookies are probably bad, unset and try again
+        if google_client.do_login() == False:
+            config.google_cookies = None
+            process_auth(args, config)
+            return
         saml_xml = google_client.parse_saml()
         logging.debug('%s: saml assertion is: %s', __name__, saml_xml)
     else:

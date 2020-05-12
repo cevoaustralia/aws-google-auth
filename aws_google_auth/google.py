@@ -177,9 +177,12 @@ class Google:
 
         # If we have no been redirected, chances are good we are still logged
         # in using the retained session cookies
-        if not sess.history:
-            self.session_state = sess
-            return True
+        if self.config.google_cookies and self.session.cookies:
+            if not sess.history:
+                self.session_state = sess
+                return True
+            else:
+                return False
 
         # Collect information from the page source
         first_page = BeautifulSoup(sess.text, 'html.parser')

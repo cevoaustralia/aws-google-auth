@@ -96,11 +96,12 @@ class Configuration(object):
     def google_cookies_file(self):
         return self.credentials_file.replace('credentials', 'google_cookies.json')
 
-    # Will return Google cookies in a dict only when non of them have expired.
+    # Will return Google cookies in a dict only when none of them that have an
+    # expiry time have expired.
     @property
     def google_cookies(self):
         if self.__google_cookies and not all([
-            datetime.timestamp(datetime.now()) < c['expires'] for c in self.__google_cookies
+            datetime.timestamp(datetime.now()) < c['expires'] for c in self.__google_cookies if c.get('expires')
         ]):
             self.__google_cookies = None
 
