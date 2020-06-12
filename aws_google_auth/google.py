@@ -392,7 +392,6 @@ class Google:
         except NameError:
             captcha_input = input("Captcha (case insensitive): ") or None
 
-        
         # Update the payload
         payload['identifier-captcha-input'] = captcha_input
         payload['identifiertoken'] = captcha_logintoken
@@ -420,7 +419,6 @@ class Google:
             'name': 'gxf'
         }).get('value')
 
-        
         newPayload['challengeId'] = challengeId
         newPayload['challengeType'] = challengeType
         newPayload['TL'] = tl
@@ -436,7 +434,7 @@ class Google:
         newPayload['oauth'] = payload['oauth']
         newPayload['Email'] = payload['Email']
         newPayload['Passwd'] = payload['Passwd']
-        
+
         return self.post(response.url, data=newPayload)
 
     def handle_sk(self, sess):
