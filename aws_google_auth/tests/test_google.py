@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 import unittest
 from io import open
 from os import path
@@ -15,7 +15,7 @@ from aws_google_auth import google
 class TestGoogle(unittest.TestCase):
     def read_local_file(self, filename):
         here = path.abspath(path.dirname(__file__))
-        with open(path.join(here, filename), encoding='utf8') as fp:
+        with open(path.join(here, filename), encoding='utf-8') as fp:
             return fp.read().encode('utf-8')
 
     def test_extra_step(self):
