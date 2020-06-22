@@ -218,7 +218,7 @@ def process_auth(args, config):
         google_client.load_cookies(config.google_cookies)
         google_client.do_login()
         # If login fails cookies are probably bad, unset and try again
-        if google_client.do_login() == False:
+        if not google_client.do_login():
             config.google_cookies = None
             process_auth(args, config)
             return
