@@ -50,7 +50,7 @@ def parse_args(args):
                         'info', 'warn'], default='warn', help='Select log level (default: %(default)s)')
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s {version}'.format(version=_version.__version__))
-
+    parser.add_argument('-P', '--envpassword', action='store', help='Environment variable containing password')
     return parser.parse_args(args)
 
 
@@ -226,7 +226,9 @@ def process_auth(args, config):
         # There is no way (intentional) to pass in the password via the command
         # line nor environment variables. This prevents password leakage.
         keyring_password = None
-        if config.keyring:
+        if args.envpassword is not None and args.envpassword in os.environ:
+            config.password = os.environ[args.envpassword]
+        elif config.keyring:
             keyring_password = keyring.get_password("aws-google-auth", config.username)
             if keyring_password:
                 config.password = keyring_password
