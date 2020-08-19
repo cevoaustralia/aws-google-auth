@@ -536,3 +536,154 @@ class TestInit(unittest.TestCase):
         self.assertEqual([call({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
                                 'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'}, [])
                           ], mock_util_obj.pick_a_role.mock_calls)
+
+    @patch('aws_google_auth.util', spec=True)
+    @patch('aws_google_auth.amazon', spec=True)
+    @patch('aws_google_auth.google', spec=True)
+    def test_process_auth_with_cached_google_cookies(self, mock_google, mock_amazon, mock_util):
+
+        mock_config = Mock()
+        mock_config.saml_cache = False
+        mock_config.google_cookies = True
+        mock_config.username = None
+        mock_config.idp_id = None
+        mock_config.sp_id = None
+        mock_config.password = None
+        mock_config.return_value = None
+        mock_config.role_arn = 'arn:aws:iam::123456789012:role/admin'
+        mock_config.account = None
+
+        mock_amazon_client = Mock()
+        mock_google_client = Mock()
+
+        mock_amazon_client.roles = {
+            'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
+            'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'
+        }
+
+        mock_util_obj = MagicMock()
+        mock_util_obj.pick_a_role = MagicMock(return_value=("da_role", "da_provider"))
+        mock_util_obj.get_input = MagicMock(side_effect=["input", "input2", "input3"])
+        mock_util_obj.get_password = MagicMock(return_value="pass")
+
+        mock_util.Util = mock_util_obj
+
+        mock_amazon_client.resolve_aws_aliases = MagicMock(return_value=[])
+        mock_google_client.do_login = MagicMock(return_value=True)
+
+        mock_amazon.Amazon = MagicMock(return_value=mock_amazon_client)
+        mock_google.Google = MagicMock(return_value=mock_google_client)
+
+        # Enable google cookie caching
+        args = aws_google_auth.parse_args(["--cache-cookies"])
+
+        # Method Under Test
+        aws_google_auth.process_auth(args, mock_config)
+
+        # Assert values collected
+        self.assertEqual(mock_config.username, None)
+        self.assertEqual(mock_config.idp_id, None)
+        self.assertEqual(mock_config.sp_id, None)
+        self.assertEqual(mock_config.password, None)
+        self.assertEqual(mock_config.provider, "da_provider")
+        self.assertEqual(mock_config.role_arn, "da_role")
+
+        # Assert calls occur
+        self.assertEqual([call.Util.pick_a_role({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
+                                                'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'}, [])],
+                         mock_util.mock_calls)
+
+        self.assertEqual([call.load_cookies(True), call.do_login(), call.parse_saml()],
+                         mock_google_client.mock_calls)
+
+        self.assertEqual([call.write(mock_amazon_client)],
+                         mock_config.mock_calls)
+
+        self.assertEqual([call({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
+                                'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'
+                                })],
+                         mock_amazon_client.resolve_aws_aliases.mock_calls)
+
+        self.assertEqual([call({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
+                                'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'}, [])
+                          ], mock_util_obj.pick_a_role.mock_calls)
+
+    @patch('aws_google_auth.util', spec=True)
+    @patch('aws_google_auth.amazon', spec=True)
+    @patch('aws_google_auth.google', spec=True)
+    def test_process_auth_with_invalid_cached_google_cookies(self, mock_google, mock_amazon, mock_util):
+
+        mock_config = Mock()
+        mock_config.saml_cache = False
+        mock_config.google_cookies = True
+        mock_config.username = None
+        mock_config.idp_id = None
+        mock_config.sp_id = None
+        mock_config.password = None
+        mock_config.return_value = None
+        mock_config.role_arn = 'arn:aws:iam::123456789012:role/admin'
+        mock_config.account = None
+
+        mock_amazon_client = Mock()
+        mock_google_client = Mock()
+
+        mock_amazon_client.roles = {
+            'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
+            'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'
+        }
+
+        mock_util_obj = MagicMock()
+        mock_util_obj.pick_a_role = MagicMock(return_value=("da_role", "da_provider"))
+        mock_util_obj.get_input = MagicMock(side_effect=["input", "input2", "input3"])
+        mock_util_obj.get_password = MagicMock(return_value="pass")
+
+        mock_util.Util = mock_util_obj
+
+        mock_amazon_client.resolve_aws_aliases = MagicMock(return_value=[])
+
+        # When the cached google cookies are invalid or expired do_login will return False
+        mock_google_client.do_login = MagicMock(return_value=False)
+
+        mock_amazon.Amazon = MagicMock(return_value=mock_amazon_client)
+        mock_google.Google = MagicMock(return_value=mock_google_client)
+
+        # Enable google cookie caching
+        args = aws_google_auth.parse_args(["--cache-cookies"])
+
+        # Method Under Test
+        aws_google_auth.process_auth(args, mock_config)
+
+        # Assert values collected
+        self.assertEqual(mock_config.username, "input")
+        self.assertEqual(mock_config.idp_id, "input2")
+        self.assertEqual(mock_config.sp_id, "input3")
+        self.assertEqual(mock_config.password, "pass")
+        self.assertEqual(mock_config.provider, "da_provider")
+        self.assertEqual(mock_config.role_arn, "da_role")
+
+        # Assert calls occur
+        self.assertEqual([call.Util.get_input('Google username: '),
+                          call.Util.get_input('Google IDP ID: '),
+                          call.Util.get_input('Google SP ID: '),
+                          call.Util.pick_a_role({'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
+                                                 'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'}, [])],
+                         mock_util.mock_calls)
+
+        self.assertEqual([call.load_cookies(True),
+                          call.do_login(),
+                          call.do_login(),
+                          call.parse_saml(),
+                          call.dump_cookies()],
+                         mock_google_client.mock_calls)
+
+        self.assertEqual([call.raise_if_invalid(), call.write(mock_amazon_client)],
+                         mock_config.mock_calls)
+
+        self.assertEqual([call({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
+                                'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'
+                                })],
+                         mock_amazon_client.resolve_aws_aliases.mock_calls)
+
+        self.assertEqual([call({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
+                                'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'}, [])
+                          ], mock_util_obj.pick_a_role.mock_calls)

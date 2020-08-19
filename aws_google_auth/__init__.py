@@ -213,11 +213,10 @@ def process_auth(args, config):
         saml_xml = config.saml_cache
         logging.info('%s: SAML cache found', __name__)
     elif args.google_cookies and config.google_cookies:
-        # Google cookies found
+        logging.info('%s: caches Google session cookies found', __name__)
         google_client = google.Google(config, args.save_failure_html)
         google_client.load_cookies(config.google_cookies)
-        google_client.do_login()
-        # If login fails cookies are probably bad, unset and try again
+        # If login fails cookies are probably bad, unset and try process_auth again
         if not google_client.do_login():
             config.google_cookies = None
             process_auth(args, config)

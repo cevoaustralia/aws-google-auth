@@ -171,7 +171,6 @@ class Google:
             sys.exit(1)
 
     def do_login(self):
-        self.session = requests.Session()
         self.session.headers['User-Agent'] = "AWS Sign-in/{} (aws-google-auth)".format(self.version)
         sess = self.get(self.login_url)
 
