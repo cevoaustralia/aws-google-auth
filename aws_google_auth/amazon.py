@@ -85,9 +85,27 @@ class Amazon:
         return roles
 
     def assume_role(self, role, principal, saml_assertion, duration=None, auto_duration=True):
+
+        # There is a possiblity that the role and the principal ARN might switch positions
+        # as mentioned in the below issue:
+        # https://github.com/cevoaustralia/aws-google-auth/issues/163#issuecomment-599113325
+        #
+        # To resolve this, a check is first made to see if the role contains the string "role"
+        # and similarly if principal contains the string "provider"; if yes, then the ordering
+        # is as expected, else switch them
+        #
+        # This switching logic is based on the ARN naming format as provided by AWS in their docs:
+        # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-arns
+        if "role" in role and "provider" in principal:
+            _role = role
+            _principal = principal
+        else:
+            _role = principal
+            _principal = role
+
         sts_call_vars = {
-            'RoleArn': role,
-            'PrincipalArn': principal,
+            'RoleArn': _role,
+            'PrincipalArn': _principal,
             'SAMLAssertion': saml_assertion
         }
 
