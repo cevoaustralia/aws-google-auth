@@ -826,52 +826,35 @@ class Google:
 
     def handle_selectchallenge(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
-        # Known mfa methods, 5 is disabled till its implemented
-        auth_methods = {
-            2: 'TOTP (Google Authenticator)',
-            3: 'SMS',
-            4: 'OOTP (Google Prompt)'
-            # 5: 'OOTP (Google App Offline Security Code)'
-        }
 
-        unavailable_challenge_ids = [
-            int(i.attrs.get('data-unavailable'))
-            for i in response_page.find_all(
-                lambda tag: tag.name == 'form' and 'data-unavailable' in tag.attrs
-            )
-        ]
+        challenges = []
+        for i in response_page.select('form[data-challengeentry]'):
+            action = i.attrs.get("action")
 
-        # ootp via google app offline code isn't implemented. make sure its not valid.
-        unavailable_challenge_ids.append(5)
-
-        challenge_ids = [
-            int(i.get('value'))
-            for i in response_page.find_all('input', {'name': 'challengeId'})
-            if int(i.get('value')) not in unavailable_challenge_ids
-        ]
-
-        challenge_ids.sort()
-
-        auth_methods = {
-            k: auth_methods[k]
-            for k in challenge_ids
-            if k in auth_methods and k not in unavailable_challenge_ids
-        }
+            if "challenge/totp/" in action:
+                challenges.append(['TOTP (Google Authenticator)', i.attrs.get("data-challengeentry")])
+            elif "challenge/ipp/" in action:
+                challenges.append(['SMS', i.attrs.get("data-challengeentry")])
+            elif "challenge/iap/" in action:
+                challenges.append(['SMS other phone', i.attrs.get("data-challengeentry")])
+            elif "challenge/sk/" in action:
+                challenges.append(['YubiKey', i.attrs.get("data-challengeentry")])
+            elif "challenge/az/" in action:
+                challenges.append(['Google Prompt', i.attrs.get("data-challengeentry")])
 
         print('Choose MFA method from available:')
-        print('\n'.join(
-            '{}: {}'.format(*i) for i in list(auth_methods.items())))
+        for i, mfa in enumerate(challenges, start=1):
+            print("{}: {}".format(i, mfa[0]))
 
-        selected_challenge = input("Enter MFA choice number ({}): ".format(
-            challenge_ids[-1:][0])) or None
+        selected_challenge = input("Enter MFA choice number (1): ") or None
 
-        if selected_challenge is not None and int(selected_challenge) in challenge_ids:
-            challenge_id = int(selected_challenge)
+        if selected_challenge is not None and int(selected_challenge) <= len(challenges):
+            selected_challenge = int(selected_challenge) - 1
         else:
-            # use the highest index as that will default to prompt, then sms, then totp, etc.
-            challenge_id = challenge_ids[-1:][0]
+            selected_challenge = 0
 
-        print("MFA Type Chosen: {}".format(auth_methods[challenge_id]))
+        challenge_id = challenges[selected_challenge][1]
+        print("MFA Type Chosen: {}".format(challenges[selected_challenge][0]))
 
         # We need the specific form of the challenge chosen
         challenge_form = response_page.find(
