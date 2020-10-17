@@ -119,7 +119,7 @@ Usage
                            [--bg-response BG_RESPONSE]
                            [--saml-assertion SAML_ASSERTION] [--no-cache]
                            [--print-creds] [--resolve-aliases]
-                           [--save-failure-html] [-a | -r ROLE_ARN] [-k]
+                           [--save-failure-html] [--save-saml-flow] [-a | -r ROLE_ARN] [-k]
                            [-l {debug,info,warn}] [-V]
 
     Acquire temporary AWS credentials via Google SSO
@@ -151,6 +151,7 @@ Usage
       --resolve-aliases     Resolve AWS account aliases.
       --save-failure-html   Write HTML failure responses to file for
                             troubleshooting.
+      --save-saml-flow      Write all GET and PUT requests and HTML responses to/from Google to files for troubleshooting.
       -a, --ask-role        Set true to always pick the role
       -r ROLE_ARN, --role-arn ROLE_ARN
                             The ARN of the role to assume ($AWS_ROLE_ARN)
