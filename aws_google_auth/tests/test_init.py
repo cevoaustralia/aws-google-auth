@@ -63,7 +63,9 @@ class TestInit(unittest.TestCase):
                                          username=None,
                                          quiet=False,
                                          bg_response=None,
-                                         account=None))
+                                         account=None,
+                                         password_cmd=None,
+                                         token_cmd=None))
                           ],
                          resolve_config.mock_calls)
 
@@ -86,7 +88,9 @@ class TestInit(unittest.TestCase):
                                          username=None,
                                          quiet=False,
                                          bg_response=None,
-                                         account=None),
+                                         account=None,
+                                         password_cmd=None,
+                                         token_cmd=None),
                                mock_config)
                           ],
                          process_auth.mock_calls)
@@ -106,6 +110,7 @@ class TestInit(unittest.TestCase):
         mock_config.return_value = None
         mock_config.account = None
         mock_config.region = None
+        mock_config.password_cmd = None
 
         mock_amazon_client = Mock()
         mock_google_client = Mock()
@@ -180,6 +185,7 @@ class TestInit(unittest.TestCase):
         mock_config.return_value = None
         mock_config.print_creds = True
         mock_config.account = None
+        mock_config.password_cmd = None
 
         mock_amazon_client = Mock()
         mock_google_client = Mock()
@@ -257,6 +263,7 @@ class TestInit(unittest.TestCase):
         mock_config.idp_id = None
         mock_config.sp_id = None
         mock_config.return_value = None
+        mock_config.password_cmd = None
 
         mock_config.role_arn = 'arn:aws:iam::123456789012:role/admin'
         mock_config.ask_role = False
@@ -328,6 +335,7 @@ class TestInit(unittest.TestCase):
         mock_config.return_value = None
         mock_config.keyring = False
         mock_config.account = None
+        mock_config.password_cmd = None
 
         mock_amazon_client = Mock()
         mock_google_client = Mock()
@@ -401,6 +409,7 @@ class TestInit(unittest.TestCase):
         mock_config.return_value = None
         mock_config.role_arn = 'arn:aws:iam::123456789012:role/admin'
         mock_config.account = None
+        mock_config.password_cmd = None
 
         mock_amazon_client = Mock()
         mock_google_client = Mock()
@@ -528,3 +537,31 @@ class TestInit(unittest.TestCase):
         self.assertEqual([call({'arn:aws:iam::123456789012:role/read-only': 'arn:aws:iam::123456789012:saml-provider/GoogleApps',
                                 'arn:aws:iam::123456789012:role/admin': 'arn:aws:iam::123456789012:saml-provider/GoogleApps'}, [])
                           ], mock_util_obj.pick_a_role.mock_calls)
+
+    @patch('aws_google_auth.util', spec=True)
+    @patch('aws_google_auth.amazon', spec=True)
+    @patch('aws_google_auth.google', spec=True)
+    def test_process_with_password_cmd(self, mock_google, mock_amazon, mock_util):
+
+        mock_config = Mock()
+        mock_config.saml_cache = False
+        mock_config.username = "input"
+        mock_config.idp_id = "input2"
+        mock_config.sp_id = "input3"
+        mock_config.region = "region_input"
+        mock_config.password_cmd = "echo '123'"
+        mock_config.provider = "da_provider"
+        mock_config.role_arn = "da_role"
+        mock_config.ask_role = False
+
+        mock_amazon_client = Mock()
+        mock_amazon_client.roles = {'da_role': 'da_role'}
+        mock_amazon.Amazon = MagicMock(return_value=mock_amazon_client)
+
+        args = aws_google_auth.parse_args([])
+
+        # Method Under Test
+        aws_google_auth.process_auth(args, mock_config)
+
+        # Assert values collected
+        self.assertEqual(mock_config.password, "123")

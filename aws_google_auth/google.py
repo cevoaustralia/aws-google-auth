@@ -682,7 +682,11 @@ class Google:
         challenge_url = sess.url.split("?")[0]
         challenge_id = challenge_url.split("totp/")[1]
 
-        mfa_token = input("MFA token: ") or None
+        if self.config.token_cmd:
+            with os.popen(self.config.token_cmd) as subproc:
+                mfa_token = subproc.read().strip()
+        else:
+            mfa_token = input("MFA token: ") or None
 
         if not mfa_token:
             raise ValueError(
