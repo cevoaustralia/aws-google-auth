@@ -103,3 +103,33 @@ class TestGoogle(unittest.TestCase):
         self.assertEqual("Something went wrong - Could not find SAML response, check your credentials "
                          "or use --save-failure-html to debug.",
                          str(ex.exception))
+
+    def test_totp_with_token_cmd(self):
+        post_mock = Mock(return_value=None)
+
+        mock_config = Mock()
+        mock_config.token_cmd = "echo '123'"
+        undertest = google.Google(config=mock_config, save_failure=False)
+        undertest.cont = None
+        undertest.post = post_mock
+
+        session_state = Mock()
+        session_state.text = '<xml><input name="TL" value="tl-value" /><input name="gxf" value="gxf-value" /></xml>'
+        session_state.url = 'https://example.com/totp/?q=1'
+
+        undertest.handle_totp(session_state)
+
+        expected_data = {
+            'challengeId': '',
+            'challengeType': 6,
+            'continue': None,
+            'scc': 1,
+            'sarp': 1,
+            'checkedDomains': 'youtube',
+            'pstMsg': 0,
+            'TL': 'tl-value',
+            'gxf': 'gxf-value',
+            'Pin': '123',
+            'TrustDevice': 'on'
+        }
+        post_mock.assert_called_with('https://example.com/totp/', data=expected_data)

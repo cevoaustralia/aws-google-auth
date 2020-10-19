@@ -41,6 +41,8 @@ def parse_args(args):
     parser.add_argument('--print-creds', action='store_true', help='Print Credentials.')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
     parser.add_argument('--save-failure-html', action='store_true', help='Write HTML failure responses to file for troubleshooting.')
+    parser.add_argument('--password-cmd', help='System shell command to get password from its output.')
+    parser.add_argument('--token-cmd', help='System shell command to get 2FA token from its output.')
 
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
@@ -165,6 +167,19 @@ def resolve_config(args):
         os.getenv('GOOGLE_USERNAME'),
         config.username)
 
+    # Shell cmd to get password (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.password_cmd = coalesce(
+        args.password_cmd,
+        os.getenv('PASSWORD_CMD'),
+        config.password_cmd)
+
+    # Shell cmd to get password (Option priority = ARGS, ENV_VAR, DEFAULT)
+    # e.g. "ssh user@host oathtool --totp -b $(cat authenticator-code)"
+    config.token_cmd = coalesce(
+        args.token_cmd,
+        os.getenv('TOKEN_CMD'),
+        config.token_cmd)
+
     # Account (Option priority = ARGS, ENV_VAR, DEFAULT)
     config.account = coalesce(
         args.account,
@@ -226,7 +241,10 @@ def process_auth(args, config):
         # There is no way (intentional) to pass in the password via the command
         # line nor environment variables. This prevents password leakage.
         keyring_password = None
-        if config.keyring:
+        if config.password_cmd:
+            with os.popen(config.password_cmd) as subproc:
+                config.password = subproc.read().strip()
+        elif config.keyring:
             keyring_password = keyring.get_password("aws-google-auth", config.username)
             if keyring_password:
                 config.password = keyring_password

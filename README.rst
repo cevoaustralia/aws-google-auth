@@ -151,6 +151,10 @@ Usage
       --resolve-aliases     Resolve AWS account aliases.
       --save-failure-html   Write HTML failure responses to file for
                             troubleshooting.
+      --password-cmd PASSWORD_CMD
+                            System shell command to get password from its output.
+      --token-cmd TOKEN_CMD
+                            System shell command to get 2FA token from its output.
       -a, --ask-role        Set true to always pick the role
       -r ROLE_ARN, --role-arn ROLE_ARN
                             The ARN of the role to assume ($AWS_ROLE_ARN)
