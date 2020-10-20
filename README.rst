@@ -279,6 +279,9 @@ by this tool are:
 | Security key     | ``.../signin/challenge/sk/...``     |
 |  (eg yubikey)    |                                     |
 +------------------+-------------------------------------+
+| One-time         | ``.../signin/challenge/skotp/...``  |
+| security codes   |                                     |
++------------------+-------------------------------------+
 | Backup code      | ``... (unknown yet) ...``           |
 |  (printed codes) |                                     |
 +------------------+-------------------------------------+
