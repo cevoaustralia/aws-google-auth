@@ -855,6 +855,8 @@ class Google:
                 challenges.append(['SMS other phone', i.attrs.get("data-challengeentry")])
             elif "challenge/sk/" in action:
                 challenges.append(['YubiKey', i.attrs.get("data-challengeentry")])
+            elif "challenge/skotp/" in action:
+                challenges.append(['One-time security code', i.attrs.get("data-challengeentry")])
             elif "challenge/az/" in action:
                 challenges.append(['Google Prompt', i.attrs.get("data-challengeentry")])
 
