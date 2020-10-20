@@ -282,6 +282,9 @@ by this tool are:
 | Dual prompt      | ``.../signin/challenge/dp/...``     |
 |  (Validate 2FA ) |                                     |
 +------------------+-------------------------------------+
+| One-time         | ``.../signin/challenge/skotp/...``  |
+| security codes   |                                     |
++------------------+-------------------------------------+
 | Backup code      | ``... (unknown yet) ...``           |
 |  (printed codes) |                                     |
 +------------------+-------------------------------------+
