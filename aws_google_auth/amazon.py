@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 import base64
 import boto3
@@ -72,6 +73,7 @@ class Amazon:
             self.session_token,
             self.expiration.strftime('%Y-%m-%dT%H:%M:%S%z'))
 
+        # Print to stdout (not stderr) so the output can be sourced by a shell.
         print(formatted)
 
     @property
