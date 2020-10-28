@@ -15,7 +15,8 @@ class Util:
 
     @staticmethod
     def get_input(prompt):
-        return input(prompt)
+        Util.message(prompt, end="")
+        return input()
 
     @staticmethod
     def pick_a_role(roles, aliases=None, account=None):
@@ -43,18 +44,18 @@ class Util:
                 enriched_roles_tab.append([i + 1, role_property[0], role_property[1]])
 
             while True:
-                print(tabulate(enriched_roles_tab, headers=['No', 'AWS account', 'Role'], ))
+                Util.message(tabulate(enriched_roles_tab, headers=['No', 'AWS account', 'Role'], ))
                 prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(enriched_roles))
                 choice = Util.get_input(prompt)
 
                 try:
                     return list(ordered_roles.items())[int(choice) - 1]
                 except (IndexError, ValueError):
-                    print("Invalid choice, try again.")
+                    Util.message("Invalid choice, try again.")
         else:
             while True:
                 for i, role in enumerate(filtered_roles):
-                    print("[{:>3d}] {}".format(i + 1, role))
+                    Util.message("[{:>3d}] {}".format(i + 1, role))
 
                 prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(filtered_roles))
                 choice = Util.get_input(prompt)
@@ -62,7 +63,7 @@ class Util:
                 try:
                     return list(filtered_roles.items())[int(choice) - 1]
                 except (IndexError, ValueError):
-                    print("Invalid choice, try again.")
+                    Util.message("Invalid choice, try again.")
 
     @staticmethod
     def touch(file_name, mode=0o600):
@@ -95,8 +96,12 @@ class Util:
         if sys.stdin.isatty():
             password = getpass.getpass(prompt)
         else:
-            print(prompt, end="")
-            sys.stdout.flush()
+            Util.message(prompt, end="")
             password = sys.stdin.readline()
-            print("")
+            Util.message("")
         return password
+
+    @staticmethod
+    def message(*msg, **print_kwargs):
+        """Print a user-interaction message to stderr."""
+        print(*msg, file=sys.stderr, **print_kwargs)

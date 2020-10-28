@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
-
 import argparse
 import base64
 import os
@@ -8,7 +6,6 @@ import sys
 import logging
 
 import keyring
-from six import print_ as print
 from tzlocal import get_localzone
 
 from aws_google_auth import _version
@@ -77,7 +74,7 @@ def cli(cli_args):
         config = resolve_config(args)
         process_auth(args, config)
     except google.ExpectedGoogleException as ex:
-        print(ex)
+        logging.error(ex)
         sys.exit(1)
     except KeyboardInterrupt:
         pass
@@ -274,8 +271,8 @@ def process_auth(args, config):
         else:
             config.role_arn, config.provider = util.Util.pick_a_role(roles)
     if not config.quiet:
-        print("Assuming " + config.role_arn)
-        print("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())))
+        util.Util.message("Assuming " + config.role_arn)
+        util.Util.message("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())))
 
     if config.print_creds:
         amazon_client.print_export_line()
