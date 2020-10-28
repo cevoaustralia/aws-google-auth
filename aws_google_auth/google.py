@@ -309,6 +309,9 @@ class Google:
         elif "challenge/ootp/5" in sess.url:
             raise NotImplementedError(
                 'Offline Google App OOTP not implemented')
+        elif "challenge/dp/" in sess.url:
+            sess = self.handle_dp(sess)
+
 
         # ... there are different URLs for backup codes (printed)
         # and security keys (eg yubikey) as well
@@ -334,12 +337,59 @@ class Google:
             if self.save_failure:
                 logging.error("SAML lookup failed, storing failure page to "
                               "'saml.html' to assist with debugging.")
-                with open("saml.html", 'w') as out:
-                    out.write(str(self.session_state.text.encode('utf-8')))
+                with open("saml.html", 'wb') as out:
+                    out.write(self.session_state.text.encode('utf-8'))
 
             raise ExpectedGoogleException('Something went wrong - Could not find SAML response, check your credentials or use --save-failure-html to debug.')
 
         return base64.b64decode(saml_element)
+
+    def handle_dp(self, sess):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        challenge_url = sess.url.split("?")[0]
+        input("I have responded from my phone:")
+
+        payload = {
+            'challengeId':
+                response_page.find('input', {
+                    'name': 'challengeId'
+                }).get('value'),
+            'challengeType':
+                response_page.find('input', {
+                    'name': 'challengeType'
+                }).get('value'),
+            'continue':
+                response_page.find('input', {
+                    'name': 'continue'
+                }).get('value'),
+            'scc':
+                response_page.find('input', {
+                    'name': 'scc'
+                }).get('value'),
+            'sarp':
+                response_page.find('input', {
+                    'name': 'sarp'
+                }).get('value'),
+            'checkedDomains':
+                response_page.find('input', {
+                    'name': 'checkedDomains'
+                }).get('value'),
+            'pstMsg':
+                response_page.find('input', {
+                    'name': 'pstMsg'
+                }).get('value'),
+            'TL':
+                response_page.find('input', {
+                    'name': 'TL'
+                }).get('value'),
+            'gxf':
+                response_page.find('input', {
+                    'name': 'gxf'
+                }).get('value'),
+            'TrustDevice':
+                'on',
+        }
+        return self.post(challenge_url, data=payload)
 
     def handle_captcha(self, sess, payload):
         response_page = BeautifulSoup(sess.text, 'html.parser')
