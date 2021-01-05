@@ -28,8 +28,11 @@ def parse_args(args):
     parser.add_argument('-I', '--idp-id', help='Google SSO IDP identifier ($GOOGLE_IDP_ID)')
     parser.add_argument('-S', '--sp-id', help='Google SSO SP identifier ($GOOGLE_SP_ID)')
     parser.add_argument('-R', '--region', help='AWS region endpoint ($AWS_DEFAULT_REGION)')
-    parser.add_argument('-d', '--duration', type=int, help='Credential duration ($DURATION)')
+    duration_group = parser.add_mutually_exclusive_group()
+    duration_group.add_argument('-d', '--duration', type=int, help='Credential duration in seconds (defaults to value of $DURATION, then falls back to 43200)')
+    duration_group.add_argument('--auto-duration', action='store_true', help='Tries to use the longest allowed duration ($AUTO_DURATION)')
     parser.add_argument('-p', '--profile', help='AWS profile (defaults to value of $AWS_PROFILE, then falls back to \'sts\')')
+    parser.add_argument('-A', '--account', help='Filter for specific AWS account.')
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
     parser.add_argument('-q', '--quiet', action='store_true', help='Quiet output')
     parser.add_argument('--bg-response', help='Override default bgresponse challenge token.')
@@ -113,6 +116,13 @@ def resolve_config(args):
         os.getenv('DURATION'),
         config.duration))
 
+    # Automatic duration (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.auto_duration = coalesce(
+        args.auto_duration,
+        os.getenv('AUTO_DURATION'),
+        config.auto_duration
+    )
+
     # IDP ID (Option priority = ARGS, ENV_VAR, DEFAULT)
     config.idp_id = coalesce(
         args.idp_id,
@@ -155,6 +165,12 @@ def resolve_config(args):
         os.getenv('GOOGLE_USERNAME'),
         config.username)
 
+    # Account (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.account = coalesce(
+        args.account,
+        os.getenv('AWS_ACCOUNT'),
+        config.account)
+
     config.keyring = coalesce(
         args.keyring,
         config.keyring)
@@ -179,6 +195,10 @@ def resolve_config(args):
 def process_auth(args, config):
     # Set up logging
     logging.getLogger().setLevel(getattr(logging, args.log_level.upper(), None))
+
+    if config.region is None:
+        config.region = util.Util.get_input("AWS Region: ")
+        logging.debug('%s: region is: %s', __name__, config.region)
 
     # If there is a valid cache and the user opted to use it, use that instead
     # of prompting the user for input (it will also ignroe any set variables
@@ -243,7 +263,12 @@ def process_auth(args, config):
     if config.role_arn in roles and not config.ask_role:
         config.provider = roles[config.role_arn]
     else:
-        if config.resolve_aliases:
+        if config.account and config.resolve_aliases:
+            aliases = amazon_client.resolve_aws_aliases(roles)
+            config.role_arn, config.provider = util.Util.pick_a_role(roles, aliases, config.account)
+        elif config.account:
+            config.role_arn, config.provider = util.Util.pick_a_role(roles, account=config.account)
+        elif config.resolve_aliases:
             aliases = amazon_client.resolve_aws_aliases(roles)
             config.role_arn, config.provider = util.Util.pick_a_role(roles, aliases)
         else:

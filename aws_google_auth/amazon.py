@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
 import base64
-import os
 import boto3
+import os
+import re
 
 from datetime import datetime
 from threading import Thread
 
-from botocore.exceptions import ProfileNotFound
+from botocore.exceptions import ClientError, ProfileNotFound
 from lxml import etree
 
 from aws_google_auth.google import ExpectedGoogleException
@@ -40,11 +41,10 @@ class Amazon:
     @property
     def token(self):
         if self.__token is None:
-            self.__token = self.sts_client.assume_role_with_saml(
-                RoleArn=self.config.role_arn,
-                PrincipalArn=self.config.provider,
-                SAMLAssertion=self.base64_encoded_saml,
-                DurationSeconds=self.config.duration)
+            self.__token = self.assume_role(self.config.role_arn,
+                                            self.config.provider,
+                                            self.base64_encoded_saml,
+                                            self.config.duration)
         return self.__token
 
     @property
@@ -79,10 +79,44 @@ class Amazon:
         doc = etree.fromstring(self.saml_xml)
         roles = {}
         for x in doc.xpath('//*[@Name = "https://aws.amazon.com/SAML/Attributes/Role"]//text()'):
-            if "arn:aws:iam:" in x:
+            if "arn:aws:iam:" in x or "arn:aws-us-gov:iam:" in x:
                 res = x.split(',')
                 roles[res[0]] = res[1]
         return roles
+
+    def assume_role(self, role, principal, saml_assertion, duration=None, auto_duration=True):
+        sts_call_vars = {
+            'RoleArn': role,
+            'PrincipalArn': principal,
+            'SAMLAssertion': saml_assertion
+        }
+
+        # Try the maximum duration of 12 hours, if it fails try to use the
+        # maximum duration indicated by the error
+        if self.config.auto_duration and auto_duration:
+            sts_call_vars['DurationSeconds'] = self.config.max_duration
+            try:
+                res = self.sts_client.assume_role_with_saml(**sts_call_vars)
+            except ClientError as err:
+                if (err.response.get('Error', []).get('Code') == 'ValidationError' and err.response.get('Error', []).get('Message')):
+                    m = re.search(
+                        'Member must have value less than or equal to ([0-9]{3,5})',
+                        err.response['Error']['Message']
+                    )
+                    if m is not None and m.group(1):
+                        new_duration = int(m.group(1))
+                        return self.assume_role(role, principal,
+                                                saml_assertion,
+                                                duration=new_duration,
+                                                auto_duration=False)
+                # Unknown error or no max time returned in error message
+                raise
+        elif duration:
+            sts_call_vars['DurationSeconds'] = duration
+
+        res = self.sts_client.assume_role_with_saml(**sts_call_vars)
+
+        return res
 
     def resolve_aws_aliases(self, roles):
         def resolve_aws_alias(role, principal, aws_dict):

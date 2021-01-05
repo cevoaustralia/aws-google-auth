@@ -1,6 +1,7 @@
 beautifulsoup4==4.9.1
 boto3==1.14.4
 configparser==4.0.2
+filelock
 keyring==20.0.1
 lxml==3.6.4
 Pillow==7.1.2

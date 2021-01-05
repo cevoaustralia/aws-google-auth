@@ -24,6 +24,7 @@ class TestPythonFailOnVersion(unittest.TestCase):
         self.assertFalse(parser.disable_u2f, None)
 
         self.assertEqual(parser.duration, None)
+        self.assertEqual(parser.auto_duration, False)
         self.assertEqual(parser.idp_id, None)
         self.assertEqual(parser.sp_id, None)
         self.assertEqual(parser.profile, None)
@@ -32,12 +33,13 @@ class TestPythonFailOnVersion(unittest.TestCase):
         self.assertEqual(parser.username, None)
         self.assertEqual(parser.quiet, False)
         self.assertEqual(parser.bg_response, None)
+        self.assertEqual(parser.account, None)
 
         self.assertFalse(parser.save_failure_html)
 
         # Assert the size of the parameter so that new parameters trigger a review of this function
         # and the appropriate defaults are added here to track backwards compatibility in the future.
-        self.assertEqual(len(vars(parser)), 18)
+        self.assertEqual(len(vars(parser)), 20)
 
     def test_username(self):
 
@@ -48,12 +50,13 @@ class TestPythonFailOnVersion(unittest.TestCase):
         self.assertFalse(parser.keyring)
         self.assertFalse(parser.resolve_aliases)
         self.assertEqual(parser.duration, None)
-        self.assertEqual(parser.duration, None)
+        self.assertEqual(parser.auto_duration, False)
         self.assertEqual(parser.idp_id, None)
         self.assertEqual(parser.profile, None)
         self.assertEqual(parser.region, None)
         self.assertEqual(parser.role_arn, None)
         self.assertEqual(parser.username, 'username@gmail.com')
+        self.assertEqual(parser.account, None)
 
     def test_nocache(self):
 
@@ -64,12 +67,13 @@ class TestPythonFailOnVersion(unittest.TestCase):
         self.assertFalse(parser.keyring)
         self.assertFalse(parser.resolve_aliases)
         self.assertEqual(parser.duration, None)
-        self.assertEqual(parser.duration, None)
+        self.assertEqual(parser.auto_duration, False)
         self.assertEqual(parser.idp_id, None)
         self.assertEqual(parser.profile, None)
         self.assertEqual(parser.region, None)
         self.assertEqual(parser.role_arn, None)
         self.assertEqual(parser.username, None)
+        self.assertEqual(parser.account, None)
 
     def test_resolvealiases(self):
 
@@ -80,12 +84,13 @@ class TestPythonFailOnVersion(unittest.TestCase):
         self.assertFalse(parser.keyring)
         self.assertTrue(parser.resolve_aliases)
         self.assertEqual(parser.duration, None)
-        self.assertEqual(parser.duration, None)
+        self.assertEqual(parser.auto_duration, False)
         self.assertEqual(parser.idp_id, None)
         self.assertEqual(parser.profile, None)
         self.assertEqual(parser.region, None)
         self.assertEqual(parser.role_arn, None)
         self.assertEqual(parser.username, None)
+        self.assertEqual(parser.account, None)
 
     def test_ask_and_supply_role(self):
 

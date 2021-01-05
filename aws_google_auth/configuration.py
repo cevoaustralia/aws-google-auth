@@ -3,6 +3,7 @@
 import os
 
 import botocore.session
+import filelock
 
 try:
     from backports import configparser
@@ -23,10 +24,11 @@ class Configuration(object):
         self.ask_role = False
         self.keyring = False
         self.duration = self.max_duration
+        self.auto_duration = False
         self.idp_id = None
         self.password = None
         self.profile = "sts"
-        self.region = "ap-southeast-2"
+        self.region = None
         self.role_arn = None
         self.__saml_cache = None
         self.sp_id = None
@@ -36,6 +38,7 @@ class Configuration(object):
         self.print_creds = False
         self.quiet = False
         self.bg_response = None
+        self.account = ""
 
     # For the "~/.aws/config" file, we use the format "[profile testing]"
     # for the 'testing' profile. The credential file will just be "[testing]"
@@ -100,8 +103,11 @@ class Configuration(object):
 
         # duration
         assert (self.duration.__class__ is int), "Expected duration to be an integer. Got {}.".format(self.duration.__class__)
-        assert (self.duration > 0), "Expected duration to be greater than 0. Got {}.".format(self.duration)
+        assert (self.duration >= 900), "Expected duration to be greater than or equal to 900. Got {}.".format(self.duration)
         assert (self.duration <= self.max_duration), "Expected duration to be less than or equal to max_duration ({}). Got {}.".format(self.max_duration, self.duration)
+
+        # auto_duration
+        assert (self.auto_duration.__class__ is bool), "Expected auto_duration to be a boolean. Got {}.".format(self.auto_duration.__class__)
 
         # profile
         assert (self.profile.__class__ is str), "Expected profile to be a string. Got {}.".format(self.profile.__class__)
@@ -129,13 +135,16 @@ class Configuration(object):
         # role_arn (Can be blank, we'll just prompt)
         if self.role_arn is not None:
             assert (self.role_arn.__class__ is str), "Expected role_arn to be None or a string. Got {}.".format(self.role_arn.__class__)
-            assert ("arn:aws:iam::" in self.role_arn), "Expected role_arn to contain 'arn:aws:iam::'. Got '{}'.".format(self.role_arn)
+            assert ("arn:aws:iam::" in self.role_arn or "arn:aws-us-gov:iam::" in self.role_arn), "Expected role_arn to contain 'arn:aws:iam::'. Got '{}'.".format(self.role_arn)
 
         # u2f_disabled
         assert (self.u2f_disabled.__class__ is bool), "Expected u2f_disabled to be a boolean. Got {}.".format(self.u2f_disabled.__class__)
 
         # quiet
         assert (self.quiet.__class__ is bool), "Expected quiet to be a boolean. Got {}.".format(self.quiet.__class__)
+
+        # account
+        assert (self.account.__class__ is str), "Expected account to be string. Got {}".format(self.account.__class__)
 
     # Write the configuration (and credentials) out to disk. This allows for
     # regular AWS tooling (aws cli and boto) to use the credentials in the
@@ -145,42 +154,59 @@ class Configuration(object):
 
         assert (self.profile is not None), "Can not store config/credentials if the AWS_PROFILE is None."
 
-        # Write to the configuration file
-        profile = Configuration.config_profile(self.profile)
-        config_parser = configparser.RawConfigParser()
-        config_parser.read(self.config_file)
-        if not config_parser.has_section(profile):
-            config_parser.add_section(profile)
-        config_parser.set(profile, 'region', self.region)
-        config_parser.set(profile, 'google_config.ask_role', self.ask_role)
-        config_parser.set(profile, 'google_config.keyring', self.keyring)
-        config_parser.set(profile, 'google_config.duration', self.duration)
-        config_parser.set(profile, 'google_config.google_idp_id', self.idp_id)
-        config_parser.set(profile, 'google_config.role_arn', self.role_arn)
-        config_parser.set(profile, 'google_config.google_sp_id', self.sp_id)
-        config_parser.set(profile, 'google_config.u2f_disabled', self.u2f_disabled)
-        config_parser.set(profile, 'google_config.google_username', self.username)
-        config_parser.set(profile, 'google_config.bg_response', self.bg_response)
-        with open(self.config_file, 'w+') as f:
-            config_parser.write(f)
+        config_file_lock = filelock.FileLock(self.config_file + '.lock')
+        config_file_lock.acquire()
+        try:
+            # Write to the configuration file
+            profile = Configuration.config_profile(self.profile)
+            config_parser = configparser.RawConfigParser()
+            config_parser.read(self.config_file)
+            if not config_parser.has_section(profile):
+                config_parser.add_section(profile)
+            config_parser.set(profile, 'region', self.region)
+            config_parser.set(profile, 'google_config.ask_role', self.ask_role)
+            config_parser.set(profile, 'google_config.keyring', self.keyring)
+            config_parser.set(profile, 'google_config.duration', self.duration)
+            config_parser.set(profile, 'google_config.google_idp_id', self.idp_id)
+            config_parser.set(profile, 'google_config.role_arn', self.role_arn)
+            config_parser.set(profile, 'google_config.google_sp_id', self.sp_id)
+            config_parser.set(profile, 'google_config.u2f_disabled', self.u2f_disabled)
+            config_parser.set(profile, 'google_config.google_username', self.username)
+            config_parser.set(profile, 'google_config.bg_response', self.bg_response)
 
-        # Write to the credentials file (only if we have credentials)
-        if amazon_object is not None:
-            credentials_parser = configparser.RawConfigParser()
-            credentials_parser.read(self.credentials_file)
-            if not credentials_parser.has_section(self.profile):
-                credentials_parser.add_section(self.profile)
-            credentials_parser.set(self.profile, 'aws_access_key_id', amazon_object.access_key_id)
-            credentials_parser.set(self.profile, 'aws_secret_access_key', amazon_object.secret_access_key)
-            credentials_parser.set(self.profile, 'aws_security_token', amazon_object.session_token)
-            credentials_parser.set(self.profile, 'aws_session_expiration', amazon_object.expiration.strftime('%Y-%m-%dT%H:%M:%S%z'))
-            credentials_parser.set(self.profile, 'aws_session_token', amazon_object.session_token)
-            with open(self.credentials_file, 'w+') as f:
-                credentials_parser.write(f)
+            with open(self.config_file, 'w+') as f:
+                config_parser.write(f)
+        finally:
+            config_file_lock.release()
 
-        if self.__saml_cache is not None:
-            with open(self.saml_cache_file, 'w') as f:
-                f.write(self.__saml_cache.decode("utf-8"))
+            # Write to the credentials file (only if we have credentials)
+            if amazon_object is not None:
+                credentials_file_lock = filelock.FileLock(self.credentials_file + '.lock')
+                credentials_file_lock.acquire()
+                try:
+                    credentials_parser = configparser.RawConfigParser()
+                    credentials_parser.read(self.credentials_file)
+                    if not credentials_parser.has_section(self.profile):
+                        credentials_parser.add_section(self.profile)
+                    credentials_parser.set(self.profile, 'aws_access_key_id', amazon_object.access_key_id)
+                    credentials_parser.set(self.profile, 'aws_secret_access_key', amazon_object.secret_access_key)
+                    credentials_parser.set(self.profile, 'aws_security_token', amazon_object.session_token)
+                    credentials_parser.set(self.profile, 'aws_session_expiration', amazon_object.expiration.strftime('%Y-%m-%dT%H:%M:%S%z'))
+                    credentials_parser.set(self.profile, 'aws_session_token', amazon_object.session_token)
+
+                    with open(self.credentials_file, 'w+') as f:
+                        credentials_parser.write(f)
+                finally:
+                    credentials_file_lock.release()
+
+            if self.__saml_cache is not None:
+                saml_cache_file_lock = filelock.FileLock(self.saml_cache_file + '.lock')
+                saml_cache_file_lock.acquire()
+                try:
+                    with open(self.saml_cache_file, 'w') as f:
+                        f.write(self.__saml_cache.decode("utf-8"))
+                finally:
+                    saml_cache_file_lock.release()
 
     # Read from the configuration file and override ALL values currently stored
     # in the configuration object. As this is potentially destructive, it's
@@ -240,6 +266,10 @@ class Configuration(object):
             # bg_response
             read_bg_response = unicode_to_string(config_parser[profile_string].get('google_config.bg_response', None))
             self.bg_response = coalesce(read_bg_response, self.bg_response)
+
+            # Account
+            read_account = unicode_to_string(config_parser[profile_string].get('account', None))
+            self.account = coalesce(read_account, self.account)
 
         # SAML Cache
         try:
