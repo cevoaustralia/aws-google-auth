@@ -36,10 +36,11 @@ class TestPythonFailOnVersion(unittest.TestCase):
         self.assertEqual(parser.account, None)
 
         self.assertFalse(parser.save_failure_html)
+        self.assertFalse(parser.save_saml_flow)
 
         # Assert the size of the parameter so that new parameters trigger a review of this function
         # and the appropriate defaults are added here to track backwards compatibility in the future.
-        self.assertEqual(len(vars(parser)), 20)
+        self.assertEqual(len(vars(parser)), 21)
 
     def test_username(self):
 
