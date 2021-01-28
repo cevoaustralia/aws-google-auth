@@ -357,8 +357,8 @@ class Google:
             if self.save_failure:
                 logging.error("SAML lookup failed, storing failure page to "
                               "'saml.html' to assist with debugging.")
-                with open("saml.html", 'w') as out:
-                    out.write(str(self.session_state.text.encode('utf-8')))
+                with open("saml.html", 'wb') as out:
+                    out.write(self.session_state.text.encode('utf-8'))
 
             raise ExpectedGoogleException('Something went wrong - Could not find SAML response, check your credentials or use --save-failure-html to debug.')
 

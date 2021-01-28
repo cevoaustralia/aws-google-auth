@@ -279,6 +279,9 @@ by this tool are:
 | Security key     | ``.../signin/challenge/sk/...``     |
 |  (eg yubikey)    |                                     |
 +------------------+-------------------------------------+
+| Dual prompt      | ``.../signin/challenge/dp/...``     |
+|  (Validate 2FA ) |                                     |
++------------------+-------------------------------------+
 | Backup code      | ``... (unknown yet) ...``           |
 |  (printed codes) |                                     |
 +------------------+-------------------------------------+
