@@ -327,6 +327,8 @@ class Google:
             sess = self.handle_sk(sess)
         elif "challenge/iap/" in sess.url:
             sess = self.handle_iap(sess)
+        elif "challenge/dp/" in sess.url:
+            sess = self.handle_dp(sess)
         elif "challenge/ootp/5" in sess.url:
             raise NotImplementedError(
                 'Offline Google App OOTP not implemented')
@@ -683,6 +685,24 @@ class Google:
         }
 
         # Submit TOTP
+        return self.post(challenge_url, data=payload)
+
+    def handle_dp(self, sess):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+
+        input("Check your phone - after you have confirmed response press ENTER to continue.") or None
+
+        form = response_page.find('form', {'id': 'challenge'})
+        challenge_url = 'https://accounts.google.com' + form.get('action')
+
+        payload = {}
+        for tag in form.find_all('input'):
+            if tag.get('name') is None:
+                continue
+
+            payload[tag.get('name')] = tag.get('value')
+
+        # Submit Configuration
         return self.post(challenge_url, data=payload)
 
     def handle_iap(self, sess):
