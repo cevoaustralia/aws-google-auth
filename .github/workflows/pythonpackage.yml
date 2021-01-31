@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8]
 
     steps:
     - uses: actions/checkout@v2
@@ -42,4 +42,3 @@ jobs:
         pip install pytest
         coverage run --source=aws_google_auth/ --omit=aws_google_auth/tests/* setup.py test
         coverage report
-        coveralls
