@@ -261,11 +261,11 @@ by this tool are:
 +==================+=====================================+
 | No second factor | (none)                              |
 +------------------+-------------------------------------+
-| TOTP (eg Google  | ``.../signin/challenge/totp/...`` |
+| TOTP (eg Google  | ``.../signin/challenge/totp/...``   |
 |  Authenticator   |                                     |
 |  or Authy)       |                                     |
 +------------------+-------------------------------------+
-| SMS (or voice    | ``.../signin/challenge/ipp/...``  |
+| SMS (or voice    | ``.../signin/challenge/ipp/...``    |
 |  call)           |                                     |
 +------------------+-------------------------------------+
 | SMS (or voice    | ``.../signin/challenge/iap/...``    |
@@ -273,7 +273,7 @@ by this tool are:
 |  number          |                                     |
 |  submission      |                                     |
 +------------------+-------------------------------------+
-| Google Prompt    | ``.../signin/challenge/az/...``   |
+| Google Prompt    | ``.../signin/challenge/az/...``     |
 |  (phone app)     |                                     |
 +------------------+-------------------------------------+
 | Security key     | ``.../signin/challenge/sk/...``     |
