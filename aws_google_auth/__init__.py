@@ -28,7 +28,9 @@ def parse_args(args):
     parser.add_argument('-I', '--idp-id', help='Google SSO IDP identifier ($GOOGLE_IDP_ID)')
     parser.add_argument('-S', '--sp-id', help='Google SSO SP identifier ($GOOGLE_SP_ID)')
     parser.add_argument('-R', '--region', help='AWS region endpoint ($AWS_DEFAULT_REGION)')
-    parser.add_argument('-d', '--duration', type=int, help='Credential duration in seconds (defaults to value of $DURATION, then falls back to 43200)')
+    duration_group = parser.add_mutually_exclusive_group()
+    duration_group.add_argument('-d', '--duration', type=int, help='Credential duration in seconds (defaults to value of $DURATION, then falls back to 43200)')
+    duration_group.add_argument('--auto-duration', action='store_true', help='Tries to use the longest allowed duration ($AUTO_DURATION)')
     parser.add_argument('-p', '--profile', help='AWS profile (defaults to value of $AWS_PROFILE, then falls back to \'sts\')')
     parser.add_argument('-A', '--account', help='Filter for specific AWS account.')
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
@@ -39,6 +41,7 @@ def parse_args(args):
     parser.add_argument('--print-creds', action='store_true', help='Print Credentials.')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
     parser.add_argument('--save-failure-html', action='store_true', help='Write HTML failure responses to file for troubleshooting.')
+    parser.add_argument('--save-saml-flow', action='store_true', help='Write all GET and PUT requests and HTML responses to/from Google to files for troubleshooting.')
 
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
@@ -113,6 +116,13 @@ def resolve_config(args):
         args.duration,
         os.getenv('DURATION'),
         config.duration))
+
+    # Automatic duration (Option priority = ARGS, ENV_VAR, DEFAULT)
+    config.auto_duration = coalesce(
+        args.auto_duration,
+        os.getenv('AUTO_DURATION'),
+        config.auto_duration
+    )
 
     # IDP ID (Option priority = ARGS, ENV_VAR, DEFAULT)
     config.idp_id = coalesce(
@@ -229,7 +239,7 @@ def process_auth(args, config):
         # Validate Options
         config.raise_if_invalid()
 
-        google_client = google.Google(config, args.save_failure_html)
+        google_client = google.Google(config, save_failure=args.save_failure_html, save_flow=args.save_saml_flow)
         google_client.do_login()
         saml_xml = google_client.parse_saml()
         logging.debug('%s: saml assertion is: %s', __name__, saml_xml)

@@ -119,7 +119,7 @@ Usage
                            [--bg-response BG_RESPONSE]
                            [--saml-assertion SAML_ASSERTION] [--no-cache]
                            [--print-creds] [--resolve-aliases]
-                           [--save-failure-html] [-a | -r ROLE_ARN] [-k]
+                           [--save-failure-html] [--save-saml-flow] [-a | -r ROLE_ARN] [-k]
                            [-l {debug,info,warn}] [-V]
 
     Acquire temporary AWS credentials via Google SSO
@@ -151,6 +151,7 @@ Usage
       --resolve-aliases     Resolve AWS account aliases.
       --save-failure-html   Write HTML failure responses to file for
                             troubleshooting.
+      --save-saml-flow      Write all GET and PUT requests and HTML responses to/from Google to files for troubleshooting.
       -a, --ask-role        Set true to always pick the role
       -r ROLE_ARN, --role-arn ROLE_ARN
                             The ARN of the role to assume ($AWS_ROLE_ARN)
@@ -260,11 +261,11 @@ by this tool are:
 +==================+=====================================+
 | No second factor | (none)                              |
 +------------------+-------------------------------------+
-| TOTP (eg Google  | ``.../signin/challenge/totp/2?...`` |
+| TOTP (eg Google  | ``.../signin/challenge/totp/...`` |
 |  Authenticator   |                                     |
 |  or Authy)       |                                     |
 +------------------+-------------------------------------+
-| SMS (or voice    | ``.../signin/challenge/ipp/2?...``  |
+| SMS (or voice    | ``.../signin/challenge/ipp/...``  |
 |  call)           |                                     |
 +------------------+-------------------------------------+
 | SMS (or voice    | ``.../signin/challenge/iap/...``    |
@@ -272,11 +273,14 @@ by this tool are:
 |  number          |                                     |
 |  submission      |                                     |
 +------------------+-------------------------------------+
-| Google Prompt    | ``.../signin/challenge/az/2?...``   |
+| Google Prompt    | ``.../signin/challenge/az/...``   |
 |  (phone app)     |                                     |
 +------------------+-------------------------------------+
 | Security key     | ``.../signin/challenge/sk/...``     |
 |  (eg yubikey)    |                                     |
++------------------+-------------------------------------+
+| Dual prompt      | ``.../signin/challenge/dp/...``     |
+|  (Validate 2FA ) |                                     |
 +------------------+-------------------------------------+
 | Backup code      | ``... (unknown yet) ...``           |
 |  (printed codes) |                                     |

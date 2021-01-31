@@ -24,6 +24,7 @@ class Configuration(object):
         self.ask_role = False
         self.keyring = False
         self.duration = self.max_duration
+        self.auto_duration = False
         self.idp_id = None
         self.password = None
         self.profile = "sts"
@@ -102,8 +103,11 @@ class Configuration(object):
 
         # duration
         assert (self.duration.__class__ is int), "Expected duration to be an integer. Got {}.".format(self.duration.__class__)
-        assert (self.duration > 0), "Expected duration to be greater than 0. Got {}.".format(self.duration)
+        assert (self.duration >= 900), "Expected duration to be greater than or equal to 900. Got {}.".format(self.duration)
         assert (self.duration <= self.max_duration), "Expected duration to be less than or equal to max_duration ({}). Got {}.".format(self.max_duration, self.duration)
+
+        # auto_duration
+        assert (self.auto_duration.__class__ is bool), "Expected auto_duration to be a boolean. Got {}.".format(self.auto_duration.__class__)
 
         # profile
         assert (self.profile.__class__ is str), "Expected profile to be a string. Got {}.".format(self.profile.__class__)
