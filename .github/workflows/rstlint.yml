@@ -1,5 +1,5 @@
 
-name: Python package
+name: Lint RST
 
 on:
   push:
