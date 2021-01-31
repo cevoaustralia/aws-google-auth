@@ -1,11 +1,11 @@
 aws-google-auth
 ===============
 
-|travis-badge| |docker-badge| |pypi-badge| |coveralls-badge|
+|github-badge| |docker-badge| |pypi-badge| |coveralls-badge|
 
-.. |travis-badge| image:: https://img.shields.io/travis/cevoaustralia/aws-google-auth.svg
-   :target: https://travis-ci.org/cevoaustralia/aws-google-auth
-   :alt: Travis build badge
+.. |github-badge| image:: https://github.com/cevoaustralia/aws-google-auth/workflows/Python%20package/badge.svg
+   :target: https://github.com/cevoaustralia/aws-google-auth/actions
+   :alt: GitHub build badge
 
 .. |docker-badge| image:: https://img.shields.io/docker/build/cevoaustralia/aws-google-auth.svg
    :target: https://hub.docker.com/r/cevoaustralia/aws-google-auth/
