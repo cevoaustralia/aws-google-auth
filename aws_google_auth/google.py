@@ -616,16 +616,10 @@ class Google:
             response_page.find('input', {
                 'name': 'sarp'
             }).get('value'),
-            'checkedDomains':
-            response_page.find('input', {
-                'name': 'checkedDomains'
-            }).get('value'),
+            'checkedDomains': 'youtube',
             'checkConnection':
             'youtube:1295:1',
-            'pstMsg':
-            response_page.find('input', {
-                'name': 'pstMsg'
-            }).get('value'),
+            'pstMsg': 0,
             'TL':
             response_page.find('input', {
                 'name': 'TL'
