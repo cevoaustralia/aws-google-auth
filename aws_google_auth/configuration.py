@@ -39,6 +39,8 @@ class Configuration(object):
         self.quiet = False
         self.bg_response = None
         self.account = ""
+        self.browser = False
+        self.port = 8000
 
     # For the "~/.aws/config" file, we use the format "[profile testing]"
     # for the 'testing' profile. The credential file will just be "[testing]"
@@ -146,6 +148,9 @@ class Configuration(object):
         # account
         assert (self.account.__class__ is str), "Expected account to be string. Got {}".format(self.account.__class__)
 
+        # port
+        assert (self.port.__class__ is int), "Expected port to be an integer. Got {}.".format(self.port.__class__)
+
     # Write the configuration (and credentials) out to disk. This allows for
     # regular AWS tooling (aws cli and boto) to use the credentials in the
     # profile the user specified.
@@ -173,6 +178,7 @@ class Configuration(object):
             config_parser.set(profile, 'google_config.u2f_disabled', self.u2f_disabled)
             config_parser.set(profile, 'google_config.google_username', self.username)
             config_parser.set(profile, 'google_config.bg_response', self.bg_response)
+            config_parser.set(profile, 'google_config.browser', self.browser)
 
             with open(self.config_file, 'w+') as f:
                 config_parser.write(f)
@@ -270,6 +276,10 @@ class Configuration(object):
             # Account
             read_account = unicode_to_string(config_parser[profile_string].get('account', None))
             self.account = coalesce(read_account, self.account)
+
+            # Browser
+            read_browser = config_parser[profile_string].getboolean('google_config.browser', None)
+            self.browser = coalesce(read_browser, self.browser)
 
         # SAML Cache
         try:

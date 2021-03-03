@@ -6,6 +6,8 @@ import getpass
 import os
 import sys
 from collections import OrderedDict
+from urllib.parse import parse_qs
+from cgi import parse_header, parse_multipart
 
 from six.moves import input
 from tabulate import tabulate
@@ -100,3 +102,17 @@ class Util:
             password = sys.stdin.readline()
             print("")
         return password
+
+    @staticmethod
+    def parse_post(handler):
+        if 'content-type' not in handler.headers:
+            return {}
+        ctype, pdict = parse_header(handler.headers['content-type'])
+        if ctype == 'multipart/form-data':
+            postvars = parse_multipart(handler.rfile, pdict)
+        elif ctype == 'application/x-www-form-urlencoded':
+            length = int(handler.headers['content-length'])
+            postvars = parse_qs(handler.rfile.read(length).decode('utf-8'), keep_blank_values=1)
+        else:
+            postvars = {}
+        return postvars
