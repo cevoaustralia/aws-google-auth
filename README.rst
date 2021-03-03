@@ -132,8 +132,8 @@ Usage
     usage: aws-google-auth [-h] [-u USERNAME | -b | --redirect-server] [-I IDP_ID] [-S SP_ID] [-R REGION]
                        [-d DURATION | --auto-duration] [-p PROFILE] [-A ACCOUNT] [-D] [-q] [--bg-response BG_RESPONSE]
                        [--saml-assertion SAML_ASSERTION] [--no-cache] [--print-creds] [--resolve-aliases]
-                       [--save-failure-html] [--save-saml-flow] [--port PORT] [-a | -r ROLE_ARN] [-k]
-                       [-l {debug,info,warn}] [-V]
+                       [--save-failure-html] [--save-saml-flow] [--port PORT] [-a | -r ROLE_ARN] [-k] [-l {debug,info,warn}]
+                       [-V]
 
     Acquire temporary AWS credentials via Google SSO
 
@@ -141,7 +141,7 @@ Usage
       -h, --help            show this help message and exit
       -u USERNAME, --username USERNAME
                             Google Apps username ($GOOGLE_USERNAME)
-      -b, --browser         Google login in the browser (Requires SAML redirect server)
+      -b, --browser         Google login in the browser (Requires SAML redirect server) ($GOOGLE_BROWSER=1)
       --redirect-server     Run the redirect server on port ($PORT)
       -I IDP_ID, --idp-id IDP_ID
                             Google SSO IDP identifier ($GOOGLE_IDP_ID)
@@ -151,7 +151,7 @@ Usage
                             AWS region endpoint ($AWS_DEFAULT_REGION)
       -d DURATION, --duration DURATION
                             Credential duration in seconds (defaults to value of $DURATION, then falls back to 43200)
-      --auto-duration       Tries to use the longest allowed duration ($AUTO_DURATION)
+      --auto-duration       Tries to use the longest allowed duration ($AUTO_DURATION=1)
       -p PROFILE, --profile PROFILE
                             AWS profile (defaults to value of $AWS_PROFILE, then falls back to 'sts')
       -A ACCOUNT, --account ACCOUNT
@@ -164,11 +164,11 @@ Usage
                             Base64 encoded SAML assertion to use.
       --no-cache            Do not cache the SAML Assertion.
       --print-creds         Print Credentials.
-      --resolve-aliases     Resolve AWS account aliases.
+      --resolve-aliases     Resolve AWS account aliases. ($RESOLVE_AWS_ALIASES=1)
       --save-failure-html   Write HTML failure responses to file for troubleshooting.
       --save-saml-flow      Write all GET and PUT requests and HTML responses to/from Google to files for troubleshooting.
       --port PORT           Port for the redirect server ($PORT)
-      -a, --ask-role        Set true to always pick the role
+      -a, --ask-role        Set true to always pick the role ($AWS_ASK_ROLE=1)
       -r ROLE_ARN, --role-arn ROLE_ARN
                             The ARN of the role to assume
       -k, --keyring         Use keyring for storing the password.
