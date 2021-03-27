@@ -840,6 +840,8 @@ class Google:
                 challenges.append(['YubiKey', i.attrs.get("data-challengeentry")])
             elif "challenge/az/" in action:
                 challenges.append(['Google Prompt', i.attrs.get("data-challengeentry")])
+            elif "challenge/dp/" in action:
+                challenges.append(['Google Dual Prompt', i.attrs.get('data-challengeentry')])
 
         print('Choose MFA method from available:')
         for i, mfa in enumerate(challenges, start=1):
