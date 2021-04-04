@@ -20,7 +20,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install restructuredtext_lint
+        pip install Pygments restructuredtext_lint
     - name: Lint with rst
       run: |
         rst-lint README.rst
