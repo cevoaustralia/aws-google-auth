@@ -87,7 +87,7 @@ setup(
     install_requires=[
         'beautifulsoup4', 'boto3', 'configparser', 'filelock',
         'keyring', 'keyrings.alt', 'lxml', 'Pillow', 'requests',
-        'six', 'tabulate', 'tzlocal','cryptography' 
+        'six', 'tabulate', 'tzlocal', 'cryptography' 
     ],
 
     # List additional groups of dependencies here (e.g. development
