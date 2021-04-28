@@ -1,0 +1,36 @@
+name: Publish Docker image
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  push_to_ecr:
+    name: Push Docker image to ECR
+    runs-on: ubuntu-latest
+    container: dnxsolutions/aws:2.1.6-dnx1
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ECR_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_ECR_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Get the tag
+        id: get_tag
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
+      - name: Build, tag, and push image to Amazon public ECR
+        env:
+          ECR_REGISTRY: public.ecr.aws
+          ECR_REPOSITORY: v9i6s3d6/aws-google-auth
+          IMAGE_TAG: ${{ steps.get_tag.outputs.tag }}
+        run: |
+          apk add docker
+          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
