@@ -6,8 +6,8 @@ RUN apk --no-cache update && \
     ca-certificates=20191127-r5 \
     py3-certifi=2020.6.20-r0 \
     py3-lxml=4.6.3-r0 \
-    python3-dev=3.8.8-r0 \
-    cython=0.29.21-r0 \
+    python3-dev=3.8.10-r0 \
+    cython=0.29.21-r1 \
     libusb-dev=1.0.24-r1 \
     build-base=0.5-r2 \
     eudev-dev=3.2.9-r3 \
@@ -18,7 +18,7 @@ RUN apk --no-cache update && \
     zlib-dev=1.2.11-r3 \
     freetype-dev=2.10.4-r1 \
     lcms2-dev=2.11-r0 \
-    openjpeg-dev=2.4.0-r0 \
+    openjpeg-dev=2.4.0-r1 \
     tiff-dev=4.2.0-r0 \
     tk-dev=8.6.10-r1 \
     tcl-dev=8.6.10-r1 \
