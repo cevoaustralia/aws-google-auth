@@ -308,7 +308,17 @@ class Google:
 
         self.session.headers['Referer'] = sess.url
 
-        if "selectchallenge/" in sess.url:
+        if "challenge/" in sess.url:
+            form = response_page.find('form', {'id': 'challenge'})
+
+            payload = {}
+            for tag in form.find_all('input'):
+                if tag.get('name') is None:
+                    continue
+
+                payload[tag.get('name')] = tag.get('value')
+
+            sess = self.post(self.base_url + "/signin/selectchallenge", data=payload)
             sess = self.handle_selectchallenge(sess)
 
         # Was there an MFA challenge?
@@ -840,6 +850,8 @@ class Google:
                 challenges.append(['YubiKey', i.attrs.get("data-challengeentry")])
             elif "challenge/az/" in action:
                 challenges.append(['Google Prompt', i.attrs.get("data-challengeentry")])
+            elif "challenge/dp/" in action:
+                challenges.append(['Dual Prompt', i.attrs.get("data-challengeentry")])
 
         print('Choose MFA method from available:')
         for i, mfa in enumerate(challenges, start=1):
@@ -872,3 +884,4 @@ class Google:
         # POST to google with the chosen challenge
         return self.post(
             self.base_url + challenge_form.get('action'), data=payload)
+
