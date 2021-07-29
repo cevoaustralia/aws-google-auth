@@ -67,7 +67,7 @@ somewhere, for example
 
     gcloud run deploy --image cevoaustralia/aws-google-auth --args=--redirect-server --platform managed
 
-Then change your SAML settings so the ``ACS URL`` points to the redirect server.
+Then change your Google Apps SAML settings so the ``ACS URL`` points to the redirect server.
 
 You will also need to change the Trust Relationship of your IAM Role to allow ``SAML:aud``
 to be the host of your redirect server.
@@ -129,11 +129,8 @@ Usage
 .. code:: shell
 
     $ aws-google-auth -h
-    usage: aws-google-auth [-h] [-u USERNAME | -b | --redirect-server] [-I IDP_ID] [-S SP_ID] [-R REGION]
-                       [-d DURATION | --auto-duration] [-p PROFILE] [-A ACCOUNT] [-D] [-q] [--bg-response BG_RESPONSE]
-                       [--saml-assertion SAML_ASSERTION] [--no-cache] [--print-creds] [--resolve-aliases]
-                       [--save-failure-html] [--save-saml-flow] [--port PORT] [-a | -r ROLE_ARN] [-k] [-l {debug,info,warn}]
-                       [-V]
+    usage: aws-google-auth [-h] [-u USERNAME | -b | --redirect-server] [-I IDP_ID] [-S SP_ID] [-R REGION] [-d DURATION | --auto-duration] [-p PROFILE] [-A ACCOUNT] [-D] [-q] [--bg-response BG_RESPONSE] [--saml-assertion SAML_ASSERTION]
+                       [--no-cache] [--print-creds | --credential-process] [--resolve-aliases] [--save-failure-html] [--save-saml-flow] [--port PORT] [-a | -r ROLE_ARN] [-k] [-l {debug,info,warn}] [-V]
 
     Acquire temporary AWS credentials via Google SSO
 
@@ -164,6 +161,7 @@ Usage
                             Base64 encoded SAML assertion to use.
       --no-cache            Do not cache the SAML Assertion.
       --print-creds         Print Credentials.
+      --credential-process  output suitable for aws cli credential_process ($AWS_CREDENTIAL_PROCESS=1)
       --resolve-aliases     Resolve AWS account aliases. ($RESOLVE_AWS_ALIASES=1)
       --save-failure-html   Write HTML failure responses to file for troubleshooting.
       --save-saml-flow      Write all GET and PUT requests and HTML responses to/from Google to files for troubleshooting.
@@ -189,6 +187,22 @@ Native Python
 2. You will be prompted to supply each parameter
 
 *Note* You can skip prompts by either passing parameters to the command, or setting the specified Environment variables.
+
+Credential Process
+~~~~~~~~~~~~~~~~~~
+
+In you aws config file you can setup a profile to use the credential process
+
+```ini
+[profile klekt]
+credential_process = aws-google-auth --credential-process
+region = eu-west-1
+```
+
+Optionally add the `--role-arn` flag, this will allow you to have multiple profiles with different roles.
+
+AWS process will trigger the login flow automatically. Unless you are passing or have a cached SAML response you must
+use the Browser login as there is no interactivity available.
 
 Via Docker
 ~~~~~~~~~~~~~

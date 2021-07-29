@@ -41,7 +41,9 @@ def parse_args(args):
     parser.add_argument('--bg-response', help='Override default bgresponse challenge token.')
     parser.add_argument('--saml-assertion', dest="saml_assertion", help='Base64 encoded SAML assertion to use.')
     parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
-    parser.add_argument('--print-creds', action='store_true', help='Print Credentials.')
+    print_group = parser.add_mutually_exclusive_group()
+    print_group.add_argument('--print-creds', action='store_true', help='Print Credentials.')
+    print_group.add_argument('--credential-process', action='store_true',help='output suitable for aws cli credential_process ($AWS_CREDENTIAL_PROCESS=1)')
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases. ($RESOLVE_AWS_ALIASES=1)')
     parser.add_argument('--save-failure-html', action='store_true', help='Write HTML failure responses to file for troubleshooting.')
     parser.add_argument('--save-saml-flow', action='store_true', help='Write all GET and PUT requests and HTML responses to/from Google to files for troubleshooting.')
@@ -79,6 +81,9 @@ def cli(cli_args):
 
         args = parse_args(args=cli_args)
 
+        # Set up logging
+        logging.getLogger().setLevel(getattr(logging, args.log_level.upper(), None))
+
         config = resolve_config(args)
         process_auth(args, config)
     except google.ExpectedGoogleException as ex:
@@ -110,7 +115,7 @@ def resolve_config(args):
     config.read(config.profile)
 
     # Ask Role (Option priority = ARGS, ENV_VAR, DEFAULT)
-    config.ask_role = args.ask_role or os.getenv('AWS_ASK_ROLE') != None
+    config.ask_role = args.ask_role or os.getenv('AWS_ASK_ROLE') != None or config.ask_role != None
 
     # Duration (Option priority = ARGS, ENV_VAR, DEFAULT)
     config.duration = int(coalesce(
@@ -188,13 +193,19 @@ def resolve_config(args):
         os.getenv('PORT'),
         config.port))
 
+    config.credential_process = args.credential_process or os.getenv('AWS_CREDENTIAL_PROCESS') != None
+    if config.credential_process:
+        config.quiet = True
+        config.ask_role = False
+        config.browser = True
+        config.read_token_cache()
+
+    config.read_saml_cache()
+
     return config
 
 
 def process_auth(args, config):
-    # Set up logging
-    logging.getLogger().setLevel(getattr(logging, args.log_level.upper(), None))
-
     if args.redirect_server:
         from aws_google_auth.redirect_server import start_redirect_server
         start_redirect_server(config.port)
@@ -211,6 +222,8 @@ def process_auth(args, config):
     # SAML cache is used.
     if args.saml_assertion:
         saml_xml = base64.b64decode(args.saml_assertion)
+    elif config.token_cache:
+        saml_xml = None
     elif args.saml_cache and config.saml_cache:
         saml_xml = config.saml_cache
         logging.info('%s: SAML cache found', __name__)
@@ -264,32 +277,36 @@ def process_auth(args, config):
     # cache or freshly generated). From here, we can get the roles and continue
     # the rest of the workflow regardless of cache.
     amazon_client = amazon.Amazon(config, saml_xml)
-    roles = amazon_client.roles
+    if saml_xml is not None:
+        roles = amazon_client.roles
 
-    # Determine the provider and the role arn (if the the user provided isn't an option)
-    if config.role_arn in roles and not config.ask_role:
-        config.provider = roles[config.role_arn]
-    else:
-        if config.account and config.resolve_aliases:
-            aliases = amazon_client.resolve_aws_aliases(roles)
-            config.role_arn, config.provider = util.Util.pick_a_role(roles, aliases, config.account)
-        elif config.account:
-            config.role_arn, config.provider = util.Util.pick_a_role(roles, account=config.account)
-        elif config.resolve_aliases:
-            aliases = amazon_client.resolve_aws_aliases(roles)
-            config.role_arn, config.provider = util.Util.pick_a_role(roles, aliases)
+        # Determine the provider and the role arn (if the the user provided isn't an option)
+        if config.role_arn in roles and not config.ask_role:
+            config.provider = roles[config.role_arn]
         else:
-            config.role_arn, config.provider = util.Util.pick_a_role(roles)
-    if not config.quiet:
-        print("Assuming " + config.role_arn)
-        print("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())))
+            if config.account and config.resolve_aliases:
+                aliases = amazon_client.resolve_aws_aliases(roles)
+                config.role_arn, config.provider = util.Util.pick_a_role(roles, aliases, config.account)
+            elif config.account:
+                config.role_arn, config.provider = util.Util.pick_a_role(roles, account=config.account)
+            elif config.resolve_aliases:
+                aliases = amazon_client.resolve_aws_aliases(roles)
+                config.role_arn, config.provider = util.Util.pick_a_role(roles, aliases)
+            else:
+                config.role_arn, config.provider = util.Util.pick_a_role(roles)
+        if not config.quiet:
+            print("Assuming " + config.role_arn)
+            print("Credentials Expiration: " + format(amazon_client.expiration.astimezone(get_localzone())))
 
-    if config.print_creds:
+    if config.credential_process:
+        amazon_client.print_credential_process()
+        config.write_token_cache(amazon_client)
+    elif config.print_creds:
         amazon_client.print_export_line()
-
-    if config.profile:
+    elif config.profile:
         config.write(amazon_client)
 
+    config.write_saml_cache()
 
 def main():
     cli_args = sys.argv[1:]

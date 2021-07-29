@@ -4,6 +4,9 @@ import os
 
 import botocore.session
 import filelock
+import logging
+from datetime import datetime
+from dateutil import tz
 
 try:
     from backports import configparser
@@ -31,6 +34,7 @@ class Configuration(object):
         self.region = None
         self.role_arn = None
         self.__saml_cache = None
+        self.__token_cache = None
         self.sp_id = None
         self.u2f_disabled = False
         self.resolve_aliases = False
@@ -83,6 +87,7 @@ class Configuration(object):
     @property
     def saml_cache(self):
         if not amazon.Amazon.is_valid_saml_assertion(self.__saml_cache):
+            logging.debug('%s: Invalid saml cache', __name__)
             self.__saml_cache = None
 
         return self.__saml_cache
@@ -90,6 +95,19 @@ class Configuration(object):
     @saml_cache.setter
     def saml_cache(self, value):
         self.__saml_cache = value
+
+    # Will return a credential cache, ONLY if it's valid.
+    @property
+    def token_cache(self):
+        if self.__token_cache is not None:
+            if self.__token_cache['Expiration'] is None \
+                    or self.__token_cache['Expiration'] <= datetime.now(tz.UTC) \
+                    or self.__token_cache['AccessKeyId'] is None \
+                    or self.__token_cache['SecretAccessKey'] is None:
+                logging.debug('%s: Invalid token cache', __name__)
+                self.__token_cache = None
+
+        return self.__token_cache
 
     # Will raise exceptions if the configuration is invalid, otherwise returns
     # None. Use this at any point to validate the configuration is in a good
@@ -205,14 +223,39 @@ class Configuration(object):
                 finally:
                     credentials_file_lock.release()
 
-            if self.__saml_cache is not None:
-                saml_cache_file_lock = filelock.FileLock(self.saml_cache_file + '.lock')
-                saml_cache_file_lock.acquire()
-                try:
-                    with open(self.saml_cache_file, 'w') as f:
-                        f.write(self.__saml_cache.decode("utf-8"))
-                finally:
-                    saml_cache_file_lock.release()
+    def write_saml_cache(self):
+        self.ensure_config_files_exist()
+
+        if self.__saml_cache is not None:
+            saml_cache_file_lock = filelock.FileLock(self.saml_cache_file + '.lock')
+            saml_cache_file_lock.acquire()
+            try:
+                with open(self.saml_cache_file, 'w') as f:
+                    f.write(self.__saml_cache.decode("utf-8"))
+            finally:
+                saml_cache_file_lock.release()
+
+    def write_token_cache(self, amazon_object):
+        assert (self.profile is not None), "Can not store config/credentials if the AWS_PROFILE is None."
+        assert (amazon_object is not None), "Can not store config/credentials if the amazon_object is None."
+
+        credentials_file_lock = filelock.FileLock(self.credentials_file + '.lock')
+        credentials_file_lock.acquire()
+        try:
+            credentials_parser = configparser.RawConfigParser()
+            credentials_parser.read(self.credentials_file)
+            if not credentials_parser.has_section(self.profile):
+                credentials_parser.add_section(self.profile)
+            credentials_parser.set(self.profile, 'google_config.aws_access_key_id', amazon_object.access_key_id)
+            credentials_parser.set(self.profile, 'google_config.aws_secret_access_key', amazon_object.secret_access_key)
+            credentials_parser.set(self.profile, 'google_config.aws_session_expiration',
+                                   amazon_object.expiration.strftime('%Y-%m-%dT%H:%M:%S%z'))
+            credentials_parser.set(self.profile, 'google_config.aws_session_token', amazon_object.session_token)
+
+            with open(self.credentials_file, 'w+') as f:
+                credentials_parser.write(f)
+        finally:
+            credentials_file_lock.release()
 
     # Read from the configuration file and override ALL values currently stored
     # in the configuration object. As this is potentially destructive, it's
@@ -281,9 +324,31 @@ class Configuration(object):
             read_browser = config_parser[profile_string].getboolean('google_config.browser', None)
             self.browser = coalesce(read_browser, self.browser)
 
-        # SAML Cache
+    def read_saml_cache(self):
         try:
             with open(self.saml_cache_file, 'r') as f:
                 self.__saml_cache = f.read().encode("utf-8")
-        except IOError:
+        except IOError as ex:
+            logging.info('%s: SAML cache failed to read: %s', __name__, ex)
             pass
+
+    def read_token_cache(self):
+        assert (self.profile is not None), "Can not store config/credentials if the AWS_PROFILE is None."
+
+        # Shortening Convenience functions
+        unicode_to_string = util.Util.unicode_to_string_if_needed
+
+        credentials_parser = configparser.RawConfigParser()
+        credentials_parser.read(self.credentials_file)
+
+        if credentials_parser.has_section(self.profile):
+            token = {}
+            token['AccessKeyId'] = unicode_to_string(credentials_parser[self.profile].get('google_config.aws_access_key_id', None))
+            token['SecretAccessKey'] = unicode_to_string(credentials_parser[self.profile].get('google_config.aws_secret_access_key', None))
+            token['SessionToken'] = unicode_to_string(credentials_parser[self.profile].get('google_config.aws_session_token', None))
+            read_expiration = unicode_to_string(credentials_parser[self.profile].get('google_config.aws_session_expiration', None))
+            if read_expiration is not None:
+                token['Expiration'] = datetime.strptime(read_expiration, '%Y-%m-%dT%H:%M:%S%z').replace(tzinfo=tz.UTC)
+            else:
+                token['Expiration'] = None
+            self.__token_cache = token
