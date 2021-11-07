@@ -19,7 +19,7 @@ from requests import HTTPError
 from six import print_ as print
 from six.moves import urllib_parse, input
 
-from aws_google_auth import _version
+from aws_google_auth import _version, CONNECT_TIMEOUT, READ_TIMEOUT
 
 # The U2F USB Library is optional, if it's there, include it.
 try:
@@ -121,7 +121,14 @@ class Google:
     def post(self, url, data=None, json_data=None):
         try:
             self._save_request(url, method='POST', data=data, json_data=json_data)
-            response = self.check_for_failure(self.session.post(url, data=data, json=json_data))
+            response = self.check_for_failure(
+                self.session.post(
+                    url,
+                    data=data,
+                    json=json_data,
+                    timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
+                )
+            )
             self._save_response(url, response)
 
         except requests.exceptions.ConnectionError as e:
@@ -141,7 +148,9 @@ class Google:
     def get(self, url):
         try:
             self._save_request(url)
-            response = self.check_for_failure(self.session.get(url))
+            response = self.check_for_failure(
+                self.session.get(url, timeout=(CONNECT_TIMEOUT, READ_TIMEOUT))
+            )
             self._save_response(url, response)
 
         except requests.exceptions.ConnectionError as e:
@@ -404,7 +413,9 @@ class Google:
 
         if open_image:
             try:
-                with requests.get(captcha_url) as url:
+                with requests.get(
+                    captcha_url, timeout=(CONNECT_TIMEOUT, READ_TIMEOUT)
+                ) as url:
                     with io.BytesIO(url.content) as f:
                         Image.open(f).show()
             except Exception:

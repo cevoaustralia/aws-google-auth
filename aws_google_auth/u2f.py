@@ -7,6 +7,8 @@ import requests
 from u2flib_host import u2f, exc, appid
 from u2flib_host.constants import APDU_USE_NOT_SATISFIED
 
+from aws_google_auth import CONNECT_TIMEOUT, READ_TIMEOUT
+
 """
 The facet/appID used by Google auth does not seem to be valid
 Need to apply some patches to u2flib_host to not validate the
@@ -20,7 +22,12 @@ valid for the facet https://accounts.google.com)
 def __appid_verifier__fetch_json(app_id):
     target = app_id
     while True:
-        resp = requests.get(target, allow_redirects=False, verify=True)
+        resp = requests.get(
+            target,
+            allow_redirects=False,
+            verify=True,
+            timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
+        )
 
         # If the server returns an HTTP redirect (status code 3xx) the
         # server must also send the header "FIDO-AppID-Redirect-Authorized:
