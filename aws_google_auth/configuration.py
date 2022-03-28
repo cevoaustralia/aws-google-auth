@@ -65,7 +65,7 @@ class Configuration(object):
 
     @property
     def saml_cache_file(self):
-        return self.credentials_file.replace('credentials', 'saml_cache_%s.xml' % self.idp_id)
+        return self.credentials_file.replace('credentials', 'saml_cache_%s_%s.xml' % (self.idp_id, self.profile))
 
     def ensure_config_files_exist(self):
         for file in [self.config_file, self.credentials_file]:
