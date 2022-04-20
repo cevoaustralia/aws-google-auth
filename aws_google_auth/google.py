@@ -284,6 +284,9 @@ class Google:
 
         self.check_extra_step(response_page)
 
+        if self.config.bg_response:
+            payload['bgresponse'] = self.config.bg_response
+
         # Process Google CAPTCHA verification request if present
         if cap is not None:
             self.session.headers['Referer'] = sess.url
