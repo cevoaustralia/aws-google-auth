@@ -2,7 +2,7 @@
 
 set -e -o pipefail
 
-aws-google-auth
+aws-google-auth --bg-response js_enabled
 
 echo "" >> /work/.env
 echo AWS_ACCESS_KEY_ID=$(aws configure get sts.aws_access_key_id) >> /work/.env
