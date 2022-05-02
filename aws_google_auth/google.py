@@ -264,6 +264,10 @@ class Google:
         # Update the payload
         payload['Passwd'] = self.config.password
 
+        # Set bg_response in request payload to passwd challenge
+        if self.config.bg_response:
+            payload['bgresponse'] = self.config.bg_response
+
         # POST to Authenticate Password
         sess = self.post(passwd_challenge_url, data=payload)
 
