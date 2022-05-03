@@ -239,6 +239,9 @@ class Google:
 
         # POST to account login info page, to collect profile and session info
         sess = self.post(account_login_url, data=payload)
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        if response_page.find('div', {'id': 'identifier-captcha'}):
+             sess = self.handle_identifier_captcha(sess, payload)
 
         self.session.headers['Referer'] = sess.url
 
@@ -876,3 +879,58 @@ class Google:
         # POST to google with the chosen challenge
         return self.post(
             self.base_url + challenge_form.get('action'), data=payload)
+
+    def handle_identifier_captcha(self, sess, payload):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+
+        # Collect ProfileInformation, SessionState, signIn, and Password Challenge URL
+        profile_information = response_page.find('input', { 'name': 'ProfileInformation' }).get('value')
+        session_state = response_page.find('input', { 'name': 'SessionState' }).get('value')
+        sign_in = response_page.find('input', {'name': 'signIn'}).get('value')
+        passwd_challenge_url = response_page.find('form', { 'id': 'gaia_loginform' }).get('action')
+        continue_page = response_page.find('input', { 'name': 'continue' }).get('value')
+        page2 = response_page.find('input', { 'name': 'Page' }).get('value')
+
+        # Update the payload
+        payload['signIn'] = sign_in
+
+        # Get all captcha challenge tokens and urls
+        captcha_container = response_page.find('div', {'id': 'identifier-captcha'})
+        captcha_logintoken = captcha_container.find('input', {'name': 'identifiertoken'}).get('value')
+        captcha_url = captcha_container.find('div', {'id', "captcha-img"}).img['src']
+        captcha_logintoken_audio = captcha_container.find('input', {'name': 'identifiertoken'}).get('value')
+        captcha_url_audio = captcha_container.find('span', {'class', "captcha-msg"}).img['alt']
+
+        open_image = True
+
+        # Check if there is a display utility installed as Image.open(f).show() do not raise any exception if not
+        # if neither xv or display are available just display the URL for the user to visit.
+        if os.name == 'posix' and sys.platform != 'darwin':
+            if find_executable('xv') is None and find_executable('display') is None:
+                open_image = False
+
+        print("Please visit the following URL to view your CAPTCHA: https://accounts.google.com{}".format(captcha_url))
+
+        if open_image:
+            try:
+                with requests.get(captcha_url) as url:
+                    with io.BytesIO(url.content) as f:
+                        Image.open(f).show()
+            except Exception:
+                pass
+
+        try:
+            captcha_input = raw_input("Captcha (case insensitive): ") or None
+        except NameError:
+            captcha_input = input("Captcha (case insensitive): ") or None
+
+        # Update the payload
+        payload['identifier-captcha-input'] = captcha_input
+        payload['identifiertoken'] = captcha_logintoken
+        payload['url'] = captcha_url
+        payload['Page'] = page2
+        payload['continue'] = continue_page
+        payload['identifiertoken_audio'] = captcha_logintoken_audio
+        payload['url_audio'] = captcha_url_audio
+        payload['signIn'] = sign_in
+        return self.post(passwd_challenge_url, data=payload)
