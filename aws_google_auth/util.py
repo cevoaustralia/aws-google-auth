@@ -43,7 +43,7 @@ class Util:
                 enriched_roles_tab.append([i + 1, role_property[0], role_property[1]])
 
             while True:
-                print(tabulate(enriched_roles_tab, headers=['No', 'AWS account', 'Role'], ))
+                print(tabulate(sorted(enriched_roles_tab), headers=['No', 'AWS account', 'Role'], ))
                 prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(enriched_roles))
                 choice = Util.get_input(prompt)
 
@@ -53,7 +53,7 @@ class Util:
                     print("Invalid choice, try again.")
         else:
             while True:
-                for i, role in enumerate(filtered_roles):
+                for i, role in enumerate(sorted(filtered_roles)):
                     print("[{:>3d}] {}".format(i + 1, role))
 
                 prompt = 'Type the number (1 - {:d}) of the role to assume: '.format(len(filtered_roles))
