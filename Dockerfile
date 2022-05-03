@@ -1,4 +1,4 @@
-FROM python:3.6-alpine
+FROM python:3.9.12-alpine3.15
 
 RUN apk add --update-cache py3-pip ca-certificates py3-certifi py3-lxml\
                            python3-dev cython cython-dev libusb-dev build-base \
