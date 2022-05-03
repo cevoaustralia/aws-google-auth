@@ -57,6 +57,21 @@ You can find the ``GOOGLE_IDP_ID``, again from the admin console, via
 string like ``https://accounts.google.com/o/saml2/idp?idpid=aBcD01AbC``
 where the last bit (after the ``=``) is the IDP ID.
 
+Browser Login
+~~~~~~~~~~~~~~
+
+To enable browser based login, you will need to host the redirect server
+somewhere, for example
+
+.. code:: shell
+
+    gcloud run deploy --image cevoaustralia/aws-google-auth --args=--redirect-server --platform managed
+
+Then change your Google Apps SAML settings so the ``ACS URL`` points to the redirect server.
+
+You will also need to change the Trust Relationship of your IAM Role to allow ``SAML:aud``
+to be the host of your redirect server.
+
 Installation
 ------------
 
@@ -114,13 +129,8 @@ Usage
 .. code:: shell
 
     $ aws-google-auth -h
-    usage: aws-google-auth [-h] [-u USERNAME] [-I IDP_ID] [-S SP_ID] [-R REGION]
-                           [-d DURATION] [-p PROFILE] [-D] [-q]
-                           [--bg-response BG_RESPONSE]
-                           [--saml-assertion SAML_ASSERTION] [--no-cache]
-                           [--print-creds] [--resolve-aliases]
-                           [--save-failure-html] [--save-saml-flow] [-a | -r ROLE_ARN] [-k]
-                           [-l {debug,info,warn}] [-V]
+    usage: aws-google-auth [-h] [-u USERNAME | -b | --redirect-server] [-I IDP_ID] [-S SP_ID] [-R REGION] [-d DURATION | --auto-duration] [-p PROFILE] [-A ACCOUNT] [-D] [-q] [--bg-response BG_RESPONSE] [--saml-assertion SAML_ASSERTION]
+                       [--no-cache] [--print-creds | --credential-process] [--resolve-aliases] [--save-failure-html] [--save-saml-flow] [--port PORT] [-a | -r ROLE_ARN] [-k] [-l {debug,info,warn}] [-V]
 
     Acquire temporary AWS credentials via Google SSO
 
@@ -128,6 +138,8 @@ Usage
       -h, --help            show this help message and exit
       -u USERNAME, --username USERNAME
                             Google Apps username ($GOOGLE_USERNAME)
+      -b, --browser         Google login in the browser (Requires SAML redirect server) ($GOOGLE_BROWSER=1)
+      --redirect-server     Run the redirect server on port ($PORT)
       -I IDP_ID, --idp-id IDP_ID
                             Google SSO IDP identifier ($GOOGLE_IDP_ID)
       -S SP_ID, --sp-id SP_ID
@@ -135,26 +147,28 @@ Usage
       -R REGION, --region REGION
                             AWS region endpoint ($AWS_DEFAULT_REGION)
       -d DURATION, --duration DURATION
-                            Credential duration (defaults to value of $DURATION, then
-                            falls back to 43200)
+                            Credential duration in seconds (defaults to value of $DURATION, then falls back to 43200)
+      --auto-duration       Tries to use the longest allowed duration ($AUTO_DURATION=1)
       -p PROFILE, --profile PROFILE
-                            AWS profile (defaults to value of $AWS_PROFILE, then
-                            falls back to 'sts')
+                            AWS profile (defaults to value of $AWS_PROFILE, then falls back to 'sts')
+      -A ACCOUNT, --account ACCOUNT
+                            Filter for specific AWS account.
       -D, --disable-u2f     Disable U2F functionality.
       -q, --quiet           Quiet output
       --bg-response BG_RESPONSE
-                            Override default bgresponse challenge token ($GOOGLE_BG_RESPONSE).
+                            Override default bgresponse challenge token.
       --saml-assertion SAML_ASSERTION
                             Base64 encoded SAML assertion to use.
       --no-cache            Do not cache the SAML Assertion.
       --print-creds         Print Credentials.
-      --resolve-aliases     Resolve AWS account aliases.
-      --save-failure-html   Write HTML failure responses to file for
-                            troubleshooting.
+      --credential-process  output suitable for aws cli credential_process ($AWS_CREDENTIAL_PROCESS=1)
+      --resolve-aliases     Resolve AWS account aliases. ($RESOLVE_AWS_ALIASES=1)
+      --save-failure-html   Write HTML failure responses to file for troubleshooting.
       --save-saml-flow      Write all GET and PUT requests and HTML responses to/from Google to files for troubleshooting.
-      -a, --ask-role        Set true to always pick the role
+      --port PORT           Port for the redirect server ($PORT)
+      -a, --ask-role        Set true to always pick the role ($AWS_ASK_ROLE=1)
       -r ROLE_ARN, --role-arn ROLE_ARN
-                            The ARN of the role to assume ($AWS_ROLE_ARN)
+                            The ARN of the role to assume
       -k, --keyring         Use keyring for storing the password.
       -l {debug,info,warn}, --log {debug,info,warn}
                             Select log level (default: warn)
@@ -173,6 +187,22 @@ Native Python
 2. You will be prompted to supply each parameter
 
 *Note* You can skip prompts by either passing parameters to the command, or setting the specified Environment variables.
+
+Credential Process
+~~~~~~~~~~~~~~~~~~
+
+In you aws config file you can setup a profile to use the credential process
+
+```ini
+[profile klekt]
+credential_process = aws-google-auth --credential-process
+region = eu-west-1
+```
+
+Optionally add the `--role-arn` flag, this will allow you to have multiple profiles with different roles.
+
+AWS process will trigger the login flow automatically. Unless you are passing or have a cached SAML response you must
+use the Browser login as there is no interactivity available.
 
 Via Docker
 ~~~~~~~~~~~~~

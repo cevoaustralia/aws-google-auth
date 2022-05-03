@@ -4,6 +4,7 @@ import base64
 import boto3
 import os
 import re
+import json
 
 from datetime import datetime
 from threading import Thread
@@ -19,7 +20,13 @@ class Amazon:
     def __init__(self, config, saml_xml):
         self.config = config
         self.saml_xml = saml_xml
-        self.__token = None
+        if config.token_cache:
+            self.__token = {
+                'Credentials': config.token_cache
+            }
+            self.__roles = [config.role_arn]
+        else:
+            self.__token = None
 
     @property
     def sts_client(self):
@@ -74,8 +81,18 @@ class Amazon:
 
         print(formatted)
 
+    def print_credential_process(self):
+        print(json.dumps({
+            'Version': 1,
+            'AccessKeyId': self.access_key_id,
+            'SecretAccessKey': self.secret_access_key,
+            'SessionToken': self.session_token,
+            'Expiration': self.expiration.strftime('%Y-%m-%dT%H:%M:%S%z'),
+        }))
+
     @property
     def roles(self):
+        assert (self.saml_xml is not None), "Cannot load roles without saml."
         doc = etree.fromstring(self.saml_xml)
         roles = {}
         for x in doc.xpath('//*[@Name = "https://aws.amazon.com/SAML/Attributes/Role"]//text()'):
@@ -120,29 +137,24 @@ class Amazon:
 
     def resolve_aws_aliases(self, roles):
         def resolve_aws_alias(role, principal, aws_dict):
-            session = boto3.session.Session(region_name=self.config.region)
-
-            sts = session.client('sts')
-            saml = sts.assume_role_with_saml(RoleArn=role,
-                                             PrincipalArn=principal,
-                                             SAMLAssertion=self.base64_encoded_saml)
-
-            iam = session.client('iam',
-                                 aws_access_key_id=saml['Credentials']['AccessKeyId'],
-                                 aws_secret_access_key=saml['Credentials']['SecretAccessKey'],
-                                 aws_session_token=saml['Credentials']['SessionToken'])
             try:
-                response = iam.list_account_aliases()
-                account_alias = response['AccountAliases'][0]
-                aws_dict[role.split(':')[4]] = account_alias
-            except:
-                sts = session.client('sts',
+                session = boto3.session.Session(region_name=self.config.region)
+
+                sts = session.client('sts')
+                saml = sts.assume_role_with_saml(RoleArn=role,
+                                                 PrincipalArn=principal,
+                                                 SAMLAssertion=self.base64_encoded_saml)
+
+                iam = session.client('iam',
                                      aws_access_key_id=saml['Credentials']['AccessKeyId'],
                                      aws_secret_access_key=saml['Credentials']['SecretAccessKey'],
                                      aws_session_token=saml['Credentials']['SessionToken'])
 
-                account_id = sts.get_caller_identity().get('Account')
-                aws_dict[role.split(':')[4]] = '{}'.format(account_id)
+                response = iam.list_account_aliases()
+                account_alias = response['AccountAliases'][0]
+                aws_dict[role.split(':')[4]] = account_alias
+            except:
+                aws_dict[role.split(':')[4]] = role.split(':')[4]
 
         threads = []
         aws_id_alias = {}
