@@ -24,13 +24,16 @@ def parse_args(args):
         description="Acquire temporary AWS credentials via Google SSO",
     )
 
-    parser.add_argument('-u', '--username', help='Google Apps username ($GOOGLE_USERNAME)')
+    google_group = parser.add_mutually_exclusive_group()
+    google_group.add_argument('-u', '--username', help='Google Apps username ($GOOGLE_USERNAME)')
+    google_group.add_argument('-b', '--browser', action='store_true', help='Google login in the browser (Requires SAML redirect server) ($GOOGLE_BROWSER=1)')
+    google_group.add_argument('--redirect-server', action='store_true', help='Run the redirect server on port ($PORT)')
     parser.add_argument('-I', '--idp-id', help='Google SSO IDP identifier ($GOOGLE_IDP_ID)')
     parser.add_argument('-S', '--sp-id', help='Google SSO SP identifier ($GOOGLE_SP_ID)')
     parser.add_argument('-R', '--region', help='AWS region endpoint ($AWS_DEFAULT_REGION)')
     duration_group = parser.add_mutually_exclusive_group()
     duration_group.add_argument('-d', '--duration', type=int, help='Credential duration in seconds (defaults to value of $DURATION, then falls back to 43200)')
-    duration_group.add_argument('--auto-duration', action='store_true', help='Tries to use the longest allowed duration ($AUTO_DURATION)')
+    duration_group.add_argument('--auto-duration', action='store_true', help='Tries to use the longest allowed duration ($AUTO_DURATION=1)')
     parser.add_argument('-p', '--profile', help='AWS profile (defaults to value of $AWS_PROFILE, then falls back to \'sts\')')
     parser.add_argument('-A', '--account', help='Filter for specific AWS account.')
     parser.add_argument('-D', '--disable-u2f', action='store_true', help='Disable U2F functionality.')
@@ -39,12 +42,13 @@ def parse_args(args):
     parser.add_argument('--saml-assertion', dest="saml_assertion", help='Base64 encoded SAML assertion to use.')
     parser.add_argument('--no-cache', dest="saml_cache", action='store_false', help='Do not cache the SAML Assertion.')
     parser.add_argument('--print-creds', action='store_true', help='Print Credentials.')
-    parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
+    parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases. ($RESOLVE_AWS_ALIASES=1)')
     parser.add_argument('--save-failure-html', action='store_true', help='Write HTML failure responses to file for troubleshooting.')
     parser.add_argument('--save-saml-flow', action='store_true', help='Write all GET and PUT requests and HTML responses to/from Google to files for troubleshooting.')
+    parser.add_argument('--port', type=int, help='Port for the redirect server ($PORT)')
 
     role_group = parser.add_mutually_exclusive_group()
-    role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
+    role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role ($AWS_ASK_ROLE=1)')
     role_group.add_argument('-r', '--role-arn', help='The ARN of the role to assume')
     parser.add_argument('-k', '--keyring', action='store_true', help='Use keyring for storing the password.')
     parser.add_argument('-l', '--log', dest='log_level', choices=['debug',
@@ -106,10 +110,7 @@ def resolve_config(args):
     config.read(config.profile)
 
     # Ask Role (Option priority = ARGS, ENV_VAR, DEFAULT)
-    config.ask_role = bool(coalesce(
-        args.ask_role,
-        os.getenv('AWS_ASK_ROLE'),
-        config.ask_role))
+    config.ask_role = args.ask_role or os.getenv('AWS_ASK_ROLE') != None
 
     # Duration (Option priority = ARGS, ENV_VAR, DEFAULT)
     config.duration = int(coalesce(
@@ -118,11 +119,7 @@ def resolve_config(args):
         config.duration))
 
     # Automatic duration (Option priority = ARGS, ENV_VAR, DEFAULT)
-    config.auto_duration = coalesce(
-        args.auto_duration,
-        os.getenv('AUTO_DURATION'),
-        config.auto_duration
-    )
+    config.auto_duration = args.auto_duration or os.getenv('AUTO_DURATION') != None
 
     # IDP ID (Option priority = ARGS, ENV_VAR, DEFAULT)
     config.idp_id = coalesce(
@@ -149,16 +146,12 @@ def resolve_config(args):
         config.sp_id)
 
     # U2F Disabled (Option priority = ARGS, ENV_VAR, DEFAULT)
-    config.u2f_disabled = coalesce(
-        args.disable_u2f,
-        os.getenv('U2F_DISABLED'),
-        config.u2f_disabled)
+    config.u2f_disabled = args.disable_u2f or os.getenv('U2F_DISABLED') != None
 
     # Resolve AWS aliases enabled (Option priority = ARGS, ENV_VAR, DEFAULT)
-    config.resolve_aliases = coalesce(
-        args.resolve_aliases,
-        os.getenv('RESOLVE_AWS_ALIASES'),
-        config.resolve_aliases)
+    config.resolve_aliases = args.resolve_aliases or os.getenv('RESOLVE_AWS_ALIASES') != None
+
+    config.browser = args.browser or os.getenv('GOOGLE_BROWSER') != None
 
     # Username (Option priority = ARGS, ENV_VAR, DEFAULT)
     config.username = coalesce(
@@ -190,12 +183,22 @@ def resolve_config(args):
         os.getenv('GOOGLE_BG_RESPONSE'),
         config.bg_response)
 
+    config.port = int(coalesce(
+        args.port,
+        os.getenv('PORT'),
+        config.port))
+
     return config
 
 
 def process_auth(args, config):
     # Set up logging
     logging.getLogger().setLevel(getattr(logging, args.log_level.upper(), None))
+
+    if args.redirect_server:
+        from aws_google_auth.redirect_server import start_redirect_server
+        start_redirect_server(config.port)
+        return
 
     if config.region is None:
         config.region = util.Util.get_input("AWS Region: ")
@@ -211,6 +214,9 @@ def process_auth(args, config):
     elif args.saml_cache and config.saml_cache:
         saml_xml = config.saml_cache
         logging.info('%s: SAML cache found', __name__)
+    elif config.browser:
+        google_client = google.Google(config, save_failure=args.save_failure_html, save_flow=args.save_saml_flow)
+        saml_xml = google_client.do_browser_saml()
     else:
         # No cache, continue without.
         logging.info('%s: SAML cache not found', __name__)

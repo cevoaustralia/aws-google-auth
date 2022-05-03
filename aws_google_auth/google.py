@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import sys
+import webbrowser
 
 import requests
 from PIL import Image
@@ -20,6 +21,7 @@ from six import print_ as print
 from six.moves import urllib_parse, input
 
 from aws_google_auth import _version
+from aws_google_auth.login_server import LoginServerHandler, LoginServer
 
 # The U2F USB Library is optional, if it's there, include it.
 try:
@@ -58,6 +60,23 @@ class Google:
             self.save_flow_dict = {}
             self.save_flow_dir = "aws-google-auth-" + datetime.now().strftime('%Y-%m-%dT%H%M%S')
             os.makedirs(self.save_flow_dir, exist_ok=True)
+
+    def do_browser_saml(self):
+        logging.info('Opening url %s', self.login_url)
+        webbrowser.open(self.login_url)
+        saml_text = self._catch_saml()
+
+        return base64.b64decode(saml_text)
+
+    @staticmethod
+    def _catch_saml(port=4589):
+        server_address = ('', port)
+        httpd = LoginServer(server_address, LoginServerHandler)
+        logging.info('Starting http handler...\n')
+        httpd.handle_request()
+
+        assert ("SAMLResponse" in httpd.post_data), "Expected post data to contain SAMLResponse."
+        return httpd.post_data["SAMLResponse"][0]
 
     @property
     def login_url(self):
