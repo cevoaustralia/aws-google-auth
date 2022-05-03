@@ -333,6 +333,8 @@ class Google:
             sess = self.handle_iap(sess)
         elif "challenge/dp/" in sess.url:
             sess = self.handle_dp(sess)
+        elif "challenge/skotp/" in sess.url:
+            sess = self.handle_skotp(sess)
         elif "challenge/ootp/5" in sess.url:
             raise NotImplementedError(
                 'Offline Google App OOTP not implemented')
@@ -827,6 +829,41 @@ class Google:
         # Submit SMS/VOICE token
         return self.post(challenge_url, data=payload)
 
+    def handle_skotp(self, sess):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        ltmpl = response_page.find('input', {'name': 'ltmpl'}).get('value')
+        flowname = response_page.find('input', {'name': 'flowName'}).get('value')
+        tl = response_page.find('input', {'name': 'TL'}).get('value')
+        gxf = response_page.find('input', {'name': 'gxf'}).get('value')
+        challenge_url = sess.url.split("?")[0]
+        challenge_id = challenge_url.split("skotp/")[1]
+
+        skotp_code = input("Enter https://g.co/sc one-time security code: ") or None
+
+        if not skotp_code:
+            raise ValueError(
+                "One-time security code required for {} but none supplied.".format(
+                    self.config.username))
+
+        payload = {
+            'challengeId': challenge_id,
+            'challengeType': 37,
+            'continue': self.cont,
+            'ltmpl': ltmpl,
+            'scc': 1,
+            'sarp': 1,
+            'oauth': 1,
+            'flowName': flowname,
+            'faa': 1,
+            'TL': tl,
+            'gxf': gxf,
+            'Pin': skotp_code,
+            'TrustDevice': 'on',
+        }
+
+        # Submit SKOTP
+        return self.post(challenge_url, data=payload)
+
     def handle_selectchallenge(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
 
@@ -842,6 +879,8 @@ class Google:
                 challenges.append(['SMS other phone', i.attrs.get("data-challengeentry")])
             elif "challenge/sk/" in action:
                 challenges.append(['YubiKey', i.attrs.get("data-challengeentry")])
+            elif "challenge/skotp/" in action:
+                challenges.append(['One-time security code', i.attrs.get("data-challengeentry")])
             elif "challenge/az/" in action:
                 challenges.append(['Google Prompt', i.attrs.get("data-challengeentry")])
 
