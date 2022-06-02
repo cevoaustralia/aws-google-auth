@@ -174,7 +174,7 @@ class Configuration(object):
             config_parser.set(profile, 'google_config.google_username', self.username)
             config_parser.set(profile, 'google_config.bg_response', self.bg_response)
 
-            with open(self.config_file, 'w+') as f:
+            with open(self.config_file, 'w+', newline='\n') as f:
                 config_parser.write(f)
         finally:
             config_file_lock.release()
@@ -194,7 +194,7 @@ class Configuration(object):
                     credentials_parser.set(self.profile, 'aws_session_expiration', amazon_object.expiration.strftime('%Y-%m-%dT%H:%M:%S%z'))
                     credentials_parser.set(self.profile, 'aws_session_token', amazon_object.session_token)
 
-                    with open(self.credentials_file, 'w+') as f:
+                    with open(self.credentials_file, 'w+', newline='\n') as f:
                         credentials_parser.write(f)
                 finally:
                     credentials_file_lock.release()
