@@ -174,7 +174,7 @@ class Configuration(object):
             config_parser.set(profile, 'google_config.google_username', self.username)
             config_parser.set(profile, 'google_config.bg_response', self.bg_response)
 
-            with open(self.config_file, 'w+') as f:
+            with open(self.config_file, 'w+', newline='\n') as f:
                 config_parser.write(f)
         finally:
             config_file_lock.release()
