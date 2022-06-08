@@ -14,6 +14,21 @@ Pull requests are definitely welcome. In order to be most useful, please try and
 * the code is clean and understandable
 * the pull request would merge cleanly
 
+### Unit Tests
+
+If you're adding new functionality to the code base, please make sure you add a
+corresponding unit test in the tests/ directory.
+
+The project's unit tests can be run using [tox](https://tox.wiki/en/latest/).
+A container to use for testing can be built using the following steps:
+
+1. Spin up a container using ubuntu:latest: `docker run -it ubuntu:latest`
+2. Add a few of prerequisite packages: `apt -y update && apt -y install git python3 tox`
+3. Clone the repository: `git clone https://github.com/cevoaustralia/aws-google-auth.git`
+4. Navigate to the directory and run tox: `cd aws-google-auth && tox`
+
+Running tox without any arguments will run flake8 and the full test suite!
+
 ## Issues
 
 Issues are also very welcome! Please try and make sure that:
