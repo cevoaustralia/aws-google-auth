@@ -7,8 +7,27 @@ on:
   push:
 
 jobs:
-  build:
+  pre-build:
+    runs-on: ubuntu-latest
 
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v3
+      with:
+        python-version: "3.x"
+    - name: Install tox
+      run: pip install tox
+    - name: Run flake8
+      run: tox -e lint
+    - name: Run coverage
+      run: tox -e coverage
+    - name: Export to Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    needs: pre-build
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -16,15 +35,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+    - uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install tox
       run: pip install tox
-    - name: Run linter
-      run: tox -e lint
     - name: Run package tests
       run: tox -e py
-    - name: Run coverage analysis
-      run: tox -e coverage
