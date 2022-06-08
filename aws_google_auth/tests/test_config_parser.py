@@ -2,7 +2,6 @@ import os
 import unittest
 
 import mock
-from nose.tools import nottest
 
 from aws_google_auth import resolve_config, parse_args
 
@@ -130,7 +129,7 @@ class TestSPProcessing(unittest.TestCase):
 
 class TestRegionProcessing(unittest.TestCase):
 
-    @nottest
+    @unittest.skip("Skip until parameters that are coalesced can be tested")
     def test_default(self):
         args = parse_args([])
         config = resolve_config(args)
@@ -183,7 +182,7 @@ class TestAskRoleProcessing(unittest.TestCase):
         config = resolve_config(args)
         self.assertTrue(config.ask_role)
 
-    @nottest
+    @unittest.skip("Skip until parameters that are coalesced can be tested")
     @mock.patch.dict(os.environ, {'AWS_ASK_ROLE': 'true'})
     def test_with_environment(self):
         args = parse_args([])
@@ -203,7 +202,7 @@ class TestU2FDisabledProcessing(unittest.TestCase):
         config = resolve_config(args)
         self.assertTrue(config.u2f_disabled)
 
-    @nottest
+    @unittest.skip("Skip until parameters that are coalesced can be tested")
     @mock.patch.dict(os.environ, {'U2F_DISABLED': 'true'})
     def test_with_environment(self):
         args = parse_args([])
@@ -223,7 +222,7 @@ class TestResolveAliasesProcessing(unittest.TestCase):
         config = resolve_config(args)
         self.assertTrue(config.resolve_aliases)
 
-    @nottest
+    @unittest.skip("Skip until parameters that are coalesced can be tested")
     @mock.patch.dict(os.environ, {'RESOLVE_AWS_ALIASES': 'true'})
     def test_with_environment(self):
         args = parse_args([])
@@ -243,7 +242,7 @@ class TestBgResponseProcessing(unittest.TestCase):
         config = resolve_config(args)
         self.assertEqual(config.bg_response, 'foo')
 
-    @nottest
+    @unittest.skip("Skip until parameters that are coalesced can be tested")
     @mock.patch.dict(os.environ, {'GOOGLE_BG_RESPONSE': 'foo'})
     def test_with_environment(self):
         args = parse_args([])
@@ -253,7 +252,7 @@ class TestBgResponseProcessing(unittest.TestCase):
 
 class TestAccountProcessing(unittest.TestCase):
 
-    @nottest
+    @unittest.skip("Skip until parameters that are coalesced can be tested")
     def test_default(self):
         args = parse_args([])
         config = resolve_config(args)
