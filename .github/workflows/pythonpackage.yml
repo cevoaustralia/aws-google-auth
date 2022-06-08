@@ -22,5 +22,9 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install tox
       run: pip install tox
-    - name: Run tox
+    - name: Run linter
+      run: tox -e lint
+    - name: Run package tests
       run: tox -e py
+    - name: Run coverage analysis
+      run: tox -e coverage
