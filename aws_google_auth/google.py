@@ -312,6 +312,9 @@ class Google:
 
         self.session.headers['Referer'] = sess.url
 
+        if "challenge/dp/" in sess.url:
+            sess = self.avoid_dp(sess)
+
         if "selectchallenge/" in sess.url:
             sess = self.handle_selectchallenge(sess)
 
@@ -709,6 +712,20 @@ class Google:
         # Submit Configuration
         return self.post(challenge_url, data=payload)
 
+    def avoid_dp(self, sess):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+
+        form = response_page.find('form', {'action': '/signin/challenge/skip'})
+        challenge_url = 'https://accounts.google.com' + form.get('action')
+
+        payload = {}
+        for tag in form.find_all('input'):
+            if tag.get('name') is None: continue
+            payload[tag.get('name')] = tag.get('value')
+
+        # Submit Configuration
+        return self.post(challenge_url, data=payload)
+
     def handle_iap(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
         challenge_url = sess.url.split("?")[0]
@@ -833,7 +850,6 @@ class Google:
         challenges = []
         for i in response_page.select('form[data-challengeentry]'):
             action = i.attrs.get("action")
-
             if "challenge/totp/" in action:
                 challenges.append(['TOTP (Google Authenticator)', i.attrs.get("data-challengeentry")])
             elif "challenge/ipp/" in action:
