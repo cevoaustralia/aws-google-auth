@@ -42,6 +42,7 @@ def parse_args(args):
     parser.add_argument('--resolve-aliases', action='store_true', help='Resolve AWS account aliases.')
     parser.add_argument('--save-failure-html', action='store_true', help='Write HTML failure responses to file for troubleshooting.')
     parser.add_argument('--save-saml-flow', action='store_true', help='Write all GET and PUT requests and HTML responses to/from Google to files for troubleshooting.')
+    parser.add_argument('--view-captcha', action='store_true', help='Force to show captcha when disabled by auto-detection')
 
     role_group = parser.add_mutually_exclusive_group()
     role_group.add_argument('-a', '--ask-role', action='store_true', help='Set true to always pick the role')
@@ -239,7 +240,7 @@ def process_auth(args, config):
         # Validate Options
         config.raise_if_invalid()
 
-        google_client = google.Google(config, save_failure=args.save_failure_html, save_flow=args.save_saml_flow)
+        google_client = google.Google(config, save_failure=args.save_failure_html, save_flow=args.save_saml_flow, view_captcha=args.view_captcha)
         google_client.do_login()
         saml_xml = google_client.parse_saml()
         logging.debug('%s: saml assertion is: %s', __name__, saml_xml)
