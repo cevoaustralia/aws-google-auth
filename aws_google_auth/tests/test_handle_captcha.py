@@ -19,35 +19,35 @@ class HandleCaptchaTestCase(unittest.TestCase):
         self.payload = MagicMock()
         self.response = MagicMock()
         self.response.text = '''<form novalidate method="post"
-		        action="https://accounts.google.com/signin/v1/lookup"
-		        id="gaia_loginform">
-		        <input name="Page" type="hidden" value="PasswordSeparationSignIn">
-		        <input type="hidden" name="GALX" value="">
-		        <input type="hidden" name="gxf" value="">
-		        <input type="hidden" name="ifkv" value="">
-		        <input type="hidden" name="continue" value="https://accounts.google.com/o/saml2/initsso?idpid=">
-		        <input type="hidden" name="flowName" value="WEB_SETUP_GLIF">
-		        <input type="hidden" name="followup" value="https://accounts.google.com/o/saml2/initsso?idpid=">
-		        <input type="hidden" name="faa" value="1">
-		        <input type="hidden" name="oauth" value="1">
-		        <input type="hidden" name="sarp" value="1">
-		        <input type="hidden" name="scc" value="1">
-		        <input type="hidden" name="ltmpl" value="popup">
-		        <input id="profile-information" name="ProfileInformation" type="hidden" value="">
-		        <div id="identifier-captcha">
-		        <input type="hidden" name="identifiertoken" id="identifier-token" value="">
-		        <div id="captcha-img" class="captcha-img">
-		        <img src="/Captcha?v=2&amp;ctoken=" alt="Visual verification">
-		        </div>
-		        </div>
-		        <input id="session-state" name="SessionState" type="hidden" value="">
-		        <input type="hidden" id="_utf8" name="_utf8" value="&#9731;"/>
-		        <input type="hidden" name="bgresponse" id="bgresponse" value="js_disabled">
-		        <input id="Email" name="Email" type="email" placeholder="" value="" spellcheck="false" readonly>
-		        <input id="password" name="Passwd" type="password" spellcheck="false" autofocus class="">
-		        <input type="checkbox" name="TrustDevice" id="trustDevice" checked>
-		        <input id="next" name="signIn" class="rc-button rc-button-submit" type="submit" value="Next">
-		        </form>'''
+            action="https://accounts.google.com/signin/v1/lookup"
+            id="gaia_loginform">
+            <input name="Page" type="hidden" value="PasswordSeparationSignIn">
+            <input type="hidden" name="GALX" value="">
+            <input type="hidden" name="gxf" value="">
+            <input type="hidden" name="ifkv" value="">
+            <input type="hidden" name="continue" value="https://accounts.google.com/o/saml2/initsso?idpid=">
+            <input type="hidden" name="flowName" value="WEB_SETUP_GLIF">
+            <input type="hidden" name="followup" value="https://accounts.google.com/o/saml2/initsso?idpid=">
+            <input type="hidden" name="faa" value="1">
+            <input type="hidden" name="oauth" value="1">
+            <input type="hidden" name="sarp" value="1">
+            <input type="hidden" name="scc" value="1">
+            <input type="hidden" name="ltmpl" value="popup">
+            <input id="profile-information" name="ProfileInformation" type="hidden" value="">
+            <div id="identifier-captcha">
+            <input type="hidden" name="identifiertoken" id="identifier-token" value="">
+            <div id="captcha-img" class="captcha-img">
+            <img src="/Captcha?v=2&amp;ctoken=" alt="Visual verification">
+            </div>
+            </div>
+            <input id="session-state" name="SessionState" type="hidden" value="">
+            <input type="hidden" id="_utf8" name="_utf8" value="&#9731;"/>
+            <input type="hidden" name="bgresponse" id="bgresponse" value="js_disabled">
+            <input id="Email" name="Email" type="email" placeholder="" value="" spellcheck="false" readonly>
+            <input id="password" name="Passwd" type="password" spellcheck="false" autofocus class="">
+            <input type="checkbox" name="TrustDevice" id="trustDevice" checked>
+            <input id="next" name="signIn" class="rc-button rc-button-submit" type="submit" value="Next">
+            </form>'''
         self.google_client = google.Google(self.config, save_failure=False, save_flow=False, view_captcha=False)
         self.google_client.post = MagicMock()
         self.google_client.post.return_value = self.response
