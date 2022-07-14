@@ -37,10 +37,11 @@ class TestPythonFailOnVersion(unittest.TestCase):
 
         self.assertFalse(parser.save_failure_html)
         self.assertFalse(parser.save_saml_flow)
+        self.assertFalse(parser.view_captcha)
 
         # Assert the size of the parameter so that new parameters trigger a review of this function
         # and the appropriate defaults are added here to track backwards compatibility in the future.
-        self.assertEqual(len(vars(parser)), 21)
+        self.assertEqual(len(vars(parser)), 22)
 
     def test_username(self):
 

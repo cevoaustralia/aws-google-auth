@@ -64,7 +64,8 @@ class TestInit(unittest.TestCase):
                                          username=None,
                                          quiet=False,
                                          bg_response=None,
-                                         account=None))
+                                         account=None,
+                                         view_captcha=False))
                           ],
                          resolve_config.mock_calls)
 
@@ -88,7 +89,8 @@ class TestInit(unittest.TestCase):
                                          username=None,
                                          quiet=False,
                                          bg_response=None,
-                                         account=None),
+                                         account=None,
+                                         view_captcha=False),
                                mock_config)
                           ],
                          process_auth.mock_calls)
