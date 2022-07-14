@@ -13,7 +13,6 @@ import sys
 import requests
 from PIL import Image
 from datetime import datetime
-from distutils.spawn import find_executable
 from bs4 import BeautifulSoup
 from requests import HTTPError
 from six import print_ as print
@@ -35,7 +34,7 @@ class ExpectedGoogleException(Exception):
 
 
 class Google:
-    def __init__(self, config, save_failure, save_flow=False):
+    def __init__(self, config, save_failure, save_flow=False, view_captcha=False):
         """The Google object holds authentication state
         for a given session. You need to supply:
 
@@ -54,6 +53,7 @@ class Google:
         self.save_failure = save_failure
         self.session_state = None
         self.save_flow = save_flow
+        self.view_captcha = view_captcha
         if save_flow:
             self.save_flow_dict = {}
             self.save_flow_dir = "aws-google-auth-" + datetime.now().strftime('%Y-%m-%dT%H%M%S')
@@ -396,13 +396,18 @@ class Google:
         captcha_url = "https://accounts.google.com" + captcha_img.find('img').get('src')
         captcha_logintoken_audio = ''
 
-        open_image = True
-
         # Check if there is a display utility installed as Image.open(f).show() do not raise any exception if not
-        # if neither xv or display are available just display the URL for the user to visit.
         if os.name == 'posix' and sys.platform != 'darwin':
-            if find_executable('xv') is None and find_executable('display') is None:
+            if self.view_captcha is True:
+                open_image = True
+            elif 'DISPLAY' not in os.environ:
                 open_image = False
+            elif 'SSH_TTY' in os.environ:
+                open_image = False
+            else:
+                open_image = True
+        else:
+            open_image = True
 
         print("Please visit the following URL to view your CAPTCHA: {}".format(captcha_url))
 
