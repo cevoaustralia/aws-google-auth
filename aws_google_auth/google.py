@@ -21,6 +21,13 @@ from six.moves import urllib_parse, input
 
 from aws_google_auth import _version
 
+# TODO: BeautifulSoup is still using the deprecated collections.Callable
+# which has been removed in Python 3.10 and later. This dirty hack should
+# allow things to continue working for a while
+if sys.version_info.minor >= 10:
+    import collections
+    collections.Callable = collections.abc.Callable
+
 # The U2F USB Library is optional, if it's there, include it.
 try:
     from aws_google_auth import u2f
