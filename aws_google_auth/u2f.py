@@ -47,12 +47,12 @@ def u2f_auth(challenges, facet):
     for device in devices[:]:
         try:
             device.open()
-        except:
+        except Exception:
             # Some U2F devices fail on the first attempt to open but
             # succeed on subsequent attempts. So retry once.
             try:
                 device.open()
-            except:
+            except Exception:
                 devices.remove(device)
 
     try:

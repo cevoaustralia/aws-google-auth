@@ -104,16 +104,22 @@ class Configuration(object):
         # duration
         assert (self.duration.__class__ is int), "Expected duration to be an integer. Got {}.".format(self.duration.__class__)
         assert (self.duration >= 900), "Expected duration to be greater than or equal to 900. Got {}.".format(self.duration)
-        assert (self.duration <= self.max_duration), "Expected duration to be less than or equal to max_duration ({}). Got {}.".format(self.max_duration, self.duration)
+        assert (self.duration <= self.max_duration), \
+            "Expected duration to be less than or equal to max_duration ({}). Got {}."\
+            .format(self.max_duration, self.duration)
 
         # auto_duration
-        assert (self.auto_duration.__class__ is bool), "Expected auto_duration to be a boolean. Got {}.".format(self.auto_duration.__class__)
+        assert (self.auto_duration.__class__ is bool), \
+            "Expected auto_duration to be a boolean. Got {}."\
+            .format(self.auto_duration.__class__)
 
         # profile
-        assert (self.profile.__class__ is str), "Expected profile to be a string. Got {}.".format(self.profile.__class__)
+        assert (self.profile.__class__ is str), \
+            "Expected profile to be a string. Got {}.".format(self.profile.__class__)
 
         # region
-        assert (self.region.__class__ is str), "Expected region to be a string. Got {}.".format(self.region.__class__)
+        assert (self.region.__class__ is str), \
+            "Expected region to be a string. Got {}.".format(self.region.__class__)
 
         # idp_id
         assert (self.idp_id is not None), "Expected idp_id to be set to non-None value."
@@ -129,16 +135,21 @@ class Configuration(object):
             assert (type(self.password) in [str, unicode]), "Expected password to be a string. Got {}.".format(
                 type(self.password))
         except NameError:
-            assert (type(self.password) is str), "Expected password to be a string. Got {}.".format(
-                type(self.password))
+            assert (type(self.password) is str), \
+                "Expected password to be a string. Got {}.".format(type(self.password))
 
         # role_arn (Can be blank, we'll just prompt)
         if self.role_arn is not None:
-            assert (self.role_arn.__class__ is str), "Expected role_arn to be None or a string. Got {}.".format(self.role_arn.__class__)
-            assert ("arn:aws:iam::" in self.role_arn or "arn:aws-us-gov:iam::" in self.role_arn), "Expected role_arn to contain 'arn:aws:iam::'. Got '{}'.".format(self.role_arn)
+            assert (self.role_arn.__class__ is str), \
+                "Expected role_arn to be None or a string. Got {}."\
+                .format(self.role_arn.__class__)
+            assert ("arn:aws:iam::" in self.role_arn or "arn:aws-us-gov:iam::" in self.role_arn), \
+                "Expected role_arn to contain 'arn:aws:iam::'. Got '{}'.".format(self.role_arn)
 
         # u2f_disabled
-        assert (self.u2f_disabled.__class__ is bool), "Expected u2f_disabled to be a boolean. Got {}.".format(self.u2f_disabled.__class__)
+        assert (self.u2f_disabled.__class__ is bool), \
+            "Expected u2f_disabled to be a boolean. Got {}."\
+            .format(self.u2f_disabled.__class__)
 
         # quiet
         assert (self.quiet.__class__ is bool), "Expected quiet to be a boolean. Got {}.".format(self.quiet.__class__)
@@ -191,7 +202,9 @@ class Configuration(object):
                     credentials_parser.set(self.profile, 'aws_access_key_id', amazon_object.access_key_id)
                     credentials_parser.set(self.profile, 'aws_secret_access_key', amazon_object.secret_access_key)
                     credentials_parser.set(self.profile, 'aws_security_token', amazon_object.session_token)
-                    credentials_parser.set(self.profile, 'aws_session_expiration', amazon_object.expiration.strftime('%Y-%m-%dT%H:%M:%S%z'))
+                    credentials_parser.set(self.profile,
+                                           'aws_session_expiration',
+                                           amazon_object.expiration.strftime('%Y-%m-%dT%H:%M:%S%z'))
                     credentials_parser.set(self.profile, 'aws_session_token', amazon_object.session_token)
 
                     with open(self.credentials_file, 'w+') as f:

@@ -11,6 +11,8 @@ from bs4 import BeautifulSoup
 from mock import Mock
 from aws_google_auth import google
 
+# flake8: noqa
+
 
 class TestGoogle(unittest.TestCase):
     def read_local_file(self, filename):
