@@ -1,4 +1,4 @@
-FROM alpine:3.15
+FROM python:3.10-alpine3.16
 
 # RUN apk add --update-cache py3-pip ca-certificates py3-certifi py3-lxml\
 #                            python3-dev cython cython-dev libusb-dev build-base \
@@ -17,4 +17,5 @@ COPY aws_google_auth /build/aws_google_auth
 RUN pip3 install -e /build/[u2f]
 
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV TZ=UTC
 ENTRYPOINT ["aws-google-auth"]
