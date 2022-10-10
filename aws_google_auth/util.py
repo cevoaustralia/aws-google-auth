@@ -20,7 +20,7 @@ class Util:
     @staticmethod
     def pick_a_role(roles, aliases=None, account=None):
         if account:
-            filtered_roles = {role: principal for role, principal in roles.items() if(account in role)}
+            filtered_roles = {role: principal for role, principal in roles.items() if (account in role)}
         else:
             filtered_roles = roles
 
