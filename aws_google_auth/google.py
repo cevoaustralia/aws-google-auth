@@ -190,7 +190,7 @@ class Google:
                         base64UrlEncoded = base64.urlsafe_b64encode(base64.b64decode(item))
                         if base64UrlEncoded != challengeTxt:  # make sure its not the challengeTxt - if it not return it
                             keyHandles.append(base64UrlEncoded)
-                    except:
+                    except Exception:
                         pass
         return keyHandles
 
@@ -200,7 +200,7 @@ class Google:
             searchResult = re.search('"appid":"[a-z://.-_] + "', inputString).group()
             searchObject = json.loads('{' + searchResult + '}')
             return str(searchObject['appid'])
-        except:
+        except Exception:
             logging.exception('Was unable to find appid value in googles SAML page')
             sys.exit(1)
 
@@ -356,7 +356,7 @@ class Google:
         parsed = BeautifulSoup(self.session_state.text, 'html.parser')
         try:
             saml_element = parsed.find('input', {'name': 'SAMLResponse'}).get('value')
-        except:
+        except Exception:
 
             if self.save_failure:
                 logging.error("SAML lookup failed, storing failure page to "
@@ -364,7 +364,9 @@ class Google:
                 with open("saml.html", 'wb') as out:
                     out.write(self.session_state.text.encode('utf-8'))
 
-            raise ExpectedGoogleException('Something went wrong - Could not find SAML response, check your credentials or use --save-failure-html to debug.')
+            raise ExpectedGoogleException('Something went wrong - '
+                                          'Could not find SAML response, check your credentials '
+                                          'or use --save-failure-html to debug.')
 
         return base64.b64decode(saml_element)
 
@@ -466,10 +468,16 @@ class Google:
         appId = self.find_app_id(str(keyHandleJsonPayload))
 
         # txt sent for signing needs to be base64 url encode
-        # we also have to remove any base64 padding because including including it will prevent google accepting the auth response
+        # we also have to remove any base64 padding because including
+        # it will prevent google accepting the auth response
         challenges_txt_encode_pad_removed = base64.urlsafe_b64encode(base64.b64decode(challenges_txt)).strip('='.encode())
 
-        u2f_challenges = [{'version': 'U2F_V2', 'challenge': challenges_txt_encode_pad_removed.decode(), 'appId': appId, 'keyHandle': keyHandle.decode()} for keyHandle in keyHandles]
+        u2f_challenges = [{
+            'version': 'U2F_V2',
+            'challenge': challenges_txt_encode_pad_removed.decode(),
+            'appId': appId,
+            'keyHandle': keyHandle.decode()
+        } for keyHandle in keyHandles]
 
         # Prompt the user up to attempts_remaining times to insert their U2F device.
         attempts_remaining = 5

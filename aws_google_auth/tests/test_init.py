@@ -5,6 +5,7 @@ from mock import call, patch, Mock, MagicMock
 
 import aws_google_auth
 
+# flake8: noqa
 
 class TestInit(unittest.TestCase):
 
