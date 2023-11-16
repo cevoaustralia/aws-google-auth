@@ -695,11 +695,7 @@ class Google:
 
     def handle_skotp(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
-        tl = response_page.find('input', {'name': 'TL'}).get('value')
-        tl = response_page.find('input', {'name': 'TL'}).get('value')
-        gxf = response_page.find('input', {'name': 'gxf'}).get('value')
         challenge_url = sess.url.split("?")[0]
-        challenge_id = challenge_url.split("skotp/")[1]
 
         security_code = input("Security code: ") or None
 
