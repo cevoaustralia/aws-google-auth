@@ -329,6 +329,8 @@ class Google:
             sess = self.handle_prompt(sess)
         elif "challenge/sk/" in sess.url:
             sess = self.handle_sk(sess)
+        elif "challenge/skotp/" in sess.url:
+            sess = self.handle_skotp(sess)
         elif "challenge/iap/" in sess.url:
             sess = self.handle_iap(sess)
         elif "challenge/dp/" in sess.url:
@@ -691,6 +693,38 @@ class Google:
         # Submit TOTP
         return self.post(challenge_url, data=payload)
 
+    def handle_skotp(self, sess):
+        response_page = BeautifulSoup(sess.text, 'html.parser')
+        challenge_url = sess.url.split("?")[0]
+
+        security_code = input("Security code: ") or None
+
+        if not security_code:
+            raise ValueError(
+                "MFA token required for {} but none supplied.".format(
+                    self.config.username))
+
+        payload = {
+            'challengeId': response_page.find('input', {'name': 'challengeId'}).get('value'),
+            'challengeType': response_page.find('input', {'name': 'challengeType'}).get('value'),
+            'ifkv': response_page.find('input', {'name': 'ifkv'}).get('value'),
+            'checkedDomains': response_page.find('input', {'name': 'checkedDomains'}).get('value'),
+            'checkConnection': response_page.find('input', {'name': 'checkConnection'}).get('value'),
+            'continue': response_page.find('input', {'name': 'continue'}).get('value'),
+            'flowName': response_page.find('input', {'name': 'flowName'}).get('value'),
+            'followup': response_page.find('input', {'name': 'followup'}).get('value'),
+            'faa': response_page.find('input', {'name': 'faa'}).get('value'),
+            'oauth': response_page.find('input', {'name': 'oauth'}).get('value'),
+            'scc': response_page.find('input', {'name': 'scc'}).get('value'),
+            'sarp': response_page.find('input', {'name': 'sarp'}).get('value'),
+            'ltmpl': response_page.find('input', {'name': 'ltmpl'}).get('value'),
+            'TL': response_page.find('input', {'name': 'TL'}).get('value'),
+            'gxf': response_page.find('input', {'name': 'gxf'}).get('value'),
+            'Pin': security_code,
+        }
+
+        return self.post(challenge_url, data=payload)
+
     def handle_dp(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
 
@@ -844,6 +878,8 @@ class Google:
                 challenges.append(['YubiKey', i.attrs.get("data-challengeentry")])
             elif "challenge/az/" in action:
                 challenges.append(['Google Prompt', i.attrs.get("data-challengeentry")])
+            elif "challenge/totp/" in action:
+                challenges.append(['Security Key', i.attrs.get("data-challengeentry")])
 
         print('Choose MFA method from available:')
         for i, mfa in enumerate(challenges, start=1):
