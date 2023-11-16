@@ -282,6 +282,10 @@ by this tool are:
 | Dual prompt      | ``.../signin/challenge/dp/...``     |
 |  (Validate 2FA ) |                                     |
 +------------------+-------------------------------------+
+| Security key OTP | ``.../signin/challenge/skotp/...``  |
+|  (Google Smart   |                                     |
+|  Lock App)       |                                     |
++------------------+-------------------------------------+
 | Backup code      | ``... (unknown yet) ...``           |
 |  (printed codes) |                                     |
 +------------------+-------------------------------------+
