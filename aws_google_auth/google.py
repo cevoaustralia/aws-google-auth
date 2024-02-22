@@ -13,7 +13,10 @@ import sys
 import requests
 from PIL import Image
 from datetime import datetime
-from distutils.spawn import find_executable
+try:
+    from shutil import which as find_executable
+except ImportError:
+    from distutils.spawn import find_executable
 from bs4 import BeautifulSoup
 from requests import HTTPError
 from six import print_ as print
