@@ -653,12 +653,55 @@ class Google:
     @staticmethod
     def check_prompt_code(response):
         """
-        Sometimes there is an additional numerical code on the response page that needs to be selected
-        on the prompt from a list of multiple choice. Print it if it's there.
+        Google Prompt sometimes requires number matching: the sign-in page
+        shows a number that the user must tap on their phone from a list of
+        multiple choice. A headless flow never renders that page, so the user
+        confirms blind unless we print the number.
+
+        Looks for the number in the known markup variants (newest first),
+        prints it if found, and returns it (None if the page has no number).
         """
-        num_code = response.find("div", {"jsname": "EKvSSd"})
+        # Current markup (observed 2026): <samp jsname="feLNVc">NN</samp>
+        num_code = response.find("samp", {"jsname": "feLNVc"})
         if num_code:
-            print("numerical code for prompt: {}".format(num_code.string))
+            code = num_code.get_text(strip=True)
+            if code.isdigit():
+                print("Tap this number on your phone: {}".format(code))
+                return code
+
+        # Same markup should the jsname churn: <samp> is ordinary HTML for
+        # computer output, so only accept a short (1-3 digits, like the
+        # codes Google uses and the text fallback below), purely numeric
+        # one; iterate in case the page carries others.
+        for num_code in response.find_all("samp"):
+            code = num_code.get_text(strip=True)
+            if code.isdigit() and len(code) <= 3:
+                print("Tap this number on your phone: {}".format(code))
+                return code
+
+        # Older markup: <div jsname="EKvSSd">NN</div>
+        num_code = response.find("div", {"jsname": "EKvSSd"})
+        if num_code and num_code.string:
+            code = num_code.string.strip()
+            if code.isdigit():
+                print("Tap this number on your phone: {}".format(code))
+                return code
+
+        # Fallback: the instruction text, e.g.
+        # "... then tap <b>NN</b> on your phone to verify it's you."
+        # Fail-closed even on a hostile page: the output is a fixed
+        # template plus at most three digits, so no page-controlled text
+        # can reach the terminal.
+        match = re.search(
+            r"tap\s+(\d{1,3})\s+on\s+your\s+phone",
+            response.get_text(" ", strip=True),
+            re.IGNORECASE)
+        if match:
+            code = match.group(1)
+            print("Tap this number on your phone: {}".format(code))
+            return code
+
+        return None
 
     def handle_totp(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
@@ -693,6 +736,8 @@ class Google:
 
     def handle_dp(self, sess):
         response_page = BeautifulSoup(sess.text, 'html.parser')
+
+        self.check_prompt_code(response_page)
 
         input("Check your phone - after you have confirmed response press ENTER to continue.") or None
 
